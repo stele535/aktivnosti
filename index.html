@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Trening">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Trening</title>
+<style>
+:root{
+  --bg:#f6f5f1; --card:#ffffff; --ink:#1c1e22; --mute:#6b7078; --line:#e4e2db; --accent:#d8561f; --accent-ink:#fff;
+  --c-ride:#2f6fd0; --c-weight:#c8452f; --c-foot:#2a8f55; --c-walk:#7b62c4; --c-other:#b58217;
+  --radius:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#14161a; --card:#1d2026; --ink:#eceae4; --mute:#9a9ea6; --line:#2b2f37; --accent:#f07a47; --accent-ink:#1a1008;
+    --c-ride:#6aa2f0; --c-weight:#ef7a64; --c-foot:#5cc388; --c-walk:#a893e6; --c-other:#e0b04a; }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+header h1{font-size:19px;margin:0;flex:1;letter-spacing:-.01em}
+.sync{font-size:12px;color:var(--mute);display:flex;align-items:center;gap:6px;cursor:pointer;border:0;background:none;padding:6px 4px;color:var(--mute)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.dot.ok{background:#2a8f55}.dot.dirty{background:var(--c-other)}.dot.err{background:var(--c-weight)}
+.btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 14px;border-radius:10px;cursor:pointer}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:600}
+.btn.danger{color:var(--c-weight)}
+.btn:disabled{opacity:.5}
+main{padding:14px 16px;max-width:760px;margin:0 auto}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav button{flex:1;border:0;background:none;color:var(--mute);padding:10px 0 9px;font:inherit;font-size:12px;cursor:pointer}
+nav button b{display:block;font-size:18px;font-weight:400;line-height:1.2}
+nav button.on{color:var(--accent)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 13px;border-radius:99px;font:inherit;font-size:14px;cursor:pointer}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px;margin:10px 0}
+.seg button{flex:1;border:0;background:none;padding:7px 0;border-radius:8px;font:inherit;font-size:14px;color:var(--mute);cursor:pointer}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.pager{display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px}
+.pager .t{font-weight:600}
+.pager button{border:1px solid var(--line);background:var(--card);color:var(--ink);width:40px;height:36px;border-radius:10px;font-size:18px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.stat .v{font-size:26px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:14px;font-weight:500;color:var(--mute);margin-left:3px}
+.stat .l{font-size:13px;color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-top:12px}
+.card h3{margin:0 0 8px;font-size:14px;color:var(--mute);font-weight:600}
+.row{display:flex;gap:10px;align-items:center}
+.metric{display:flex;gap:6px;margin-bottom:6px}
+.metric button{border:0;background:none;color:var(--mute);font:inherit;font-size:13px;padding:3px 9px;border-radius:99px;cursor:pointer}
+.metric button.on{background:var(--line);color:var(--ink)}
+svg text{fill:var(--mute);font-size:9px;font-family:inherit}
+.list .day{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;margin:16px 2px 6px}
+.item{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px;cursor:pointer}
+.bar{width:4px;align-self:stretch;border-radius:3px;flex:none}
+.item .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .sub{font-size:13px;color:var(--mute)}
+.item .main{flex:1;min-width:0}
+.item .rt{text-align:right;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
+.tag{display:inline-block;font-size:11px;background:var(--line);color:var(--ink);padding:1px 7px;border-radius:99px;margin-left:5px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+textarea{min-height:80px;resize:vertical}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+dialog{border:0;border-radius:18px;padding:18px;width:min(520px,calc(100vw - 24px));background:var(--card);color:var(--ink);max-height:90vh}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin:0 0 4px;font-size:18px}
+.acts{display:flex;gap:8px;justify-content:space-between;margin-top:16px}
+.rec{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.rec:last-child{border:0}
+.rec .v{font-weight:650;font-variant-numeric:tabular-nums;text-align:right}
+.rec .s{font-size:12px;color:var(--mute)}
+.empty{text-align:center;color:var(--mute);padding:36px 10px}
+.note{font-size:13px;color:var(--mute);margin:6px 0 0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-size:14px;z-index:20;max-width:90vw;text-align:center}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <h1>Trening</h1>
+  <button class="sync" id="syncBtn" title="Sinkroniziraj s Google Driveom"><span class="dot" id="dot"></span><span id="syncTxt">lokalno</span></button>
+  <button class="btn pri" id="addBtn">+ Novi</button>
+</header>
+
+<main id="view"></main>
+
+<nav id="nav">
+  <button data-v="overview" class="on"><b>▦</b>Pregled</button>
+  <button data-v="list"><b>☰</b>Treninzi</button>
+  <button data-v="records"><b>★</b>Rekordi</button>
+  <button data-v="settings"><b>⚙</b>Postavke</button>
+</nav>
+
+<dialog id="dlg"></dialog>
+<input type="file" id="csvIn" accept=".csv,text/csv" class="hide">
+<input type="file" id="jsonIn" accept=".json,application/json" class="hide">
+
+<script src="core.js"></script>
+<script>
+'use strict';
+/* =====================================================================
+   POSTAVKE – ovdje zalijepi svoj Google OAuth Client ID (vidi upute).
+   Ako ostane prazno, aplikacija radi lokalno + ručni backup (JSON).
+   ===================================================================== */
+const GOOGLE_CLIENT_ID = '';
+const DRIVE_FILE_NAME = 'trening-evidencija.json';
+const SCOPE = 'https://www.googleapis.com/auth/drive.file';
+
+const { typeLabel, ymd } = Core;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const typeColor = t => ({ 'Ride': 'var(--c-ride)', 'Virtual Ride': 'var(--c-ride)', 'Weight Training': 'var(--c-weight)', 'Football (Soccer)': 'var(--c-foot)', 'Walk': 'var(--c-walk)', 'Hike': 'var(--c-walk)' }[t] || 'var(--c-other)');
+
+/* ---------- lokalna pohrana (IndexedDB, uz localStorage rezervu) ---------- */
+const store = {
+  _db: null,
+  open() {
+    return new Promise((res, rej) => {
+      if (!window.indexedDB) return rej(new Error('no idb'));
+      const r = indexedDB.open('trening', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('kv');
+      r.onsuccess = () => { this._db = r.result; res(); };
+      r.onerror = () => rej(r.error);
+    });
+  },
+  async get(k) {
+    try {
+      if (!this._db) await this.open();
+      return await new Promise((res, rej) => { const q = this._db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+    } catch (e) { try { return JSON.parse(localStorage.getItem('kv_' + k)); } catch (_) { return undefined; } }
+  },
+  async set(k, v) {
+    try {
+      if (!this._db) await this.open();
+      await new Promise((res, rej) => { const t = this._db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); });
+    } catch (e) { try { localStorage.setItem('kv_' + k, JSON.stringify(v)); } catch (_) {} }
+  }
+};
+
+/* ---------- stanje ---------- */
+let DB = Core.emptyDB();
+let META = { fileId: null, lastSync: null, dirty: false, clientId: '' };
+const UI = { view: 'overview', sport: 'all', period: 'month', cursor: new Date(), metric: 'km', q: '', limit: 60 };
+const acts = () => Object.values(DB.activities).sort((a, b) => b.date.localeCompare(a.date));
+const sports = () => [...new Set(acts().map(a => a.type))].sort((a, b) => acts().filter(x => x.type === b).length - acts().filter(x => x.type === a).length);
+const filtered = () => acts().filter(a => UI.sport === 'all' || a.type === UI.sport);
+
+async function persist(markDirty = true) {
+  if (markDirty) META.dirty = true;
+  await store.set('db', DB); await store.set('meta', META);
+  renderSync();
+  if (markDirty) scheduleSync();
+}
+
+/* ---------- sinkronizacija s Google Driveom ---------- */
+const clientId = () => GOOGLE_CLIENT_ID || META.clientId || '';
+let token = null, tokenExp = 0, tokenClient = null, syncTimer = null, syncing = false, lastErr = '';
+
+function renderSync() {
+  const dot = $('#dot'), txt = $('#syncTxt');
+  dot.className = 'dot';
+  if (!clientId()) { txt.textContent = 'samo lokalno'; return; }
+  if (syncing) { txt.textContent = 'sinkroniziram…'; return; }
+  if (lastErr) { dot.classList.add('err'); txt.textContent = 'greška – dodirni'; return; }
+  if (META.dirty) { dot.classList.add('dirty'); txt.textContent = 'nije spremljeno na Drive'; return; }
+  if (META.lastSync) { dot.classList.add('ok'); txt.textContent = 'Drive ✓ ' + new Date(META.lastSync).toLocaleTimeString('hr', { hour: '2-digit', minute: '2-digit' }); return; }
+  txt.textContent = 'dodirni za Drive';
+}
+
+function getToken(interactive) {
+  return new Promise((resolve, reject) => {
+    if (token && Date.now() < tokenExp - 60000) return resolve(token);
+    if (!window.google || !google.accounts) return reject(new Error('Google skripta nije učitana (nema interneta?).'));
+    if (!tokenClient || tokenClient._cid !== clientId()) {
+      tokenClient = google.accounts.oauth2.initTokenClient({ client_id: clientId(), scope: SCOPE, callback: () => {} });
+      tokenClient._cid = clientId();
+    }
+    tokenClient.callback = r => {
+      if (r.error) return reject(new Error(r.error_description || r.error));
+      token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000;
+      try { sessionStorage.setItem('tok', JSON.stringify({ token, tokenExp })); } catch (_) {}
+      resolve(token);
+    };
+    tokenClient.error_callback = e => reject(new Error(e.type === 'popup_closed' ? 'Prijava prekinuta.' : (e.message || e.type || 'Prijava nije uspjela.')));
+    tokenClient.requestAccessToken({ prompt: interactive ? '' : 'none' });
+  });
+}
+
+async function drive(path, opts = {}, tries = 0) {
+  const r = await fetch('https://www.googleapis.com/' + path, Object.assign({}, opts, { headers: Object.assign({ Authorization: 'Bearer ' + token }, opts.headers || {}) }));
+  if (r.status === 401 && tries === 0) { token = null; await getToken(true); return drive(path, opts, 1); }
+  if (!r.ok) throw new Error('Drive ' + r.status + ': ' + (await r.text()).slice(0, 160));
+  return r;
+}
+
+async function findFile() {
+  if (META.fileId) return META.fileId;
+  const q = encodeURIComponent("name='" + DRIVE_FILE_NAME + "' and trashed=false");
+  const r = await (await drive('drive/v3/files?q=' + q + '&spaces=drive&fields=files(id,modifiedTime)&orderBy=modifiedTime desc')).json();
+  if (r.files && r.files.length) { META.fileId = r.files[0].id; return META.fileId; }
+  return null;
+}
+
+async function sync(interactive = false) {
+  if (!clientId() || syncing) return;
+  syncing = true; lastErr = ''; renderSync();
+  try {
+    await getToken(interactive);
+    let id = await findFile();
+    let remote = Core.emptyDB();
+    if (id) {
+      try { remote = await (await drive('drive/v3/files/' + id + '?alt=media')).json(); }
+      catch (e) { if (String(e.message).includes(' 404')) { META.fileId = null; id = null; } else throw e; }
+    }
+    const merged = Core.mergeDB(DB, remote);
+    const changedLocal = !Core.sameDB(merged, DB);
+    const changedRemote = !id || !Core.sameDB(merged, remote);
+    DB = merged;
+    if (changedRemote) {
+      const body = JSON.stringify(DB);
+      if (id) await drive('upload/drive/v3/files/' + id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+      else {
+        const b = '-----trening' + Date.now();
+        const multi = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify({ name: DRIVE_FILE_NAME, mimeType: 'application/json' }) +
+          '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + body + '\r\n--' + b + '--';
+        const c = await (await drive('upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: multi })).json();
+        META.fileId = c.id;
+      }
+    }
+    META.dirty = false; META.lastSync = Date.now();
+    await persist(false);
+    if (changedLocal) render();
+    if (interactive) toast(changedLocal ? 'Sinkronizirano – stigle su promjene s drugog uređaja.' : 'Sinkronizirano.');
+  } catch (e) {
+    lastErr = e.message || String(e);
+    if (interactive) toast(lastErr.slice(0, 140), 4500);
+  } finally { syncing = false; renderSync(); }
+}
+function scheduleSync() {
+  clearTimeout(syncTimer);
+  if (!clientId() || !token || Date.now() >= tokenExp - 60000) return; // bez valjane prijave čeka dodir na gumb
+  syncTimer = setTimeout(() => sync(false), 2500);
+}
+$('#syncBtn').onclick = () => {
+  if (!clientId()) { UI.view = 'settings'; render(); toast('Prvo upiši Google Client ID u Postavkama.'); return; }
+  sync(true);
+};
+
+/* ---------- pomoćno ---------- */
+function toast(msg, ms = 2600) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
+  setTimeout(() => t.remove(), ms);
+}
+const fmtKm = v => (v >= 100 ? v.toFixed(0) : v.toFixed(1)).replace('.', ',');
+const fmtDate = iso => new Date(iso).toLocaleDateString('hr', { weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric' });
+const fmtTime = iso => new Date(iso).toLocaleTimeString('hr', { hour: '2-digit', minute: '2-digit' });
+function download(name, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type })); const a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+/* ---------- prikaz ---------- */
+function render() {
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === UI.view));
+  const v = $('#view');
+  if (UI.view === 'overview') v.innerHTML = viewOverview();
+  else if (UI.view === 'list') v.innerHTML = viewList();
+  else if (UI.view === 'records') v.innerHTML = viewRecords();
+  else v.innerHTML = viewSettings();
+  bind();
+}
+
+function sportChips() {
+  const s = sports();
+  return '<div class="chips"><button class="chip ' + (UI.sport === 'all' ? 'on' : '') + '" data-sport="all">Sve</button>' +
+    s.map(t => '<button class="chip ' + (UI.sport === t ? 'on' : '') + '" data-sport="' + esc(t) + '">' + esc(typeLabel(t)) + '</button>').join('') + '</div>';
+}
+
+function periodTitle() {
+  const [s, e] = Core.periodRange(UI.period, UI.cursor);
+  if (UI.period === 'week') { const last = Core.addDays(e, -1); return s.toLocaleDateString('hr', { day: 'numeric', month: 'numeric' }) + ' – ' + last.toLocaleDateString('hr', { day: 'numeric', month: 'numeric', year: 'numeric' }); }
+  if (UI.period === 'month') return s.toLocaleDateString('hr', { month: 'long', year: 'numeric' });
+  if (UI.period === 'year') return String(s.getFullYear());
+  return 'Cijelo vrijeme';
+}
+
+function viewOverview() {
+  if (!acts().length) return emptyState();
+  const all = filtered();
+  const range = Core.periodRange(UI.period, UI.cursor);
+  const list = all.filter(a => Core.inRange(a, range));
+  const t = Core.totals(list);
+  const hasKm = all.some(a => a.dist > 0);
+  const hasElev = all.some(a => a.elev > 0);
+  const bks = Core.buckets(UI.period, UI.cursor, all);
+  let metric = UI.metric; if (metric === 'km' && !hasKm) metric = 'h';
+  const vals = Core.bucketValues(bks, all, metric);
+  const unit = metric === 'km' ? 'km' : metric === 'h' ? 'h' : '×';
+
+  const stat = (v, l, u) => '<div class="stat"><div class="v">' + v + (u ? '<small>' + u + '</small>' : '') + '</div><div class="l">' + l + '</div></div>';
+  let html = sportChips();
+  html += '<div class="seg">' + [['week', 'Tjedan'], ['month', 'Mjesec'], ['year', 'Godina'], ['all', 'Sve']].map(([k, l]) => '<button data-period="' + k + '" class="' + (UI.period === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
+  html += '<div class="pager"><button data-page="-1" ' + (UI.period === 'all' ? 'disabled style="visibility:hidden"' : '') + '>‹</button><div class="t">' + esc(periodTitle()) + '</div><button data-page="1" ' + (UI.period === 'all' ? 'disabled style="visibility:hidden"' : '') + '>›</button></div>';
+  html += '<div class="grid">' + stat(t.n, 'treninga') + stat(hoursStr(t.sec), 'ukupno vrijeme');
+  if (hasKm) html += stat(fmtKm(t.km), 'prijeđeno', 'km');
+  if (hasElev) html += stat(Math.round(t.elev).toLocaleString('hr'), 'visinska razlika', 'm');
+  const moving = Core.totals(list.filter(a => a.dist > 0));
+  if (moving.sec > 0 && moving.km > 0) html += stat((moving.km / (moving.sec / 3600)).toFixed(1).replace('.', ','), 'prosječna brzina', 'km/h');
+  if (t.cal > 0) html += stat(Math.round(t.cal).toLocaleString('hr'), 'kalorija', 'kcal');
+  html += '</div>';
+  html += '<div class="card"><div class="metric">' + [['km', 'Kilometri', hasKm], ['h', 'Sati', true], ['n', 'Treninzi', true]].filter(x => x[2]).map(([k, l]) => '<button data-metric="' + k + '" class="' + (metric === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>' + chart(bks, vals, unit) + '</div>';
+  if (UI.period !== 'all' && !list.length) html += '<p class="empty">Nema treninga u ovom razdoblju.</p>';
+  else if (list.length) html += '<div class="list" style="margin-top:6px"><div class="day">Treninzi u razdoblju</div>' + list.slice(0, 8).map(item).join('') + (list.length > 8 ? '<button class="btn" style="width:100%" data-go="list">Svih ' + list.length + ' u popisu</button>' : '') + '</div>';
+  return html;
+}
+const hoursStr = s => { const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); return h + '<small>h</small> ' + String(m).padStart(2, '0') + '<small>min</small>'; };
+
+function chart(bks, vals, unit) {
+  if (!bks.length) return '<p class="empty">Nema podataka.</p>';
+  const W = 340, H = 150, padL = 4, padB = 18, padT = 14, n = bks.length;
+  const max = Math.max(...vals, 0.0001), bw = (W - padL * 2) / n, gap = Math.min(4, bw * 0.25);
+  const every = n > 20 ? 5 : n > 12 ? 2 : 1;
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="Graf">';
+  s += '<line x1="0" x2="' + W + '" y1="' + (H - padB) + '" y2="' + (H - padB) + '" stroke="var(--line)"/>';
+  vals.forEach((v, i) => {
+    const h = v > 0 ? Math.max(2, (v / max) * (H - padB - padT)) : 0;
+    const x = padL + i * bw + gap / 2, y = H - padB - h;
+    const col = UI.sport === 'all' ? 'var(--accent)' : typeColor(UI.sport);
+    if (h) s += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (bw - gap).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="2" fill="' + col + '"/>';
+    if (h && n <= 14) s += '<text x="' + (x + (bw - gap) / 2).toFixed(1) + '" y="' + (y - 3).toFixed(1) + '" text-anchor="middle">' + (unit === '×' ? v : v >= 10 ? Math.round(v) : v.toFixed(1)) + '</text>';
+    if (i % every === 0) s += '<text x="' + (x + (bw - gap) / 2).toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle">' + esc(bks[i].label) + '</text>';
+  });
+  return s + '</svg>';
+}
+
+function item(a) {
+  const bits = [];
+  if (a.dist > 0) bits.push(fmtKm(a.dist) + ' km');
+  bits.push(Core.fmtDur(a.moving || a.elapsed));
+  const sub = [typeLabel(a.type), fmtTime(a.date)];
+  if (a.avgSpeed && a.dist >= 1) sub.push(a.avgSpeed.toFixed(1).replace('.', ',') + ' km/h');
+  if (a.elev > 0) sub.push('↑' + Math.round(a.elev) + ' m');
+  if (a.lifted > 0) sub.push(Math.round(a.lifted) + ' kg');
+  return '<div class="item" data-id="' + esc(a.id) + '"><div class="bar" style="background:' + typeColor(a.type) + '"></div><div class="main"><div class="nm">' + esc(a.name || typeLabel(a.type)) + (a.tags || []).map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div><div class="sub">' + esc(sub.join(' · ')) + (a.notes ? ' · 📝' : '') + '</div></div><div class="rt">' + esc(bits.join(' · ')) + '</div></div>';
+}
+
+function viewList() {
+  if (!acts().length) return emptyState();
+  const q = UI.q.trim().toLowerCase();
+  let list = filtered();
+  if (q) list = list.filter(a => [a.name, a.desc, a.notes, (a.tags || []).join(' '), typeLabel(a.type), a.gear].join(' ').toLowerCase().includes(q));
+  let html = '<input id="q" type="search" placeholder="Traži po nazivu, bilješci, oznaci…" value="' + esc(UI.q) + '">' + sportChips() + '<div class="list">';
+  let last = '';
+  list.slice(0, UI.limit).forEach(a => {
+    const d = new Date(a.date); const key = d.getFullYear() + '-' + d.getMonth();
+    if (key !== last) { last = key; html += '<div class="day">' + esc(d.toLocaleDateString('hr', { month: 'long', year: 'numeric' })) + '</div>'; }
+    html += item(a);
+  });
+  if (!list.length) html += '<p class="empty">Ništa nije pronađeno.</p>';
+  if (list.length > UI.limit) html += '<button class="btn" style="width:100%" id="more">Prikaži još (' + (list.length - UI.limit) + ')</button>';
+  return html + '</div>';
+}
+
+function viewRecords() {
+  if (!acts().length) return emptyState();
+  const recs = Core.records(filtered());
+  let html = sportChips() + '<div class="card" style="margin-top:6px">';
+  if (!recs.length) html += '<p class="empty">Nema dovoljno podataka za rekorde.</p>';
+  recs.forEach(r => {
+    const sub = r.a ? esc((r.a.name || typeLabel(r.a.type)) + ' · ' + fmtDate(r.a.date)) : esc(r.note || '');
+    html += '<div class="rec" ' + (r.a ? 'data-id="' + esc(r.a.id) + '" style="cursor:pointer"' : '') + '><div><div>' + esc(r.title) + '</div><div class="s">' + sub + '</div></div><div class="v">' + esc(r.value) + '</div></div>';
+  });
+  return html + '</div>';
+}
+
+function emptyState() {
+  return '<div class="empty"><p style="font-size:18px;color:var(--ink);margin-bottom:6px">Evidencija je prazna</p><p>Uvezi <b>activities.csv</b> iz Strava exporta ili unesi trening ručno.</p><p><button class="btn pri" data-act="csv">Uvezi Strava CSV</button></p></div>';
+}
+
+function viewSettings() {
+  const n = acts().length;
+  const cid = clientId();
+  return '<div class="card" style="margin-top:0"><h3>Podaci</h3><p style="margin:0 0 10px">' + n + ' treninga u evidenciji.</p>' +
+    '<div class="row" style="flex-wrap:wrap"><button class="btn pri" data-act="csv">Uvezi Strava CSV</button><button class="btn" data-act="export">Izvezi backup (JSON)</button><button class="btn" data-act="exportcsv">Izvezi CSV</button><button class="btn" data-act="import">Vrati iz backupa</button></div>' +
+    '<p class="note">Uvoz preskače treninge koji već postoje (isti Strava ID), pa možeš uvoziti svježi export bez dupliciranja. Tvoje bilješke i oznake se ne prepisuju.</p></div>' +
+    '<div class="card"><h3>Google Drive</h3>' +
+    (GOOGLE_CLIENT_ID ? '<p style="margin:0">Client ID je ugrađen u aplikaciju.</p>' :
+      '<label for="cid">OAuth Client ID</label><input id="cid" placeholder="123456-abc.apps.googleusercontent.com" value="' + esc(META.clientId) + '" autocapitalize="off" autocorrect="off"><p class="note">Bolje ga je jednom upisati u konstantu <code>GOOGLE_CLIENT_ID</code> na vrhu skripte u index.html, pa ga nećeš morati unositi na novom mobitelu.</p>') +
+    '<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn pri" data-act="sync">Sinkroniziraj sada</button>' + (META.lastSync ? '<span class="note" style="margin:0">zadnji put: ' + esc(new Date(META.lastSync).toLocaleString('hr')) + '</span>' : '') + '</div>' +
+    (lastErr ? '<p class="note" style="color:var(--c-weight)">' + esc(lastErr) + '</p>' : '') +
+    '<p class="note">Aplikacija na Driveu stvara jednu datoteku <b>' + DRIVE_FILE_NAME + '</b> (vidi samo datoteke koje je sama napravila). Lokalna kopija je samo predmemorija, Drive je izvor istine.</p></div>' +
+    '<div class="card"><h3>Opasna zona</h3><button class="btn danger" data-act="wipe">Obriši lokalne podatke na ovom uređaju</button><p class="note">Ne briše Drive. Nakon toga dodirni sinkronizaciju pa se sve vrati s Drivea.</p></div>';
+}
+
+/* ---------- događaji ---------- */
+function bind() {
+  const v = $('#view');
+  v.querySelectorAll('[data-sport]').forEach(b => b.onclick = () => { UI.sport = b.dataset.sport; UI.limit = 60; render(); });
+  v.querySelectorAll('[data-period]').forEach(b => b.onclick = () => { UI.period = b.dataset.period; UI.cursor = new Date(); render(); });
+  v.querySelectorAll('[data-metric]').forEach(b => b.onclick = () => { UI.metric = b.dataset.metric; render(); });
+  v.querySelectorAll('[data-page]').forEach(b => b.onclick = () => {
+    const d = +b.dataset.page, c = new Date(UI.cursor);
+    if (UI.period === 'week') c.setDate(c.getDate() + 7 * d); else if (UI.period === 'month') c.setMonth(c.getMonth() + d, 1); else c.setFullYear(c.getFullYear() + d);
+    UI.cursor = c; render();
+  });
+  v.querySelectorAll('[data-id]').forEach(e => e.onclick = () => openEdit(e.dataset.id));
+  v.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { UI.view = b.dataset.go; render(); });
+  const q = $('#q'); if (q) q.oninput = () => { UI.q = q.value; const pos = q.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(pos, pos); };
+  const more = $('#more'); if (more) more.onclick = () => { UI.limit += 60; render(); };
+  const cid = $('#cid'); if (cid) cid.onchange = async () => { META.clientId = cid.value.trim(); await persist(false); renderSync(); };
+  v.querySelectorAll('[data-act]').forEach(b => b.onclick = () => actions[b.dataset.act]());
+}
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => { UI.view = b.dataset.v; render(); scrollTo(0, 0); });
+$('#addBtn').onclick = () => openEdit(null);
+
+const actions = {
+  csv: () => $('#csvIn').click(),
+  import: () => $('#jsonIn').click(),
+  sync: () => { const c = $('#cid'); if (c) META.clientId = c.value.trim(); if (!clientId()) return toast('Prvo upiši Client ID.'); sync(true); },
+  export: () => download('trening-backup-' + ymd(new Date()) + '.json', JSON.stringify(DB, null, 1), 'application/json'),
+  exportcsv: () => {
+    const cols = ['id', 'date', 'name', 'type', 'dist', 'moving', 'elapsed', 'avgSpeed', 'elev', 'avgHr', 'maxHr', 'watts', 'cal', 'gear', 'lifted', 'sets', 'reps', 'tags', 'notes', 'desc'];
+    const q = v => { v = Array.isArray(v) ? v.join(';') : v ?? ''; v = String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    download('trening-' + ymd(new Date()) + '.csv', [cols.join(',')].concat(acts().map(a => cols.map(c => q(a[c])).join(','))).join('\n'), 'text/csv');
+  },
+  wipe: async () => {
+    if (!confirm('Obrisati sve lokalne podatke na ovom uređaju? (Drive ostaje netaknut.)')) return;
+    DB = Core.emptyDB(); META.dirty = false; META.lastSync = null;
+    await store.set('db', DB); await store.set('meta', META); render(); renderSync();
+  }
+};
+
+$('#csvIn').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const { activities, bad } = Core.importStravaCSV(await f.text());
+    const r = Core.addImported(DB, activities);
+    await persist(r.added > 0);
+    toast('Uvezeno ' + r.added + ' novih, ' + r.dup + ' već postoji' + (bad.length ? ', ' + bad.length + ' redaka preskočeno' : '') + '.', 4500);
+    UI.view = 'overview'; render();
+  } catch (err) { toast('Uvoz nije uspio: ' + err.message, 5000); }
+};
+$('#jsonIn').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const inc = JSON.parse(await f.text());
+    if (!inc || typeof inc.activities !== 'object') throw new Error('Datoteka nije backup ove aplikacije.');
+    DB = Core.mergeDB(DB, inc); await persist(true); toast('Backup spojen s evidencijom.'); render();
+  } catch (err) { toast('Nije uspjelo: ' + err.message, 4500); }
+};
+
+/* ---------- uređivanje / ručni unos ---------- */
+const toLocalInput = iso => { const d = new Date(iso), p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes()); };
+function openEdit(id) {
+  const a = id ? DB.activities[id] : null;
+  const isNew = !a;
+  const x = a || { type: UI.sport !== 'all' ? UI.sport : 'Ride', date: new Date().toISOString(), name: '', dist: 0, moving: 0, tags: [], notes: '' };
+  const types = [...new Set(['Ride', 'Weight Training', 'Football (Soccer)', 'Run', 'Walk', 'Workout', 'Swim', 'Hike', x.type].concat(sports()))];
+  const dlg = $('#dlg');
+  dlg.innerHTML = '<form method="dialog" id="f"><h2>' + (isNew ? 'Novi trening' : 'Trening') + '</h2>' +
+    (a && a.src === 'strava' ? '<div class="note">Uvezeno sa Strave · ID ' + esc(a.id) + '</div>' : '') +
+    '<label>Naziv</label><input name="name" value="' + esc(x.name) + '">' +
+    '<div class="two"><div><label>Sport</label><select name="type">' + types.map(t => '<option value="' + esc(t) + '"' + (t === x.type ? ' selected' : '') + '>' + esc(typeLabel(t)) + '</option>').join('') + '</select></div>' +
+    '<div><label>Početak</label><input type="datetime-local" name="date" value="' + toLocalInput(x.date) + '" required></div></div>' +
+    '<div class="two"><div><label>Trajanje (min)</label><input name="min" inputmode="decimal" value="' + (x.moving ? Math.round(x.moving / 60 * 10) / 10 : '') + '"></div>' +
+    '<div><label>Udaljenost (km)</label><input name="dist" inputmode="decimal" value="' + (x.dist ? x.dist : '') + '"></div></div>' +
+    '<div class="two"><div><label>Visinska razlika (m)</label><input name="elev" inputmode="decimal" value="' + (x.elev ?? '') + '"></div>' +
+    '<div><label>Prosječni puls</label><input name="avgHr" inputmode="decimal" value="' + (x.avgHr ?? '') + '"></div></div>' +
+    '<div class="two"><div><label>Kalorije</label><input name="cal" inputmode="decimal" value="' + (x.cal ?? '') + '"></div>' +
+    '<div><label>Podignuto (kg)</label><input name="lifted" inputmode="decimal" value="' + (x.lifted ?? '') + '"></div></div>' +
+    '<label>Oznake (odvoji zarezom)</label><input name="tags" value="' + esc((x.tags || []).join(', ')) + '" placeholder="npr. s prijateljima, utrka, kiša">' +
+    '<label>Bilješke</label><textarea name="notes" placeholder="Kako je bilo, osjećaj, oprema…">' + esc(x.notes) + '</textarea>' +
+    '<div class="acts"><div>' + (isNew ? '' : '<button type="button" class="btn danger" id="del">Obriši</button>') + '</div><div class="row"><button type="button" class="btn" id="cancel">Odustani</button><button class="btn pri" value="ok">Spremi</button></div></div></form>';
+  dlg.showModal();
+  $('#cancel').onclick = () => dlg.close();
+  const del = $('#del');
+  if (del) del.onclick = async () => { if (!confirm('Obrisati ovaj trening? Neće se vratiti pri sljedećem uvozu.')) return; delete DB.activities[a.id]; DB.deleted[a.id] = Date.now(); dlg.close(); await persist(); render(); };
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    const f = new FormData(e.target), n = k => { const v = String(f.get(k) || '').trim().replace(',', '.'); return v === '' ? null : (isFinite(+v) ? +v : null); };
+    const min = n('min') || 0, dist = n('dist') || 0;
+    const rec = Object.assign({}, x, {
+      id: a ? a.id : 'm' + Date.now(), name: String(f.get('name')).trim(), type: f.get('type'),
+      date: new Date(f.get('date')).toISOString(), moving: Math.round(min * 60), elapsed: a ? Math.max(a.elapsed || 0, Math.round(min * 60)) : Math.round(min * 60),
+      dist, elev: n('elev'), avgHr: n('avgHr'), cal: n('cal'), lifted: n('lifted'),
+      avgSpeed: dist > 0 && min > 0 ? Math.round(dist / (min / 60) * 100) / 100 : (a ? a.avgSpeed : null),
+      tags: String(f.get('tags')).split(',').map(s => s.trim()).filter(Boolean), notes: String(f.get('notes')).trim(),
+      src: a ? a.src : 'manual', updated: Date.now()
+    });
+    DB.activities[rec.id] = rec; delete DB.deleted[rec.id];
+    dlg.close(); await persist(); render(); toast('Spremljeno.');
+  };
+}
+
+/* ---------- pokretanje ---------- */
+(async function init() {
+  const d = await store.get('db'); if (d && d.activities) DB = d;
+  const m = await store.get('meta'); if (m) META = Object.assign(META, m);
+  try { const t = JSON.parse(sessionStorage.getItem('tok')); if (t && Date.now() < t.tokenExp - 60000) { token = t.token; tokenExp = t.tokenExp; } } catch (_) {}
+  render(); renderSync();
+  if (clientId() && token && META.lastSync) sync(false); // tiha sinkronizacija ako je prijava još valjana
+  if ('serviceWorker' in navigator && /^https:|^http:\/\/localhost/.test(location.href)) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if (clientId()) { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onerror = () => {}; document.head.appendChild(s); }
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+})();
+</script>
+</body>
+</html>
