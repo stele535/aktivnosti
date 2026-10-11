@@ -968,7 +968,7 @@ async function openShare(id) {
   const opt = (title, key, items) => '<div class="opt"><b>' + title + '</b><div class="chips">' + items.map(([k, l]) => '<button type="button" class="chip ' + (String(SHR[key]) === String(k) ? 'on' : '') + '" data-o="' + key + '" data-v="' + k + '">' + l + '</button>').join('') + '</div></div>';
   const optionsHtml = () => opt('Stil', 'style', STYLES) + opt('Format', 'format', [['4:5', 'Objava 4:5'], ['9:16', 'Story 9:16'], ['1:1', 'Kvadrat']]) +
     (SHR.style === 'full' || SHR.style === 'overlay' ? '' : opt('Tema', 'theme', [['light', 'Svijetla'], ['dark', 'Tamna']])) +
-    (SHR.style === 'split' || SHR.style === 'full' || SHR.style === 'zones' ? opt('Podloga karte', 'gray', [[false, 'Šarena'], [true, 'Siva']]) : '') + opt('Brzina kao', 'pace', [[false, 'km/h'], [true, 'min/km (tempo)']]);
+    (SHR.style === 'split' || SHR.style === 'full' || SHR.style === 'zones' ? opt('Podloga karte', 'gray', [[false, 'Šarena'], [true, 'Siva']]) : '');
   dlg.innerHTML = '<h2>Podijeli vožnju</h2><div class="shr-box" id="shrBox">Pripremam sliku…</div><div id="shrOpts">' + optionsHtml() + '</div>' +
     '<label class="chk" style="margin-top:12px"><input type="checkbox" id="shrHide"' + (SHR.hide ? ' checked' : '') + '> Sakrij početak i kraj rute (200 m)</label>' +
     '<p class="note" id="shrNote" style="margin-top:0"></p>' +
@@ -977,7 +977,7 @@ async function openShare(id) {
     const stats = [];
     if (a.dist > 0) stats.push([fmtKm(a.dist), 'km']);
     stats.push([Core.fmtDur(a.moving || a.elapsed), 'vrijeme']);
-    if (SHR.pace && paceStr(a) && a.dist >= 1) stats.push([paceStr(a), 'min/km']); else if (a.avgSpeed && a.dist >= 1) stats.push([a.avgSpeed.toFixed(1).replace('.', ','), 'km/h']);
+    if (a.avgSpeed && a.dist >= 1) stats.push([a.avgSpeed.toFixed(1).replace('.', ','), 'km/h']);
     if (a.elev > 0) stats.push([Math.round(a.elev), 'm uspona']);
     if (stats.length < 4 && a.avgHr > 0) stats.push([Math.round(a.avgHr), 'bpm']);
     const zk = has.hr ? 'hr' : 'spd';
@@ -1001,7 +1001,7 @@ async function openShare(id) {
   const persistOpts = () => { try { localStorage.setItem('shr', JSON.stringify(SHR)); } catch (_) {} };
   dlg.onclick = e => {
     const b = e.target.closest('[data-o]'); if (!b) return;
-    const k = b.dataset.o, v = b.dataset.v; SHR[k] = k === 'pace' || k === 'gray' ? v === 'true' : v; persistOpts();
+    const k = b.dataset.o, v = b.dataset.v; SHR[k] = k === 'gray' ? v === 'true' : v; persistOpts();
     $('#shrOpts').innerHTML = optionsHtml(); draw();
   };
   $('#shrHide').onchange = () => { SHR.hide = $('#shrHide').checked; persistOpts(); draw(); };
@@ -1053,7 +1053,7 @@ async function loadMapData() {
   MAPD.routes = out; MAPD.sig = sig; MAPD.busy = false;
   if (UI.view === 'map') render();
 }
-function mapRoutes() { return (MAPD.routes || []).filter(r => (UI.sport === 'all' || r.type === UI.sport) && (MAPD.year === 'all' || String(r.year) === MAPD.year)); }
+function mapRoutes() { return (MAPD.routes || []).filter(r => /ride/i.test(r.type) && !/virtual/i.test(r.type) && (MAPD.year === 'all' || String(r.year) === MAPD.year)); }
 function mapSpec() {
   const R = mapRoutes(), [alpha, width] = HM_STR[MAPD.str];
   return [{ key: 'ride', name: 'Vožnje', routes: R.filter(r => !r.commute) }, { key: 'commute', name: 'Commute', routes: R.filter(r => r.commute) }]
@@ -1065,7 +1065,7 @@ function viewMap() {
   const years = [...new Set((MAPD.routes || []).map(r => r.year))].sort((x, y) => y - x);
   const ch = (attr, val, on, label) => '<button class="chip ' + (on ? 'on' : '') + '" ' + attr + '="' + val + '">' + label + '</button>';
   const lay = (k, label) => '<button class="chip lay ' + (MAPD.on[k] ? 'on' : '') + '" data-mt="' + k + '"><i style="background:' + HM_COL[k] + '"></i>' + label + ' <span id="n_' + k + '"></span></button>';
-  return sportChips() + (years.length > 1 ? '<div class="chips">' + ch('data-myear', 'all', MAPD.year === 'all', 'Sve godine') + years.map(y => ch('data-myear', y, MAPD.year === String(y), y)).join('') + '</div>' : '') +
+  return (years.length > 1 ? '<div class="chips">' + ch('data-myear', 'all', MAPD.year === 'all', 'Sve godine') + years.map(y => ch('data-myear', y, MAPD.year === String(y), y)).join('') + '</div>' : '') +
     '<div class="chips wrap">' + lay('ride', 'Vožnje') + lay('commute', 'Commute') + '<button class="chip ' + (MAPD.gray ? 'on' : '') + '" data-mt="gray">Siva podloga</button></div>' +
     '<div class="chips wrap"><span class="note" style="margin:0;align-self:center">Jačina:</span>' + [[1, 'Tanko'], [2, 'Srednje'], [3, 'Jako']].map(([k, l]) => '<button class="chip ' + (MAPD.str === k ? 'on' : '') + '" data-mt="str' + k + '">' + l + '</button>').join('') + '</div>' +
     '<div class="hm-wrap"><div id="hmBox" class="hm"></div></div><p class="note" id="hmNote">' + (MAPD.routes ? '' : 'Učitavam rute…') + '</p>';

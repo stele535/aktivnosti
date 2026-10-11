@@ -9,12 +9,12 @@ Aplikacija je zamišljena kao **pregled**: uređivanje ostaje na Stravi, a ovdje
 - **Kalendar** (prvi tab): mjesečni i tjedni prikaz u stilu intervals.icu. Svaki trening je blok u boji sporta (bicikl s km i vremenom, ostalo s trajanjem). Ispod su legenda boja i zbroj mjeseca ili tjedna, ukupno i po sportu.
 - **Zone pulsa i brzine:** granice zona 2–5 upisuješ u Postavkama (zadano kao na iGPSPORT-u: puls 114/133/152/171 bpm, brzina 18/25/30/35 km/h). U detalju vožnje s GPS-om vidiš vrijeme i postotak po zonama, uz kratku ocjenu intenziteta. Stajanje se ne računa.
 - **Ruta obojena po zonama:** ispod karte u detalju prekidač *Jednobojno / Puls / Brzina* boji putanju bojom zone na svakoj dionici, uz legendu.
-- **Karta** (tab): sve rute na jednoj karti kao heat map. Linije su prozirne, pa se češće vožene dionice vide jače. Vožnje i commute imaju različite boje i svaki se uključuje i isključuje posebno. Filtri po sportu i godini, jačina linija (tanko, srednje, jako) i siva podloga za bolji kontrast.
+- **Karta** (tab): sve rute na jednoj karti kao heat map. Linije su prozirne, pa se češće vožene dionice vide jače. Vožnje i commute imaju različite boje i svaki se uključuje i isključuje posebno. Prikazuje se samo bicikl. Filter po godini, jačina linija (tanko, srednje, jako) i siva podloga za bolji kontrast.
 - **Pregled**: tjedan, mjesec, godina i sve, s ukupnim brojkama i grafom (kilometri, sati ili broj treninga, s vrijednošću iznad svakog stupca). Na vrhu je tražilica: pretražuje sve treninge po nazivu, opisu, bilješci i oznaci, a popis treninga u razdoblju može se proširiti na sve.
 
 - **Rekordi**: najduža vožnja, najbolji tjedan i slično.
 - **Detalj treninga**: podaci, opis, oznake (Commute, Oporavak, S psom, S djetetom, Utrka, Dugi trening), karta rute (OpenStreetMap) i grafovi visine, brzine, pulsa i snage. Povlačenjem prsta po grafu pomiče se točka na karti.
-- **Podijeli sliku:** pet stilova (karta + podaci, preko cijele karte, samo ruta, prozirno za story, zone), tri formata (objava 4:5, story 9:16, kvadrat), svijetla ili tamna tema, podloga karte šarena ili siva (zadano siva) i izbor brzine kao km/h ili tempo (min/km). Ruta na slici je uvijek jednobojna. Početak i kraj rute (200 m) po zadanom su skriveni radi privatnosti.
+- **Podijeli sliku:** pet stilova (karta + podaci, preko cijele karte, samo ruta, prozirno za story, zone), tri formata (objava 4:5, story 9:16, kvadrat), svijetla ili tamna tema, podloga karte šarena ili siva (zadano siva). Ruta na slici je uvijek jednobojna. Početak i kraj rute (200 m) po zadanom su skriveni radi privatnosti.
 - **Filteri** po sportu i oznaci (Commute, S rutom, S opisom) u kalendaru, pregledu i popisu.
 - **Sinkronizacija s Google Driveom**: Drive je izvor istine, a lokalna kopija u pregledniku samo predmemorija. Promjena mobitela ne gubi ništa.
 - **Zaključano po zadanom**: nema dodavanja, uređivanja ni brisanja. Otključava se u Postavke → *Uređivanje* (postavka vrijedi po uređaju).
