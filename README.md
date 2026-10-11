@@ -7,6 +7,10 @@ Aplikacija je zamišljena kao **pregled**: uređivanje ostaje na Stravi, a ovdje
 ## Mogućnosti
 
 - **Kalendar** (prvi tab): mjesečni i tjedni prikaz u stilu intervals.icu. Svaki trening je blok u boji sporta (bicikl s km i vremenom, ostalo s trajanjem). Ispod su legenda boja i zbroj mjeseca ili tjedna, ukupno i po sportu.
+- **Bicikl** (tab): 
+  - **Oprema i servisi:** za svaki bicikl pratiš dijelove i servise (lanac, mali i veliki servis, gume…) s intervalom u km. Aplikacija zbraja kilometre vožnji tog bicikla od datuma postavljanja i pokazuje koliko je ostalo do servisa (traka zelena, žuta pri 85 %, crvena kad kasni). Gumb *Servisirano* vraća brojač na 0 i pamti datum. Zadani razmaci (lanac 3000, mali servis 2000, veliki servis 6000 km) su okvirni i mijenjaju se. Radi i kad je ostatak aplikacije zaključan, a sinkronizira se na Drive.
+  - **Kako sam vozio:** zone pulsa (60/70/80/90 % maksimalnog pulsa) i zone brzine, po vožnji u detalju i tjedno za zadnjih 8 tjedana, uz opis intenziteta (lagana, tempo, žestoka). Maksimalni puls se procjenjuje iz podataka ili ga upišeš.
+  - **Iste rute:** vožnje s podudarnom putanjom grupiraju se u jednu rutu, a za svaku vidiš graf prosječne brzine kroz vrijeme, najbržu vožnju i trend (prosjek zadnjih vožnji naspram prvih).
 - **Pregled**: tjedan, mjesec, godina i sve, s ukupnim brojkama i grafom (kilometri, sati ili broj treninga, s vrijednošću iznad svakog stupca).
 - **Treninzi**: popis s pretragom po nazivu, opisu, bilješci i oznaci.
 - **Rekordi**: najduža vožnja, najbolji tjedan i slično.
@@ -26,6 +30,7 @@ Aplikacija je zamišljena kao **pregled**: uređivanje ostaje na Stravi, a ovdje
 | `files.js` | Čitanje ZIP, FIT, GPX i TCX datoteka (i `.gz`) |
 | `trackview.js` | Karta rute i grafovi |
 | `share.js` | Slika za dijeljenje |
+| `analytics.js` | Zone pulsa i brzine, prepoznavanje iste rute, stanje servisa |
 | `config.js` | **Tvoj Google Client ID** (vidi dolje) |
 | `config.example.js` | Predložak za `config.js`; aplikacija ga ne učitava |
 | `sw.js` | Service worker (rad bez interneta, osvježavanje verzija) |
@@ -91,6 +96,8 @@ Dodatno: *Dodaj GPS datoteke* (pojedinačni `.gpx`, `.fit`, `.tcx`, i `.gz`) ve�
 - Uspon izračunat iz GPS datoteke je procjena i može odstupati od Stravinog; treninzi iz CSV-a zadržavaju Stravine vrijednosti.
 - Fotografije iz Stravinog exporta (mapa `media`) se ne uvoze.
 - Bez interneta karta nema podlogu (vidi se samo ruta), grafovi rade normalno.
+- Zone ovise o podacima u GPS datotekama (puls, brzina); vožnje samo iz CSV-a nemaju zone ni prepoznatu rutu.
+- Prepoznavanje rute uspoređuje putanje (duljina do 12 % različita, odstupanje nekoliko desetaka metara); obrnuti smjer se računa kao ista ruta, a rute kraće od 1,5 km se ne grupiraju.
 - Sportovi osim bicikla, snage, nogometa i hodanja/planinarenja imaju zajedničku boju („ostalo“).
 
 ## Rješavanje problema

@@ -105,7 +105,7 @@
   const round = (n, d) => { const p = Math.pow(10, d); return Math.round(n * p) / p; };
 
   /* ---------- Stanje i spajanje ---------- */
-  const emptyDB = () => ({ v: 1, activities: {}, deleted: {} });
+  const emptyDB = () => ({ v: 1, activities: {}, deleted: {}, gear: {}, settings: {} });
 
   // Dodaje uvezene aktivnosti; postojeće (isti ID) se ne diraju, da ne pregazimo tvoje bilješke.
   function addImported(db, list) {
@@ -141,6 +141,12 @@
       out.activities[id] = (x && y && (x.hasTrack || y.hasTrack) && !best.hasTrack) ? Object.assign({}, best, { hasTrack: true }) : best;
     }
     out.deleted = deleted;
+    // oprema (po biciklu) i postavke: novija izmjena pobjeđuje
+    for (const k of ['gear', 'settings']) {
+      const x = a[k] || {}, y = b[k] || {};
+      if (k === 'settings') { out.settings = (y.updated || 0) > (x.updated || 0) ? y : x; continue; }
+      for (const id of new Set([...Object.keys(x), ...Object.keys(y)])) out.gear[id] = !x[id] ? y[id] : !y[id] ? x[id] : ((y[id].updated || 0) > (x[id].updated || 0) ? y[id] : x[id]);
+    }
     return out;
   }
   const sameDB = (a, b) => JSON.stringify(a) === JSON.stringify(b);
