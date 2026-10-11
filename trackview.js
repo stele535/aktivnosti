@@ -14,7 +14,7 @@
     const layer = document.createElement('div'); layer.className = 'mm-tiles';
     const svg = svgEl('svg', { class: 'mm-route' });
     const casing = svgEl('polyline', { class: 'mm-casing' }), line = svgEl('polyline', { class: 'mm-line' });
-    const cs = svgEl('circle', { class: 'mm-start', r: 6 }), ce = svgEl('circle', { class: 'mm-end', r: 6 }), cm = svgEl('circle', { class: 'mm-mark', r: 7 });
+    const cs = svgEl('circle', { class: 'mm-start', r: 8 }), ce = svgEl('circle', { class: 'mm-end', r: 8 }), cm = svgEl('circle', { class: 'mm-mark', r: 9 });
     cm.style.display = 'none';
     const segG = svgEl('g', { class: 'mm-segs' });
     svg.append(casing, line, segG, cs, ce, cm);
@@ -111,6 +111,94 @@
       setColors(a) { zc = a; redraw(); },
       zoomIn() { zoomAt(w / 2, h / 2, 1); },
       state: () => ({ z, c, tiles: tiles.size }),
+      destroy() { dead = true; if (ro) ro.disconnect(); tiles.clear(); }
+    };
+  }
+
+
+  /* ---------- karta svih ruta (heat map) ---------- */
+  /* layers: [{ name, color, alpha, width, routes: [{ ll: [[lat, lon], ...] }] }]. Prozirne linije se zbrajaju, pa se češće vožene dionice vide jače. */
+  function HeatMap(el) {
+    el.classList.add('hm');
+    const layerEl = document.createElement('div'); layerEl.className = 'mm-tiles';
+    const cv = document.createElement('canvas'); cv.className = 'hm-cv';
+    const ctl = document.createElement('div'); ctl.className = 'mm-ctl';
+    ctl.innerHTML = '<button type="button" data-z="1" aria-label="Približi">+</button><button type="button" data-z="-1" aria-label="Udalji">−</button><button type="button" data-fit="1" aria-label="Prikaži sve" style="font-size:15px">⤢</button>';
+    const att = document.createElement('div'); att.className = 'mm-att'; att.textContent = '© OpenStreetMap';
+    el.append(layerEl, cv, ctl, att);
+    const g = cv.getContext('2d');
+    let w = el.clientWidth || 320, h = el.clientHeight || 400, z = 8, c = [0.5, 0.5], layers = [], raf = 0, dead = false, gray = true;
+    const tiles = new Map();
+    const prep = ll => { const n = ll.length, xs = new Float64Array(n), ys = new Float64Array(n); let a = 1, b = 0, d = 1, e = 0; for (let i = 0; i < n; i++) { const s = Math.sin(ll[i][0] * Math.PI / 180); xs[i] = (ll[i][1] + 180) / 360; ys[i] = 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI); a = Math.min(a, xs[i]); b = Math.max(b, xs[i]); d = Math.min(d, ys[i]); e = Math.max(e, ys[i]); } return { xs, ys, x0: a, x1: b, y0: d, y1: e }; };
+
+    function fit() {
+      let a = 1, b = 0, d = 1, e = 0, any = false;
+      for (const L of layers) for (const r of L.routes) { any = true; a = Math.min(a, r.x0); b = Math.max(b, r.x1); d = Math.min(d, r.y0); e = Math.max(e, r.y1); }
+      if (!any) return;
+      const pad = 24, sx = Math.max(b - a, 1e-7), sy = Math.max(e - d, 1e-7);
+      z = clamp(Math.floor(Math.log2(Math.min((w - 2 * pad) / (T * sx), (h - 2 * pad) / (T * sy)))), 3, 16);
+      c = [(a + b) / 2, (d + e) / 2];
+    }
+    function render() {
+      raf = 0; if (dead) return;
+      const scale = T * Math.pow(2, z), x0 = c[0] * scale - w / 2, y0 = c[1] * scale - h / 2, n = Math.pow(2, z);
+      const tx0 = Math.floor(x0 / T), tx1 = Math.floor((x0 + w) / T), ty0 = Math.max(0, Math.floor(y0 / T)), ty1 = Math.min(n - 1, Math.floor((y0 + h) / T));
+      const need = new Set();
+      for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+        const wx = ((tx % n) + n) % n, key = z + '/' + tx + '/' + ty; need.add(key);
+        let img = tiles.get(key);
+        if (!img) { img = new Image(); img.alt = ''; img.draggable = false; img.onerror = () => { img.style.visibility = 'hidden'; }; img.src = TILE.replace('{z}', z).replace('{x}', wx).replace('{y}', ty); layerEl.appendChild(img); tiles.set(key, img); }
+        img.style.transform = 'translate(' + Math.round(tx * T - x0) + 'px,' + Math.round(ty * T - y0) + 'px)';
+      }
+      for (const [k, img] of tiles) if (!need.has(k)) { img.remove(); tiles.delete(k); }
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+      g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); g.lineJoin = 'round'; g.lineCap = 'round';
+      const vx0 = x0 / scale, vx1 = (x0 + w) / scale, vy0 = y0 / scale, vy1 = (y0 + h) / scale;
+      for (const L of layers) {
+        g.strokeStyle = L.color; g.globalAlpha = L.alpha; g.lineWidth = L.width; L.drawn = 0;
+        for (const r of L.routes) {
+          if (r.x1 < vx0 || r.x0 > vx1 || r.y1 < vy0 || r.y0 > vy1) continue;
+          L.drawn++; g.beginPath(); let lx = -1e9, ly = -1e9, first = true;
+          for (let i = 0; i < r.xs.length; i++) {
+            const px = r.xs[i] * scale - x0, py = r.ys[i] * scale - y0;
+            if (!first && Math.abs(px - lx) + Math.abs(py - ly) < 2 && i < r.xs.length - 1) continue;
+            if (first) { g.moveTo(px, py); first = false; } else g.lineTo(px, py); lx = px; ly = py;
+          }
+          g.stroke();
+        }
+      }
+      g.globalAlpha = 1;
+    }
+    const redraw = () => { if (!raf) raf = requestAnimationFrame(render); };
+    function zoomAt(px, py, dz) {
+      const nz = clamp(z + dz, 3, 18); if (nz === z) return;
+      const s0 = T * Math.pow(2, z), s1 = T * Math.pow(2, nz), gx = c[0] * s0 - w / 2 + px, gy = c[1] * s0 - h / 2 + py;
+      c = [(gx / s0 * s1 - px + w / 2) / s1, (gy / s0 * s1 - py + h / 2) / s1]; z = nz; redraw();
+    }
+    const ptrs = new Map(); let pinchD = 0, lastWheel = 0;
+    const dist = () => { const a = [...ptrs.values()]; return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); };
+    el.addEventListener('pointerdown', e => { if (e.target.closest('.mm-ctl')) return; try { el.setPointerCapture(e.pointerId); } catch (_) {} ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (ptrs.size === 2) pinchD = dist(); });
+    el.addEventListener('pointermove', e => {
+      const p = ptrs.get(e.pointerId); if (!p) return;
+      if (ptrs.size === 1) { const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY; const s = T * Math.pow(2, z); c = [c[0] - dx / s, c[1] - dy / s]; redraw(); }
+      else if (ptrs.size === 2) {
+        p.x = e.clientX; p.y = e.clientY; const d = dist(), a = [...ptrs.values()], r = el.getBoundingClientRect(), mx = (a[0].x + a[1].x) / 2 - r.left, my = (a[0].y + a[1].y) / 2 - r.top;
+        if (d > pinchD * 1.5) { zoomAt(mx, my, 1); pinchD = d; } else if (d < pinchD * 0.67) { zoomAt(mx, my, -1); pinchD = d; }
+      }
+    });
+    const up = e => { ptrs.delete(e.pointerId); };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    el.addEventListener('wheel', e => { e.preventDefault(); const t = Date.now(); if (t - lastWheel < 140) return; lastWheel = t; const r = el.getBoundingClientRect(); zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1 : -1); }, { passive: false });
+    el.addEventListener('dblclick', e => { if (e.target.closest('.mm-ctl')) return; const r = el.getBoundingClientRect(); zoomAt(e.clientX - r.left, e.clientY - r.top, 1); });
+    ctl.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.fit) { fit(); redraw(); } else zoomAt(w / 2, h / 2, +b.dataset.z); });
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => { const nw = el.clientWidth, nh = el.clientHeight; if (nw && (nw !== w || nh !== h)) { w = nw; h = nh; redraw(); } }) : null;
+    if (ro) ro.observe(el);
+    return {
+      /* spec: [{ name, color, alpha, width, routes: [{ ll }] }]; refit = prilagodi prikaz svim rutama */
+      setData(spec, refit) { layers = spec.map(L => ({ name: L.name, color: L.color, alpha: L.alpha, width: L.width, drawn: 0, routes: L.routes.map(r => r._p || (r._p = prep(r.ll))) })); if (refit) fit(); render(); },
+      setGray(v) { gray = v; layerEl.style.filter = v ? 'grayscale(1) contrast(.92) brightness(1.04)' : ''; },
+      stats: () => ({ z, layers: layers.map(L => ({ name: L.name, routes: L.routes.length, drawn: L.drawn })) }),
       destroy() { dead = true; if (ro) ro.disconnect(); tiles.clear(); }
     };
   }
@@ -221,5 +309,5 @@
     return { map, chart, destroy() { if (map) map.destroy(); } };
   }
 
-  root.TrackView = { mount, MiniMap, ChartView };
+  root.TrackView = { mount, MiniMap, ChartView, HeatMap };
 })(typeof self !== 'undefined' ? self : this);

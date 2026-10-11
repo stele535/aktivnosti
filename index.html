@@ -112,9 +112,9 @@ dialog h2{margin:0 0 4px;font-size:18px}
 .mm-tiles{position:absolute;inset:0}
 .mm-tiles img{position:absolute;left:0;top:0;width:256px;height:256px;max-width:none;-webkit-user-drag:none;user-select:none}
 .mm-route{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.mm-casing{fill:none;stroke:#fff;stroke-width:6;stroke-linejoin:round;stroke-linecap:round;opacity:.9}
-.mm-line{fill:none;stroke:var(--accent);stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round}
-.mm-start{fill:#2a8f55;stroke:#fff;stroke-width:2.5}.mm-end{fill:#1c1e22;stroke:#fff;stroke-width:2.5}.mm-mark{fill:var(--accent);stroke:#fff;stroke-width:3}
+.mm-casing{fill:none;stroke:#fff;stroke-width:9;stroke-linejoin:round;stroke-linecap:round;opacity:.97}
+.mm-line{fill:none;stroke:#e0430c;stroke-width:5;stroke-linejoin:round;stroke-linecap:round}
+.mm-start{fill:#2a8f55;stroke:#fff;stroke-width:3}.mm-end{fill:#1c1e22;stroke:#fff;stroke-width:3}.mm-mark{fill:#e0430c;stroke:#fff;stroke-width:3.5}
 .mm-ctl{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:6px}
 .mm-ctl button{width:36px;height:36px;border-radius:9px;border:1px solid rgba(0,0,0,.2);background:rgba(255,255,255,.93);color:#1c1e22;font-size:21px;line-height:1;cursor:pointer;padding:0}
 .mm-att{position:absolute;right:4px;bottom:2px;font-size:10px;background:rgba(255,255,255,.78);color:#333;padding:0 4px;border-radius:4px}
@@ -151,12 +151,15 @@ progress{height:10px;accent-color:var(--accent)}
 .zh{font-size:14px;margin:14px 0 6px}
 .zh{font-size:14px;margin:14px 0 6px}
 .zb{display:grid;gap:6px}.zr{display:grid;grid-template-columns:136px 1fr 76px;gap:8px;align-items:center;font-size:12px}.zl{color:var(--mute);line-height:1.15}.zt{height:12px;background:var(--line);border-radius:99px;overflow:hidden}.zt i{display:block;height:100%}.zv{text-align:right;font-variant-numeric:tabular-nums}
-.mm-seg{fill:none;stroke-width:3.8;stroke-linejoin:round;stroke-linecap:round}
+.mm-seg{fill:none;stroke-width:5;stroke-linejoin:round;stroke-linecap:round}
 .tv-zc{margin-top:10px}.tv-leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--mute);margin-top:2px}.tv-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .zset{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.zset label{font-size:12px;margin:6px 0 2px}.zset input{width:100%}
 .opt{margin:10px 0 0}.opt>b{display:block;font-size:12px;color:var(--mute);font-weight:600;margin-bottom:4px}.opt .chips{margin:0;padding:0 0 2px}.opt .chip{padding:5px 11px;font-size:13px}
 .shr-box.chk-bg{background:repeating-conic-gradient(#d9d9d9 0 25%,#fff 0 50%) 0 0/20px 20px;border-radius:12px}
 .pt{display:grid;gap:0;font-size:13px}.pt>div{display:grid;grid-template-columns:1.1fr .55fr .7fr 1fr 1.15fr;gap:4px;padding:6px 0;white-space:nowrap;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}.pt>div span:nth-child(n+2){text-align:right}.pt-h{color:var(--mute);font-size:11px;border-top:0!important}
+.chips.wrap{flex-wrap:wrap;overflow:visible}.hm-wrap{margin-top:4px}.hm{position:relative;height:calc(100vh - 360px);height:calc(100dvh - 360px);min-height:330px;border-radius:14px;overflow:hidden;background:var(--line);touch-action:none;user-select:none;-webkit-user-select:none}
+.hm-cv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.chip.lay i{display:inline-block;width:10px;height:10px;border-radius:99px;margin-right:6px;vertical-align:-1px}
 .bdg{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;margin-right:6px;background:var(--line);color:var(--ink);vertical-align:1px}
 .bdg.cm{background:color-mix(in srgb,var(--c-ride) 16%,transparent);color:var(--c-ride)}
 .chk{display:inline-flex;align-items:center;gap:6px;margin:0 8px 8px 0;padding:6px 12px;border:1px solid var(--line);border-radius:99px;font-size:14px;color:var(--ink);cursor:pointer}
@@ -177,7 +180,7 @@ progress{height:10px;accent-color:var(--accent)}
 <nav id="nav">
   <button data-v="cal" class="on"><b>▤</b>Kalendar</button>
   <button data-v="overview"><b>▦</b>Pregled</button>
-  <button data-v="list"><b>☰</b>Treninzi</button>
+  <button data-v="map"><b>◉</b>Karta</button>
   <button data-v="records"><b>★</b>Rekordi</button>
   <button data-v="settings"><b>⚙</b>Postavke</button>
 </nav>
@@ -430,10 +433,12 @@ function render() {
   $('#addBtn').classList.toggle('hide', !!META.locked);
   if (UI.view === 'cal') v.innerHTML = viewCal();
   else if (UI.view === 'overview') v.innerHTML = viewOverview();
+  else if (UI.view === 'map') v.innerHTML = viewMap();
   else if (UI.view === 'list') v.innerHTML = viewList();
   else if (UI.view === 'records') v.innerHTML = viewRecords();
   else v.innerHTML = viewSettings();
   bind();
+  if (UI.view === 'map') mountMap(); else destroyMap();
 }
 
 function sportChips() {
@@ -463,6 +468,7 @@ function periodTitle() {
 
 function viewOverview() {
   if (!acts().length) return emptyState();
+  if (UI.q.trim()) return viewList();
   const all = filtered();
   const range = Core.periodRange(UI.period, UI.cursor);
   const list = all.filter(a => Core.inRange(a, range));
@@ -475,7 +481,7 @@ function viewOverview() {
   const unit = metric === 'km' ? 'km' : metric === 'h' ? 'h' : '×';
 
   const stat = (v, l, u) => '<div class="stat"><div class="v">' + v + (u ? '<small>' + u + '</small>' : '') + '</div><div class="l">' + l + '</div></div>';
-  let html = filterBar();
+  let html = '<input id="q" type="search" placeholder="Traži treninge po nazivu, opisu, bilješci, oznaci…" value="">' + filterBar();
   html += '<div class="seg">' + [['week', 'Tjedan'], ['month', 'Mjesec'], ['year', 'Godina'], ['all', 'Sve']].map(([k, l]) => '<button data-period="' + k + '" class="' + (UI.period === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
   html += '<div class="pager"><button data-page="-1" ' + (UI.period === 'all' ? 'disabled style="visibility:hidden"' : '') + '>‹</button><div class="t">' + esc(periodTitle()) + '</div><button data-page="1" ' + (UI.period === 'all' ? 'disabled style="visibility:hidden"' : '') + '>›</button></div>';
   html += '<div class="grid">' + stat(t.n, 'treninga') + stat(hoursStr(t.sec), 'ukupno vrijeme');
@@ -487,7 +493,7 @@ function viewOverview() {
   html += '</div>';
   html += '<div class="card"><div class="metric">' + [['km', 'Kilometri', hasKm], ['h', 'Sati', true], ['n', 'Treninzi', true]].filter(x => x[2]).map(([k, l]) => '<button data-metric="' + k + '" class="' + (metric === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>' + chart(bks, vals, unit) + '</div>';
   if (UI.period !== 'all' && !list.length) html += '<p class="empty">Nema treninga u ovom razdoblju.</p>';
-  else if (list.length) html += '<div class="list" style="margin-top:6px"><div class="day">Treninzi u razdoblju</div>' + list.slice(0, 8).map(item).join('') + (list.length > 8 ? '<button class="btn" style="width:100%" data-go="list">Svih ' + list.length + ' u popisu</button>' : '') + '</div>';
+  else if (list.length) html += '<div class="list" style="margin-top:6px"><div class="day">Treninzi u razdoblju</div>' + (UI.ovAll ? list.slice(0, UI.limit) : list.slice(0, 8)).map(item).join('') + (UI.ovAll ? (list.length > UI.limit ? '<button class="btn" style="width:100%" id="more">Prikaži još (' + (list.length - UI.limit) + ')</button>' : '') : list.length > 8 ? '<button class="btn" style="width:100%" data-ovall="1">Prikaži svih ' + list.length + '</button>' : '') + '</div>';
   return html;
 }
 const hoursStr = s => { const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); return h + '<small>h</small> ' + String(m).padStart(2, '0') + '<small>min</small>'; };
@@ -639,7 +645,7 @@ function bind() {
   const v = $('#view');
   v.querySelectorAll('[data-sport]').forEach(b => b.onclick = () => { UI.sport = b.dataset.sport; UI.limit = 60; render(); });
   v.querySelectorAll('[data-flt]').forEach(b => b.onclick = () => { UI.flt = UI.flt === b.dataset.flt ? '' : b.dataset.flt; UI.limit = 60; render(); });
-  v.querySelectorAll('[data-period]').forEach(b => b.onclick = () => { UI.period = b.dataset.period; UI.cursor = new Date(); render(); });
+  v.querySelectorAll('[data-period]').forEach(b => b.onclick = () => { UI.period = b.dataset.period; UI.cursor = new Date(); UI.ovAll = false; render(); });
   v.querySelectorAll('[data-cmode]').forEach(b => b.onclick = () => { UI.cal.mode = b.dataset.cmode; render(); });
   v.querySelectorAll('[data-ctoday]').forEach(b => b.onclick = () => { UI.cal.cursor = new Date(); render(); });
   v.querySelectorAll('[data-cpage]').forEach(b => b.onclick = () => { const d = +b.dataset.cpage, c = new Date(UI.cal.cursor); if (UI.cal.mode === 'week') c.setDate(c.getDate() + 7 * d); else c.setMonth(c.getMonth() + d, 1); UI.cal.cursor = c; render(); });
@@ -651,6 +657,9 @@ function bind() {
     UI.cursor = c; render();
   });
   v.querySelectorAll('[data-id]').forEach(e => e.onclick = () => openEdit(e.dataset.id));
+  v.querySelectorAll('[data-ovall]').forEach(b => b.onclick = () => { UI.ovAll = true; render(); });
+  v.querySelectorAll('[data-myear]').forEach(b => b.onclick = () => { MAPD.year = b.dataset.myear; render(); });
+  v.querySelectorAll('[data-mt]').forEach(b => b.onclick = () => mapToggle(b));
   v.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { UI.view = b.dataset.go; render(); });
   const q = $('#q'); if (q) q.oninput = () => { UI.q = q.value; const pos = q.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(pos, pos); };
   const more = $('#more'); if (more) more.onclick = () => { UI.limit += 60; render(); };
@@ -1027,6 +1036,63 @@ function showZones(tr) {
   box.innerHTML = h;
 }
 const paceStr = a => { if (!(a.dist > 0) || !(a.moving || a.elapsed)) return null; const s = Math.round((a.moving || a.elapsed) / a.dist); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
+/* ---------- karta svih ruta ---------- */
+const MAPD = { routes: null, sig: '', busy: false, on: { ride: true, commute: true }, str: 2, gray: true, year: 'all', map: null };
+const HM_COL = { ride: '#e0430c', commute: '#2f6fd0' };
+const HM_STR = { 1: [0.16, 2], 2: [0.26, 3], 3: [0.42, 4] };   // [prozirnost, debljina] po jačini
+
+async function loadMapData() {
+  const rs = acts().filter(a => a.hasTrack), sig = rs.map(a => a.id).join(',');
+  if (MAPD.busy || (MAPD.routes && MAPD.sig === sig)) return;
+  MAPD.busy = true; const out = [];
+  try {
+    for (let i = 0; i < rs.length; i++) {
+      const tr = await store.get('tr:' + rs[i].id);
+      if (tr && tr.poly) { const ll = Files.decPoly(tr.poly); if (ll.length >= 2) out.push({ id: rs[i].id, ll, commute: !!rs[i].commute, type: rs[i].type, year: new Date(rs[i].date).getFullYear() }); }
+      if (i % 20 === 19) { const n = $('#hmNote'); if (n) n.textContent = 'Učitavam rute… ' + (i + 1) + '/' + rs.length; await tick(); }
+    }
+  } catch (e) { /* prikaži što je učitano */ }
+  MAPD.routes = out; MAPD.sig = sig; MAPD.busy = false;
+  if (UI.view === 'map') render();
+}
+function mapRoutes() { return (MAPD.routes || []).filter(r => (UI.sport === 'all' || r.type === UI.sport) && (MAPD.year === 'all' || String(r.year) === MAPD.year)); }
+function mapSpec() {
+  const R = mapRoutes(), [alpha, width] = HM_STR[MAPD.str];
+  return [{ key: 'ride', name: 'Vožnje', routes: R.filter(r => !r.commute) }, { key: 'commute', name: 'Commute', routes: R.filter(r => r.commute) }]
+    .map(L => Object.assign(L, { color: HM_COL[L.key], alpha, width, all: L.routes, routes: MAPD.on[L.key] ? L.routes : [] }));
+}
+function viewMap() {
+  if (!acts().some(a => a.hasTrack)) return '<p class="empty">Za kartu su potrebne GPS rute. Uvezi Strava ZIP u Postavkama.</p>';
+  loadMapData();
+  const years = [...new Set((MAPD.routes || []).map(r => r.year))].sort((x, y) => y - x);
+  const ch = (attr, val, on, label) => '<button class="chip ' + (on ? 'on' : '') + '" ' + attr + '="' + val + '">' + label + '</button>';
+  const lay = (k, label) => '<button class="chip lay ' + (MAPD.on[k] ? 'on' : '') + '" data-mt="' + k + '"><i style="background:' + HM_COL[k] + '"></i>' + label + ' <span id="n_' + k + '"></span></button>';
+  return sportChips() + (years.length > 1 ? '<div class="chips">' + ch('data-myear', 'all', MAPD.year === 'all', 'Sve godine') + years.map(y => ch('data-myear', y, MAPD.year === String(y), y)).join('') + '</div>' : '') +
+    '<div class="chips wrap">' + lay('ride', 'Vožnje') + lay('commute', 'Commute') + '<button class="chip ' + (MAPD.gray ? 'on' : '') + '" data-mt="gray">Siva podloga</button></div>' +
+    '<div class="chips wrap"><span class="note" style="margin:0;align-self:center">Jačina:</span>' + [[1, 'Tanko'], [2, 'Srednje'], [3, 'Jako']].map(([k, l]) => '<button class="chip ' + (MAPD.str === k ? 'on' : '') + '" data-mt="str' + k + '">' + l + '</button>').join('') + '</div>' +
+    '<div class="hm-wrap"><div id="hmBox" class="hm"></div></div><p class="note" id="hmNote">' + (MAPD.routes ? '' : 'Učitavam rute…') + '</p>';
+}
+function mountMap() {
+  const box = $('#hmBox'); if (!box) return;
+  destroyMap();
+  MAPD.map = TrackView.HeatMap(box); MAPD.map.setGray(MAPD.gray);
+  if (MAPD.routes) applyMap(true);
+}
+function destroyMap() { if (MAPD.map) { MAPD.map.destroy(); MAPD.map = null; } }
+function applyMap(refit) {
+  if (!MAPD.map) return;
+  const spec = mapSpec();
+  MAPD.map.setData(spec, refit);
+  spec.forEach(L => { const n = $('#n_' + L.key); if (n) n.textContent = '(' + L.all.length + ')'; });
+  const note = $('#hmNote'); if (note) note.textContent = !MAPD.routes.length ? 'Nema ruta za prikaz.' : spec.every(L => !L.routes.length) ? 'Ništa nije uključeno ili nema ruta za odabrani filtar.' : '';
+}
+function mapToggle(b) {
+  const k = b.dataset.mt;
+  if (k === 'gray') { MAPD.gray = !MAPD.gray; b.classList.toggle('on', MAPD.gray); if (MAPD.map) MAPD.map.setGray(MAPD.gray); return; }
+  if (k.startsWith('str')) { MAPD.str = +k.slice(3); document.querySelectorAll('[data-mt^=str]').forEach(x => x.classList.toggle('on', x === b)); applyMap(false); return; }
+  MAPD.on[k] = !MAPD.on[k]; b.classList.toggle('on', MAPD.on[k]); applyMap(false);
+}
 
 /* ---------- pokretanje ---------- */
 (async function init() {
