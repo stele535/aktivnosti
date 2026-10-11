@@ -157,6 +157,7 @@ progress{height:10px;accent-color:var(--accent)}
 .opt{margin:10px 0 0}.opt>b{display:block;font-size:12px;color:var(--mute);font-weight:600;margin-bottom:4px}.opt .chips{margin:0;padding:0 0 2px}.opt .chip{padding:5px 11px;font-size:13px}
 .shr-box.chk-bg{background:repeating-conic-gradient(#d9d9d9 0 25%,#fff 0 50%) 0 0/20px 20px;border-radius:12px}
 .pt{display:grid;gap:0;font-size:13px}.pt>div{display:grid;grid-template-columns:1.1fr .55fr .7fr 1fr 1.15fr;gap:4px;padding:6px 0;white-space:nowrap;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}.pt>div span:nth-child(n+2){text-align:right}.pt-h{color:var(--mute);font-size:11px;border-top:0!important}
+.tbl-wrap{overflow-x:auto;margin:0 -16px;padding:0 16px;-webkit-overflow-scrolling:touch}.tbl{border-collapse:separate;border-spacing:0;font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums;width:100%}.tbl td.l:not(.f){max-width:120px;overflow:hidden;text-overflow:ellipsis}.tbl th,.tbl td{padding:8px 8px;text-align:right;border-bottom:1px solid var(--line);background:var(--card)}.tbl th{color:var(--mute);font-size:11px;font-weight:600;cursor:pointer;user-select:none}.tbl .l{text-align:left}.tbl .f{position:sticky;left:0;z-index:1;text-align:left;box-shadow:1px 0 0 var(--line);max-width:46vw;overflow:hidden;text-overflow:ellipsis}.tbl tbody tr{cursor:pointer}.tbl tr.tt td{font-weight:700;cursor:default}.tcl{margin-top:4px}.tcr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid var(--line)}.tcr input{width:auto}.tcr label{margin:0;display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px}.tcr .btn{padding:3px 11px;margin-left:6px}
 .chips.wrap{flex-wrap:wrap;overflow:visible}.hm-wrap{margin-top:4px}.hm{position:relative;height:calc(100vh - 360px);height:calc(100dvh - 360px);min-height:330px;border-radius:14px;overflow:hidden;background:var(--line);touch-action:none;user-select:none;-webkit-user-select:none}
 .hm-cv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .chip.lay i{display:inline-block;width:10px;height:10px;border-radius:99px;margin-right:6px;vertical-align:-1px}
@@ -181,7 +182,7 @@ progress{height:10px;accent-color:var(--accent)}
   <button data-v="cal" class="on"><b>▤</b>Kalendar</button>
   <button data-v="overview"><b>▦</b>Pregled</button>
   <button data-v="map"><b>◉</b>Karta</button>
-  <button data-v="records"><b>★</b>Rekordi</button>
+  <button data-v="table"><b>☰</b>Tablica</button>
   <button data-v="settings"><b>⚙</b>Postavke</button>
 </nav>
 
@@ -261,7 +262,7 @@ const store = {
 /* ---------- stanje ---------- */
 let DB = Core.emptyDB();
 let META = { fileId: null, lastSync: null, dirty: false, clientId: '', tracksFileId: null, tracksVer: null, tracksDirty: false, locked: true };
-const UI = { view: 'cal', cal: { mode: 'month', cursor: new Date() }, sport: 'all', flt: '', period: 'month', cursor: new Date(), metric: 'km', q: '', limit: 60 };
+const UI = { view: 'cal', cal: { mode: 'month', cursor: new Date() }, sport: 'all', flt: '', period: 'month', cursor: new Date(), metric: 'km', q: '', limit: 60, tyear: 'all' };
 const acts = () => Object.values(DB.activities).sort((a, b) => b.date.localeCompare(a.date));
 const sports = () => [...new Set(acts().map(a => a.type))].sort((a, b) => acts().filter(x => x.type === b).length - acts().filter(x => x.type === a).length);
 const FLT = { commute: a => a.commute, nocommute: a => !a.commute, map: a => a.hasTrack, desc: a => a.desc };
@@ -428,7 +429,7 @@ function download(name, text, type) {
 
 /* ---------- prikaz ---------- */
 function render() {
-  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === UI.view));
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === (UI.view === 'records' ? 'overview' : UI.view)));
   const v = $('#view');
   $('#addBtn').classList.toggle('hide', !!META.locked);
   if (UI.view === 'cal') v.innerHTML = viewCal();
@@ -436,6 +437,7 @@ function render() {
   else if (UI.view === 'map') v.innerHTML = viewMap();
   else if (UI.view === 'list') v.innerHTML = viewList();
   else if (UI.view === 'records') v.innerHTML = viewRecords();
+  else if (UI.view === 'table') v.innerHTML = viewTable();
   else v.innerHTML = viewSettings();
   bind();
   if (UI.view === 'map') mountMap(); else destroyMap();
@@ -481,7 +483,7 @@ function viewOverview() {
   const unit = metric === 'km' ? 'km' : metric === 'h' ? 'h' : '×';
 
   const stat = (v, l, u) => '<div class="stat"><div class="v">' + v + (u ? '<small>' + u + '</small>' : '') + '</div><div class="l">' + l + '</div></div>';
-  let html = '<input id="q" type="search" placeholder="Traži treninge po nazivu, opisu, bilješci, oznaci…" value="">' + filterBar();
+  let html = '<input id="q" type="search" placeholder="Traži treninge po nazivu, opisu, bilješci, oznaci…" value="">' + '<div class="chips"><button class="chip" data-go="records">★ Rekordi</button></div>' + filterBar();
   html += '<div class="seg">' + [['week', 'Tjedan'], ['month', 'Mjesec'], ['year', 'Godina'], ['all', 'Sve']].map(([k, l]) => '<button data-period="' + k + '" class="' + (UI.period === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
   html += '<div class="pager"><button data-page="-1" ' + (UI.period === 'all' ? 'disabled style="visibility:hidden"' : '') + '>‹</button><div class="t">' + esc(periodTitle()) + '</div><button data-page="1" ' + (UI.period === 'all' ? 'disabled style="visibility:hidden"' : '') + '>›</button></div>';
   html += '<div class="grid">' + stat(t.n, 'treninga') + stat(hoursStr(t.sec), 'ukupno vrijeme');
@@ -607,13 +609,90 @@ function viewList() {
 function viewRecords() {
   if (!acts().length) return emptyState();
   const recs = Core.records(filtered());
-  let html = filterBar() + '<div class="card" style="margin-top:6px">';
+  let html = '<div class="chips"><button class="chip" data-go="overview">‹ Pregled</button></div>' + filterBar() + '<div class="card" style="margin-top:6px">';
   if (!recs.length) html += '<p class="empty">Nema dovoljno podataka za rekorde.</p>';
   recs.forEach(r => {
     const sub = r.a ? esc((r.a.name || typeLabel(r.a.type)) + ' · ' + fmtDate(r.a.date)) : esc(r.note || '');
     html += '<div class="rec" ' + (r.a ? 'data-id="' + esc(r.a.id) + '" style="cursor:pointer"' : '') + '><div><div>' + esc(r.title) + '</div><div class="s">' + sub + '</div></div><div class="v">' + esc(r.value) + '</div></div>';
   });
   return html + '</div>';
+}
+
+/* ---------- tablica (tabovi s odabranim stupcima) ---------- */
+const spdOf = a => a.avgSpeed || (a.dist > 0 && a.moving > 0 ? a.dist / (a.moving / 3600) : null);
+const COLS = {
+  date: { l: 'Datum', get: a => a.date, fmt: a => { const d = new Date(a.date); return d.getDate() + '.' + (d.getMonth() + 1) + '.' + String(d.getFullYear()).slice(2); } },
+  name: { l: 'Naziv', get: a => (a.name || typeLabel(a.type)).toLowerCase(), fmt: a => a.name || typeLabel(a.type), left: true },
+  type: { l: 'Sport', get: a => typeLabel(a.type), fmt: a => typeLabel(a.type), left: true },
+  dist: { l: 'km', get: a => a.dist > 0 ? a.dist : null, fmt: a => fmtKm(a.dist), tot: 'sum' },
+  moving: { l: 'Vrijeme', get: a => a.moving || a.elapsed || null, fmt: a => Core.fmtDur(a.moving || a.elapsed), tot: 'sum', dur: true },
+  elapsed: { l: 'Proteklo', get: a => a.elapsed || null, fmt: a => Core.fmtDur(a.elapsed), tot: 'sum', dur: true },
+  avgSpeed: { l: 'km/h', get: spdOf, fmt: a => spdOf(a).toFixed(1).replace('.', ','), tot: 'speed' },
+  pace: { l: 'min/km', get: a => paceStr(a) && a.dist >= 1 ? (a.moving || a.elapsed) / a.dist : null, fmt: a => paceStr(a), tot: 'pace' },
+  elev: { l: 'Uspon m', get: a => a.elev > 0 ? a.elev : null, fmt: a => Math.round(a.elev), tot: 'sum' },
+  avgHr: { l: 'Puls', get: a => a.avgHr > 0 ? a.avgHr : null, fmt: a => Math.round(a.avgHr), tot: 'avg' },
+  maxHr: { l: 'Max puls', get: a => a.maxHr > 0 ? a.maxHr : null, fmt: a => Math.round(a.maxHr), tot: 'max' },
+  watts: { l: 'Snaga W', get: a => a.watts > 0 ? a.watts : null, fmt: a => Math.round(a.watts), tot: 'avg' },
+  cal: { l: 'kcal', get: a => a.cal > 0 ? a.cal : null, fmt: a => Math.round(a.cal), tot: 'sum' },
+  gear: { l: 'Oprema', get: a => a.gear || null, fmt: a => a.gear, left: true },
+  tags: { l: 'Oznake', get: a => (a.tags || []).join(', ') || null, fmt: a => (a.tags || []).join(', '), left: true },
+  commute: { l: 'Commute', get: a => a.commute ? 1 : null, fmt: () => '✓' },
+  route: { l: 'Ruta', get: a => a.hasTrack ? 1 : null, fmt: () => '✓' }
+};
+const TABS_DEFAULT = () => [
+  { id: 't1', name: 'Bicikl', sport: 'Ride', cols: ['date', 'name', 'dist', 'moving', 'avgSpeed', 'elev', 'avgHr'] },
+  { id: 't2', name: 'Sve', sport: 'all', cols: ['date', 'name', 'type', 'dist', 'moving', 'elev'] }
+];
+const tabsCfg = () => { const t = DB.settings && DB.settings.tabs; return Array.isArray(t) && t.length ? t.map(x => ({ id: String(x.id), name: String(x.name || 'Tab'), sport: x.sport || 'all', cols: (x.cols || []).filter(k => COLS[k]) })) : TABS_DEFAULT(); };
+const curTab = () => { const a = tabsCfg(); return a.find(t => t.id === UI.tab) || a[0]; };
+async function tabsSave(arr, activeId) {
+  DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), tabs: arr || undefined });
+  if (activeId) UI.tab = activeId === 'tnew' ? arr[arr.length - 1].id : activeId;
+  await persist(); render();
+}
+function tabEdit(fn) { const a = tabsCfg(), t = a.find(x => x.id === curTab().id); fn(t); tabsSave(a); }
+
+function viewTable() {
+  if (!acts().length) return emptyState();
+  const tabs = tabsCfg(), t = curTab(), edit = !!UI.tedit;
+  let html = '<div class="chips">' + tabs.map(x => '<button class="chip ' + (x.id === t.id ? 'on' : '') + '" data-tab="' + esc(x.id) + '">' + esc(x.name) + '</button>').join('') + '<button class="chip ' + (edit ? 'on' : '') + '" data-tedit="1">' + (edit ? '✓ Gotovo' : '✎ Uredi') + '</button></div>';
+  if (edit) {
+    const off = Object.keys(COLS).filter(k => !t.cols.includes(k));
+    const row = (k, on) => '<div class="tcr"><label><input type="checkbox" data-tcol="' + k + '"' + (on ? ' checked' : '') + '> ' + esc(COLS[k].l) + (k === 'dist' ? '' : '') + '</label>' + (on ? '<span><button class="btn" data-tmove="' + k + ':-1">↑</button><button class="btn" data-tmove="' + k + ':1">↓</button></span>' : '') + '</div>';
+    return html + '<div class="card"><label>Naziv taba</label><input data-tname value="' + esc(t.name) + '">' +
+      '<label>Sport</label><select data-tsport><option value="all"' + (t.sport === 'all' ? ' selected' : '') + '>Svi sportovi</option>' + sports().concat(sports().includes(t.sport) || t.sport === 'all' ? [] : [t.sport]).map(s => '<option value="' + esc(s) + '"' + (t.sport === s ? ' selected' : '') + '>' + esc(typeLabel(s)) + '</option>').join('') + '</select>' +
+      '<label>Stupci (redoslijed odozgo prema dolje je slijeva udesno)</label><div class="tcl">' + t.cols.map(k => row(k, true)).join('') + off.map(k => row(k, false)).join('') + '</div>' +
+      '<div class="acts"><button class="btn" data-tdel="1"' + (tabs.length < 2 ? ' disabled' : '') + '>Obriši tab</button><div class="row"><button class="btn" data-treset="1">Zadano</button><button class="btn pri" data-tadd="1">+ Novi tab</button></div></div></div>';
+  }
+  let list = acts().filter(a => t.sport === 'all' || a.type === t.sport);
+  const years = [...new Set(list.map(a => new Date(a.date).getFullYear()))].sort((x, y) => y - x);
+  if (UI.tyear !== 'all' && !years.includes(+UI.tyear)) UI.tyear = 'all';
+  if (UI.tyear !== 'all') list = list.filter(a => String(new Date(a.date).getFullYear()) === UI.tyear);
+  if (years.length > 1) html += '<div class="chips">' + [['all', 'Sve godine']].concat(years.map(y => [String(y), y])).map(([k, l]) => '<button class="chip ' + (UI.tyear === k ? 'on' : '') + '" data-tyear="' + k + '">' + l + '</button>').join('') + '</div>';
+  if (!t.cols.length) return html + '<p class="empty">Tab nema stupaca. Dodirni Uredi i odaberi ih.</p>';
+  const so = UI.tsort && t.cols.includes(UI.tsort.k) ? UI.tsort : { k: t.cols.includes('date') ? 'date' : t.cols[0], dir: -1 };
+  const g = COLS[so.k].get;
+  const rows = list.slice().sort((a, b) => { const x = g(a), y = g(b); if (x === null && y === null) return 0; if (x === null) return 1; if (y === null) return -1; return (x < y ? -1 : x > y ? 1 : 0) * so.dir; });
+  // zbroj / prosjek
+  const tot = k => {
+    const c = COLS[k]; if (!c.tot) return '';
+    const vs = rows.map(c.get).filter(v => v !== null);
+    if (c.tot === 'sum') { const s = vs.reduce((p, q) => p + q, 0); return !vs.length ? '' : c.dur ? Core.fmtDur(s) : k === 'dist' ? fmtKm(s) : Math.round(s).toLocaleString('hr'); }
+    if (c.tot === 'avg') return vs.length ? Math.round(vs.reduce((p, q) => p + q, 0) / vs.length) : '';
+    if (c.tot === 'max') return vs.length ? Math.round(Math.max(...vs)) : '';
+    const mv = rows.filter(a => a.dist > 0 && (a.moving || a.elapsed)), km = mv.reduce((p, a) => p + a.dist, 0), sec = mv.reduce((p, a) => p + (a.moving || a.elapsed), 0);
+    if (!(km > 0 && sec > 0)) return '';
+    if (c.tot === 'speed') return (km / (sec / 3600)).toFixed(1).replace('.', ',');
+    const p = Math.round(sec / km); return Math.floor(p / 60) + ':' + String(p % 60).padStart(2, '0');
+  };
+  const th = (k, i) => '<th class="' + (i === 0 ? 'f ' : '') + (COLS[k].left ? 'l' : '') + '" data-tsort="' + k + '">' + esc(COLS[k].l) + (so.k === k ? (so.dir > 0 ? ' ▲' : ' ▼') : '') + '</th>';
+  const show = rows.slice(0, UI.limit);
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr>' + t.cols.map(th).join('') + '</tr></thead><tbody>' +
+    '<tr class="tt">' + t.cols.map((k, i) => '<td class="' + (i === 0 ? 'f ' : '') + (COLS[k].left ? 'l' : '') + '">' + (i === 0 ? 'Σ ' + rows.length + '×' : esc(tot(k))) + '</td>').join('') + '</tr>' +
+    show.map(a => '<tr data-id="' + esc(a.id) + '">' + t.cols.map((k, i) => { const v = COLS[k].get(a); return '<td class="' + (i === 0 ? 'f ' : '') + (COLS[k].left ? 'l' : '') + '">' + (v === null ? '' : esc(COLS[k].fmt(a))) + '</td>'; }).join('') + '</tr>').join('') + '</tbody></table></div>';
+  if (!rows.length) html += '<p class="empty">Nema treninga za ovaj tab.</p>';
+  if (rows.length > UI.limit) html += '<button class="btn" style="width:100%;margin-top:10px" id="more">Prikaži još (' + (rows.length - UI.limit) + ')</button>';
+  return html;
 }
 
 function emptyState() {
@@ -660,6 +739,17 @@ function bind() {
   v.querySelectorAll('[data-ovall]').forEach(b => b.onclick = () => { UI.ovAll = true; render(); });
   v.querySelectorAll('[data-myear]').forEach(b => b.onclick = () => { MAPD.year = b.dataset.myear; render(); });
   v.querySelectorAll('[data-mt]').forEach(b => b.onclick = () => mapToggle(b));
+  v.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { UI.tab = b.dataset.tab; UI.tedit = false; UI.limit = 60; render(); });
+  v.querySelectorAll('[data-tsort]').forEach(b => b.onclick = () => { const k = b.dataset.tsort; UI.tsort = UI.tsort && UI.tsort.k === k ? { k, dir: -UI.tsort.dir } : { k, dir: ['name', 'type', 'gear', 'tags'].includes(k) ? 1 : -1 }; render(); });
+  v.querySelectorAll('[data-tyear]').forEach(b => b.onclick = () => { UI.tyear = b.dataset.tyear; UI.limit = 60; render(); });
+  v.querySelectorAll('[data-tedit]').forEach(b => b.onclick = () => { UI.tedit = !UI.tedit; render(); });
+  v.querySelectorAll('[data-tcol]').forEach(b => b.onclick = () => tabEdit(t => { const i = t.cols.indexOf(b.dataset.tcol); if (i >= 0) t.cols.splice(i, 1); else t.cols.push(b.dataset.tcol); }));
+  v.querySelectorAll('[data-tmove]').forEach(b => b.onclick = () => tabEdit(t => { const [k, d] = b.dataset.tmove.split(':'), i = t.cols.indexOf(k), j = i + +d; if (i >= 0 && j >= 0 && j < t.cols.length) [t.cols[i], t.cols[j]] = [t.cols[j], t.cols[i]]; }));
+  v.querySelectorAll('[data-tname]').forEach(i => i.onchange = () => tabEdit(t => { t.name = i.value.trim() || t.name; }));
+  v.querySelectorAll('[data-tsport]').forEach(i => i.onchange = () => tabEdit(t => { t.sport = i.value; }));
+  v.querySelectorAll('[data-tadd]').forEach(b => b.onclick = () => tabsSave(tabsCfg().concat([{ id: 't' + Date.now().toString(36), name: 'Novi tab', sport: 'all', cols: ['date', 'name', 'dist', 'moving'] }]), 't' + 'new'));
+  v.querySelectorAll('[data-tdel]').forEach(b => b.onclick = () => { const a = tabsCfg(); if (a.length > 1) tabsSave(a.filter(t => t.id !== curTab().id)); });
+  v.querySelectorAll('[data-treset]').forEach(b => b.onclick = () => tabsSave(null));
   v.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { UI.view = b.dataset.go; render(); });
   const q = $('#q'); if (q) q.oninput = () => { UI.q = q.value; const pos = q.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(pos, pos); };
   const more = $('#more'); if (more) more.onclick = () => { UI.limit += 60; render(); };
@@ -670,7 +760,7 @@ document.querySelectorAll('#nav button').forEach(b => b.onclick = () => { UI.vie
 $('#addBtn').onclick = () => openEdit(null);
 
 const actions = {
-  zreset: async () => { DB.settings = { updated: Date.now() }; await persist(); render(); toast('Zadane zone vraćene.'); },
+  zreset: async () => { DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), hr: undefined, spd: undefined }); await persist(); render(); toast('Zadane zone vraćene.'); },
   lock: async () => { META.locked = !META.locked; await persist(false); render(); },
   csv: () => $('#csvIn').click(),
   gps: () => $('#gpsIn').click(),
