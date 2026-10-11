@@ -3,7 +3,7 @@
   'use strict';
   const T = 256;
   const FORMATS = { '4:5': [1080, 1350], '9:16': [1080, 1920], '1:1': [1080, 1080] };
-  const STYLES = ['split', 'full', 'route', 'overlay', 'zones'];
+  const STYLES = ['split', 'full', 'route', 'overlay', 'zones', 'photo'];
   const ZCOL = ['#6aa2f0', '#5cc388', '#e8c04a', '#ef8a4c', '#d6453a'];  // boje stupaca zona
   const THEMES = {
     light: { bg: '#f6f5f1', ink: '#1c1e22', mute: '#6b7078', line: '#e4e2db', map: '#e8e4d8', routeBg: '#ebe9e2', casing: 'rgba(255,255,255,.95)' },
@@ -40,16 +40,17 @@
   }
   const dur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + ':' + String(m).padStart(2, '0') + ' h' : m + ' min'; };
 
-  /* o: { title, sub, stats: [[vrijednost, oznaka], ...] (do 4), pts: [[lat, lon], ...], d, style, gray, format, theme, hideEnds, tiles, zoneBars: { title, rows: [{ label, sec }] } | null, zoneLegend: [oznake] | null }
+  /* o: { title, sub, stats: [[vrijednost, oznaka], ...] (do 4), pts: [[lat, lon], ...], d, style, gray, format, theme, hideEnds, tiles, zoneBars: { title, rows: [{ label, sec }] } | null, photo: slika | null, photoSide: 'left' | 'right' }
      Vraća Promise<{ blob, trimmed, points, tilesLoaded }> */
   async function draw(o) {
-    const style = STYLES.includes(o.style) ? o.style : 'split', th = THEMES[o.theme === 'dark' ? 'dark' : 'light'];
+    let style = STYLES.includes(o.style) ? o.style : 'split'; if (style === 'photo' && !o.photo) style = 'split';
+    const th = THEMES[o.theme === 'dark' ? 'dark' : 'light'];
     const [W, H] = FORMATS[o.format] || FORMATS['4:5'];
     const tr = o.hideEnds ? trimEnds(o.pts, o.d, 200) : { pts: o.pts, trimmed: false };
     const pts = tr.pts;
-    const overlay = style === 'overlay', full = style === 'full', wantTiles = (style === 'split' || full || style === 'zones') && o.tiles !== false;
+    const overlay = style === 'overlay', full = style === 'full', wantTiles = (style === 'split' || full || style === 'zones' || style === 'photo') && o.tiles !== false;
     const zb = style === 'zones' && o.zoneBars && o.zoneBars.rows.some(r => r.sec > 0) ? o.zoneBars : null;
-    const panelH = full ? 0 : overlay ? 0 : zb ? 760 : (H === 1080 ? 430 : H === 1350 ? 550 : 620);
+    const panelH = full ? 0 : overlay ? 0 : style === 'photo' ? (H === 1080 ? 520 : H === 1350 ? 640 : 760) : zb ? 760 : (H === 1080 ? 430 : H === 1350 ? 550 : 620);
     const mapH = overlay || full ? H : H - panelH;
     const fitH = full ? H - 470 : overlay ? H - 380 : mapH;         // dio platna u koji se uklapa ruta
     const c = document.createElement('canvas'); c.width = W; c.height = H;
@@ -116,6 +117,26 @@
       statsRow(60, by + 150, W - 120, '#fff', 'rgba(255,255,255,.8)', sh);
       g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '500 24px ' + FONT; g.textAlign = 'right'; g.fillText('Trening', W - 60, H - 44); g.textAlign = 'left';
       if (tr.trimmed) g.fillText('Početak i kraj rute su skriveni', 60, H - 44);
+    } else if (style === 'photo') {
+      const top = mapH, ph = o.photo, left = o.photoSide !== 'right';
+      g.fillStyle = th.ink; g.font = '700 58px ' + FONT; g.fillText(fitText(g, o.title || 'Trening', W - 120), 60, top + 84);
+      g.fillStyle = th.mute; g.font = '500 32px ' + FONT; g.fillText(fitText(g, o.sub || '', W - 120), 60, top + 126);
+      g.fillStyle = th.line; g.fillRect(60, top + 152, W - 120, 2);
+      const cy = top + 182, ch = H - 70 - cy, gap = 30, pw = Math.round((W - 120 - gap) / 2);
+      const px = left ? 60 : 60 + pw + gap, tx = left ? 60 + pw + gap : 60;
+      const iw = ph.width || ph.naturalWidth, ih = ph.height || ph.naturalHeight, k = Math.max(pw / iw, ch / ih), sw = pw / k, sh2 = ch / k;
+      g.save(); g.beginPath();
+      const r = 22; g.moveTo(px + r, cy); g.arcTo(px + pw, cy, px + pw, cy + ch, r); g.arcTo(px + pw, cy + ch, px, cy + ch, r); g.arcTo(px, cy + ch, px, cy, r); g.arcTo(px, cy, px + pw, cy, r); g.closePath(); g.clip();
+      g.drawImage(ph, (iw - sw) / 2, (ih - sh2) / 2, sw, sh2, px, cy, pw, ch); g.restore();
+      const rh = ch / 2, cw = pw / 2;
+      st.forEach(([v, l], i) => {
+        const xx = tx + (i % 2) * cw, yy = cy + Math.floor(i / 2) * rh + rh * 0.52;
+        g.fillStyle = th.ink; g.font = '700 ' + (String(v).length > 6 ? 44 : 54) + 'px ' + FONT; g.fillText(String(v), xx, yy);
+        g.fillStyle = th.mute; g.font = '500 26px ' + FONT; g.fillText(l, xx, yy + 38);
+      });
+      g.fillStyle = th.mute; g.font = '500 24px ' + FONT;
+      if (tr.trimmed) g.fillText('Početak i kraj rute su skriveni', 60, H - 30);
+      g.textAlign = 'right'; g.fillText('Trening', W - 60, H - 30); g.textAlign = 'left';
     } else {
       const top = mapH, compact = H === 1080 && !zb;
       g.fillStyle = th.ink; g.font = '700 62px ' + FONT; g.fillText(fitText(g, o.title || 'Trening', W - 120), 60, top + (compact ? 84 : 100));
