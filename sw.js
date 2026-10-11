@@ -1,5 +1,5 @@
 /* Service worker: aplikacija se otvara i bez interneta (samo vlastite datoteke). */
-const CACHE = 'trening-v7';
+const CACHE = 'trening-v10';
 const SHELL = ['./', 'index.html', 'config.js', 'core.js', 'files.js', 'trackview.js', 'share.js', 'analytics.js', 'manifest.webmanifest', 'icon.svg'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {

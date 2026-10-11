@@ -1,8 +1,15 @@
-/* Slika za dijeljenje: karta s rutom + ključni podaci, crtano na canvasu (1080 x 1350, omjer 4:5). Bez vanjskih biblioteka. */
+/* Slika za dijeljenje (canvas): više stilova i formata. Bez vanjskih biblioteka. */
 (function (root) {
   'use strict';
-  const W = 1080, H = 1350, MAPH = 800, T = 256;
-  const C = { bg: '#f6f5f1', ink: '#1c1e22', mute: '#6b7078', line: '#e4e2db', accent: '#d8561f', land: '#e8e4d8', start: '#2a8f55' };
+  const T = 256;
+  const FORMATS = { '4:5': [1080, 1350], '9:16': [1080, 1920], '1:1': [1080, 1080] };
+  const STYLES = ['split', 'full', 'route', 'overlay', 'zones'];
+  const ZCOL = ['#6aa2f0', '#5cc388', '#e8c04a', '#ef8a4c', '#d6453a'];
+  const THEMES = {
+    light: { bg: '#f6f5f1', ink: '#1c1e22', mute: '#6b7078', line: '#e4e2db', map: '#e8e4d8', routeBg: '#ebe9e2', casing: 'rgba(255,255,255,.95)' },
+    dark: { bg: '#14161a', ink: '#eceae4', mute: '#9a9ea6', line: '#2b2f37', map: '#2a2e35', routeBg: '#1b1e24', casing: 'rgba(0,0,0,.65)' }
+  };
+  const ACCENT = '#d8561f', START = '#2a8f55';
   const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const merc01 = (lat, lon) => { const s = Math.sin(lat * Math.PI / 180); return [(lon + 180) / 360, 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)]; };
@@ -17,12 +24,13 @@
     });
   }
 
-  // Skida prvih i zadnjih `m` metara rute (privatnost). Vraća { pts, trimmed }.
-  function trimEnds(pts, d, m) {
-    if (!d || d.length !== pts.length) return { pts, trimmed: false };
-    const total = d[d.length - 1], out = [];
-    for (let i = 0; i < pts.length; i++) if (d[i] >= m && d[i] <= total - m) out.push(pts[i]);
-    return out.length >= 5 ? { pts: out, trimmed: true } : { pts, trimmed: false };
+  // Skida prvih i zadnjih `m` metara rute (privatnost). Vraća { pts, zc, trimmed }.
+  function trimEnds(pts, d, m, zc) {
+    if (!d || d.length !== pts.length) return { pts, zc, trimmed: false };
+    const total = d[d.length - 1], keep = [];
+    for (let i = 0; i < pts.length; i++) if (d[i] >= m && d[i] <= total - m) keep.push(i);
+    if (keep.length < 5) return { pts, zc, trimmed: false };
+    return { pts: keep.map(i => pts[i]), zc: zc ? keep.map(i => zc[i]) : zc, trimmed: true };
   }
 
   function fitText(g, text, maxW) {
@@ -30,64 +38,114 @@
     while (text.length > 1 && g.measureText(text + '…').width > maxW) text = text.slice(0, -1);
     return text.trim() + '…';
   }
+  const dur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + ':' + String(m).padStart(2, '0') + ' h' : m + ' min'; };
 
-  /* o: { title, sub, stats: [[vrijednost, oznaka], ...] (do 4), pts: [[lat, lon], ...], d: [m, ...] | null, hideEnds: bool, tiles: bool }
+  /* o: { title, sub, stats: [[vrijednost, oznaka], ...] (do 4), pts: [[lat, lon], ...], d, zc: [zona po točki] | null,
+          style, format, theme, hideEnds, tiles, zoneBars: { title, rows: [{ label, sec }] } | null, zoneLegend: [oznake] | null }
      Vraća Promise<{ blob, trimmed, points, tilesLoaded }> */
   async function draw(o) {
-    const { pts, trimmed } = o.hideEnds ? trimEnds(o.pts, o.d, 200) : { pts: o.pts, trimmed: false };
+    const style = STYLES.includes(o.style) ? o.style : 'split', th = THEMES[o.theme === 'dark' ? 'dark' : 'light'];
+    const [W, H] = FORMATS[o.format] || FORMATS['4:5'];
+    const tr = o.hideEnds ? trimEnds(o.pts, o.d, 200, o.zc) : { pts: o.pts, zc: o.zc, trimmed: false };
+    const pts = tr.pts, zc = tr.zc;
+    const overlay = style === 'overlay', full = style === 'full', wantTiles = (style === 'split' || full || style === 'zones') && o.tiles !== false;
+    const zb = style === 'zones' && o.zoneBars && o.zoneBars.rows.some(r => r.sec > 0) ? o.zoneBars : null;
+    const panelH = full ? 0 : overlay ? 0 : zb ? 760 : (H === 1080 ? 430 : H === 1350 ? 550 : 620);
+    const mapH = overlay || full ? H : H - panelH;
+    const fitH = full ? H - 470 : overlay ? H - 380 : mapH;         // dio platna u koji se uklapa ruta
     const c = document.createElement('canvas'); c.width = W; c.height = H;
     const g = c.getContext('2d');
-    g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
+    if (!overlay) { g.fillStyle = th.bg; g.fillRect(0, 0, W, H); }
 
     /* ---- karta ---- */
-    g.save(); g.beginPath(); g.rect(0, 0, W, MAPH); g.clip();
-    g.fillStyle = C.land; g.fillRect(0, 0, W, MAPH);
+    g.save(); g.beginPath(); g.rect(0, 0, W, mapH); g.clip();
+    if (!overlay) { g.fillStyle = wantTiles ? THEMES.light.map : th.routeBg; g.fillRect(0, 0, W, mapH); }
     const P = pts.map(([la, lo]) => merc01(la, lo));
     let minx = 1, maxx = 0, miny = 1, maxy = 0;
     for (const [x, y] of P) { minx = Math.min(minx, x); maxx = Math.max(maxx, x); miny = Math.min(miny, y); maxy = Math.max(maxy, y); }
-    const pad = 120, sx = Math.max(maxx - minx, 1e-9), sy = Math.max(maxy - miny, 1e-9);
-    const zf = clamp(Math.log2(Math.min((W - 2 * pad) / (T * sx), (MAPH - 2 * pad) / (T * sy))), 2, 17.5);
-    const scale = T * Math.pow(2, zf), x0 = (minx + maxx) / 2 * scale - W / 2, y0 = (miny + maxy) / 2 * scale - MAPH / 2;
+    const pad = overlay ? 150 : 120, sx = Math.max(maxx - minx, 1e-9), sy = Math.max(maxy - miny, 1e-9);
+    const zf = clamp(Math.log2(Math.min((W - 2 * pad) / (T * sx), (fitH - 2 * pad) / (T * sy))), 2, 17.5);
+    const scale = T * Math.pow(2, zf), x0 = (minx + maxx) / 2 * scale - W / 2, y0 = (miny + maxy) / 2 * scale - fitH / 2;
     let tilesLoaded = 0;
-    if (o.tiles !== false) {
+    if (wantTiles) {
       const zt = clamp(Math.floor(zf), 0, 18), ts = T * Math.pow(2, zf - zt), n = Math.pow(2, zt);
-      const tx0 = Math.floor(x0 / ts), tx1 = Math.floor((x0 + W) / ts), ty0 = Math.max(0, Math.floor(y0 / ts)), ty1 = Math.min(n - 1, Math.floor((y0 + MAPH) / ts));
+      const tx0 = Math.floor(x0 / ts), tx1 = Math.floor((x0 + W) / ts), ty0 = Math.max(0, Math.floor(y0 / ts)), ty1 = Math.min(n - 1, Math.floor((y0 + mapH) / ts));
       const jobs = [];
       for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) jobs.push(loadTile(zt, ((tx % n) + n) % n, ty).then(img => ({ img, tx, ty })));
       for (const { img, tx, ty } of await Promise.all(jobs)) if (img) { g.drawImage(img, tx * ts - x0, ty * ts - y0, ts + 0.6, ts + 0.6); tilesLoaded++; }
     }
     const S = P.map(([x, y]) => [x * scale - x0, y * scale - y0]);
     g.lineJoin = 'round'; g.lineCap = 'round';
+    const casing = overlay ? 'rgba(0,0,0,.35)' : wantTiles ? THEMES.light.casing : th.casing;
     g.beginPath(); S.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
-    g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 17; g.stroke();
-    g.strokeStyle = C.accent; g.lineWidth = 10; g.stroke();
+    g.strokeStyle = casing; g.lineWidth = 17; g.stroke();
+    if (zc) {
+      g.lineWidth = 10;
+      for (let i = 1; i < S.length; i++) { g.beginPath(); g.moveTo(S[i - 1][0], S[i - 1][1]); g.lineTo(S[i][0], S[i][1]); g.strokeStyle = zc[i] >= 0 ? ZCOL[zc[i]] : '#9aa0a8'; g.stroke(); }
+    } else {
+      g.beginPath(); S.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
+      g.strokeStyle = overlay ? '#ffffff' : ACCENT; g.lineWidth = 10; g.stroke();
+    }
     const dot = ([x, y], col) => { g.beginPath(); g.arc(x, y, 17, 0, 7); g.fillStyle = col; g.fill(); g.lineWidth = 6; g.strokeStyle = '#fff'; g.stroke(); };
-    dot(S[0], C.start); dot(S[S.length - 1], C.ink);
-    g.font = '600 22px ' + FONT; const att = '© OpenStreetMap';
-    const aw = g.measureText(att).width + 18;
-    g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(W - aw - 8, MAPH - 36, aw, 28);
-    g.fillStyle = '#333'; g.textBaseline = 'middle'; g.fillText(att, W - aw, MAPH - 22);
+    dot(S[0], START); dot(S[S.length - 1], '#1c1e22');
+    g.textBaseline = 'middle';
+    if (wantTiles) {
+      g.font = '600 22px ' + FONT; const att = '© OpenStreetMap', aw = g.measureText(att).width + 18;
+      const ay = full ? 10 : mapH - 36;
+      g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(W - aw - 8, ay, aw, 28);
+      g.fillStyle = '#333'; g.fillText(att, W - aw, ay + 14);
+    }
+    if (zc && o.zoneLegend) { // legenda boja zona u kutu karte
+      g.font = '600 22px ' + FONT;
+      const items = o.zoneLegend, wid = items.map(t => g.measureText(t).width + 40), tot = wid.reduce((a, b) => a + b, 0) + 24, lx = 24, ly = 24;
+      g.fillStyle = overlay ? 'rgba(0,0,0,.45)' : 'rgba(255,255,255,.88)'; g.beginPath(); g.roundRect ? g.roundRect(lx, ly, Math.min(tot, W - 48), 44, 12) : g.rect(lx, ly, Math.min(tot, W - 48), 44); g.fill();
+      let x = lx + 16; items.forEach((t, i) => { g.fillStyle = ZCOL[i]; g.fillRect(x, ly + 14, 16, 16); g.fillStyle = overlay ? '#fff' : '#333'; g.fillText(t, x + 24, ly + 23); x += wid[i]; });
+    }
     g.restore();
 
-    /* ---- ploča s podacima ---- */
+    /* ---- podaci ---- */
     g.textBaseline = 'alphabetic'; g.textAlign = 'left';
-    g.fillStyle = C.ink; g.font = '700 62px ' + FONT;
-    g.fillText(fitText(g, o.title || 'Trening', W - 120), 60, MAPH + 100);
-    g.fillStyle = C.mute; g.font = '500 34px ' + FONT;
-    g.fillText(fitText(g, o.sub || '', W - 120), 60, MAPH + 154);
-    g.fillStyle = C.line; g.fillRect(60, MAPH + 192, W - 120, 2);
-    const st = (o.stats || []).slice(0, 4), cw = (W - 120) / Math.max(st.length, 1);
-    st.forEach(([v, l], i) => {
-      const x = 60 + i * cw;
-      g.fillStyle = C.ink; g.font = '700 ' + (String(v).length > 6 ? 54 : 66) + 'px ' + FONT; g.fillText(String(v), x, MAPH + 290);
-      g.fillStyle = C.mute; g.font = '500 28px ' + FONT; g.fillText(l, x, MAPH + 336);
-    });
-    g.fillStyle = C.mute; g.font = '500 24px ' + FONT; g.textAlign = 'left';
-    g.fillText(trimmed ? 'Početak i kraj rute su skriveni' : '', 60, H - 44);
-    g.textAlign = 'right'; g.fillText('Trening', W - 60, H - 44);
-
+    const st = (o.stats || []).slice(0, 4);
+    const statsRow = (x, y, w, ink, mute, shadow) => {
+      const cw = w / Math.max(st.length, 1);
+      st.forEach(([v, l], i) => {
+        const xx = x + i * cw; if (shadow) { g.shadowColor = 'rgba(0,0,0,.55)'; g.shadowBlur = 12; }
+        g.fillStyle = ink; g.font = '700 ' + (String(v).length > 6 ? 54 : 66) + 'px ' + FONT; g.fillText(String(v), xx, y);
+        g.fillStyle = mute; g.font = '500 28px ' + FONT; g.fillText(l, xx, y + 46); g.shadowBlur = 0;
+      });
+    };
+    if (overlay || full) {
+      if (full) { const gr = g.createLinearGradient(0, H - 560, 0, H); gr.addColorStop(0, 'rgba(10,12,16,0)'); gr.addColorStop(0.55, 'rgba(10,12,16,.72)'); gr.addColorStop(1, 'rgba(10,12,16,.88)'); g.fillStyle = gr; g.fillRect(0, H - 560, W, 560); }
+      const by = H - 340, sh = overlay;
+      if (sh) { g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 14; }
+      g.fillStyle = '#fff'; g.font = '700 62px ' + FONT; g.fillText(fitText(g, o.title || 'Trening', W - 120), 60, by);
+      g.fillStyle = 'rgba(255,255,255,.82)'; g.font = '500 34px ' + FONT; g.fillText(fitText(g, o.sub || '', W - 120), 60, by + 54); g.shadowBlur = 0;
+      statsRow(60, by + 150, W - 120, '#fff', 'rgba(255,255,255,.8)', sh);
+      g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '500 24px ' + FONT; g.textAlign = 'right'; g.fillText('Trening', W - 60, H - 44); g.textAlign = 'left';
+      if (tr.trimmed) g.fillText('Početak i kraj rute su skriveni', 60, H - 44);
+    } else {
+      const top = mapH, compact = H === 1080 && !zb;
+      g.fillStyle = th.ink; g.font = '700 62px ' + FONT; g.fillText(fitText(g, o.title || 'Trening', W - 120), 60, top + (compact ? 84 : 100));
+      g.fillStyle = th.mute; g.font = '500 34px ' + FONT; g.fillText(fitText(g, o.sub || '', W - 120), 60, top + (compact ? 130 : 154));
+      g.fillStyle = th.line; g.fillRect(60, top + (compact ? 160 : 192), W - 120, 2);
+      statsRow(60, top + (compact ? 236 : 290), W - 120, th.ink, th.mute, false);
+      if (zb) {
+        const ry = top + 410, tot = zb.rows.reduce((a, r) => a + r.sec, 0) || 1;
+        g.font = '600 26px ' + FONT; g.fillStyle = th.mute; g.fillText(zb.title, 60, ry);
+        zb.rows.forEach((r, i) => {
+          const y = ry + 34 + i * 46, bw = W - 60 - 300 - 250;
+          g.font = '500 26px ' + FONT; g.fillStyle = th.ink; g.fillText(r.label, 60, y + 24);
+          g.fillStyle = th.line; g.fillRect(300, y + 4, bw, 26);
+          g.fillStyle = ZCOL[i]; g.fillRect(300, y + 4, Math.max(r.sec > 0 ? 4 : 0, bw * r.sec / tot), 26);
+          g.fillStyle = th.ink; g.textAlign = 'right'; g.fillText(dur(r.sec) + ' · ' + Math.round(r.sec / tot * 100) + ' %', W - 60, y + 24); g.textAlign = 'left';
+        });
+      }
+      g.fillStyle = th.mute; g.font = '500 24px ' + FONT;
+      if (tr.trimmed) g.fillText('Početak i kraj rute su skriveni', 60, H - 40);
+      g.textAlign = 'right'; g.fillText('Trening', W - 60, H - 40); g.textAlign = 'left';
+    }
     const blob = await new Promise((res, rej) => { try { c.toBlob(b => b ? res(b) : rej(new Error('Slika nije napravljena.')), 'image/png'); } catch (e) { rej(e); } });
-    return { blob, trimmed, points: pts.length, tilesLoaded };
+    return { blob, trimmed: tr.trimmed, points: pts.length, tilesLoaded, w: W, h: H };
   }
 
   // Pokušaj s podlogom karte; ako preglednik zabrani (CORS) ili nešto pukne, napravi sliku bez podloge.
@@ -96,5 +154,5 @@
     catch (e) { return draw(Object.assign({}, o, { tiles: false })); }
   }
 
-  root.Share = { render, trimEnds, W, H };
+  root.Share = { render, trimEnds, FORMATS, STYLES, ZCOL };
 })(typeof self !== 'undefined' ? self : this);

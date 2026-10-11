@@ -1,6 +1,7 @@
 /* Prikaz trase: mala karta (OpenStreetMap pločice + SVG ruta) i grafovi visine/brzine/pulsa. Bez vanjskih biblioteka. */
 (function (root) {
   'use strict';
+  const ZCOL = ['#6aa2f0', '#5cc388', '#e8c04a', '#ef8a4c', '#d6453a'];
   const TILE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', T = 256, NS = 'http://www.w3.org/2000/svg';
   const svgEl = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -15,7 +16,9 @@
     const casing = svgEl('polyline', { class: 'mm-casing' }), line = svgEl('polyline', { class: 'mm-line' });
     const cs = svgEl('circle', { class: 'mm-start', r: 6 }), ce = svgEl('circle', { class: 'mm-end', r: 6 }), cm = svgEl('circle', { class: 'mm-mark', r: 7 });
     cm.style.display = 'none';
-    svg.append(casing, line, cs, ce, cm);
+    const segG = svgEl('g', { class: 'mm-segs' });
+    svg.append(casing, line, segG, cs, ce, cm);
+    let zc = null;
     const ctl = document.createElement('div'); ctl.className = 'mm-ctl';
     ctl.innerHTML = '<button type="button" data-z="1" aria-label="Približi">+</button><button type="button" data-z="-1" aria-label="Udalji">−</button>';
     const att = document.createElement('div'); att.className = 'mm-att'; att.textContent = '© OpenStreetMap';
@@ -56,6 +59,14 @@
       const sp = pts.map(([la, lo]) => { const [x, y] = merc(la, lo, z); return [x - x0, y - y0]; });
       const s = sp.map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(' ');
       casing.setAttribute('points', s); line.setAttribute('points', s);
+      segG.textContent = '';
+      line.style.display = zc ? 'none' : '';
+      if (zc) { // ruta obojena po zonama: uzastopne točke iste zone čine jednu liniju
+        let run = [sp[0]], cur = zc[1] !== undefined ? zc[1] : -1;
+        const flush = () => { if (run.length > 1) segG.appendChild(svgEl('polyline', { class: 'mm-seg', stroke: cur >= 0 ? ZCOL[cur] : '#9aa0a8', points: run.map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(' ') })); };
+        for (let i = 1; i < sp.length; i++) { if (zc[i] !== cur) { flush(); run = [sp[i - 1]]; cur = zc[i]; } run.push(sp[i]); }
+        flush();
+      }
       cs.setAttribute('cx', sp[0][0]); cs.setAttribute('cy', sp[0][1]);
       const L = sp[sp.length - 1]; ce.setAttribute('cx', L[0]); ce.setAttribute('cy', L[1]);
       if (marker !== null && sp[marker]) { cm.style.display = ''; cm.setAttribute('cx', sp[marker][0]); cm.setAttribute('cy', sp[marker][1]); } else cm.style.display = 'none';
@@ -97,6 +108,7 @@
     fit(); render();
     return {
       setMarker(i) { marker = i; redraw(); },
+      setColors(a) { zc = a; redraw(); },
       zoomIn() { zoomAt(w / 2, h / 2, 1); },
       state: () => ({ z, c, tiles: tiles.size }),
       destroy() { dead = true; if (ro) ro.disconnect(); tiles.clear(); }
@@ -181,11 +193,29 @@
   }
 
   /* ---------- sklapanje ---------- */
-  function mount(box, tr) {
+  /* opts: { cfg, labels: { hr: [...], spd: [...] } } za bojenje rute po zonama */
+  function mount(box, tr, opts) {
     box.innerHTML = '';
     let map = null;
     const pts = tr.poly ? (root.Files || {}).decPoly(tr.poly) : [];
     if (pts.length >= 2) { const m = document.createElement('div'); m.className = 'tv-map'; box.appendChild(m); map = MiniMap(m, pts); }
+    const A = root.Analytics;
+    if (map && opts && opts.cfg && A) {
+      const modes = [['plain', 'Jednobojno'], ['hr', 'Puls'], ['spd', 'Brzina']].filter(m => m[0] === 'plain' || (tr[m[0]] && tr[m[0]].filter(v => v !== null && v !== undefined).length >= 3));
+      if (modes.length > 1) {
+        const bar = document.createElement('div'); bar.className = 'tv-zc';
+        bar.innerHTML = '<div class="tv-tabs">' + modes.map(m => '<button type="button" data-m="' + m[0] + '">' + m[1] + '</button>').join('') + '</div><div class="tv-leg"></div>';
+        box.appendChild(bar);
+        const leg = bar.querySelector('.tv-leg');
+        const set = k => {
+          bar.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === k));
+          map.setColors(k === 'plain' ? null : A.zoneIdx(tr, opts.cfg, k));
+          leg.innerHTML = k === 'plain' ? '' : (opts.labels[k] || []).map((l, i) => '<span><i style="background:' + ZCOL[i] + '"></i>' + l.replace(/ (bpm|km\/h)$/, '') + '</span>').join('');
+        };
+        bar.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { mount.mode = b.dataset.m; set(b.dataset.m); } });
+        set(modes.some(m => m[0] === mount.mode) ? mount.mode : 'plain');
+      }
+    }
     const cd = document.createElement('div'); cd.className = 'tv-chartbox'; box.appendChild(cd);
     const chart = ChartView(cd, tr, i => { if (map) map.setMarker(i); });
     return { map, chart, destroy() { if (map) map.destroy(); } };

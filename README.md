@@ -7,15 +7,13 @@ Aplikacija je zamišljena kao **pregled**: uređivanje ostaje na Stravi, a ovdje
 ## Mogućnosti
 
 - **Kalendar** (prvi tab): mjesečni i tjedni prikaz u stilu intervals.icu. Svaki trening je blok u boji sporta (bicikl s km i vremenom, ostalo s trajanjem). Ispod su legenda boja i zbroj mjeseca ili tjedna, ukupno i po sportu.
-- **Bicikl** (tab): 
-  - **Oprema i servisi:** za svaki bicikl pratiš dijelove i servise (lanac, mali i veliki servis, gume…) s intervalom u km. Aplikacija zbraja kilometre vožnji tog bicikla od datuma postavljanja i pokazuje koliko je ostalo do servisa (traka zelena, žuta pri 85 %, crvena kad kasni). Gumb *Servisirano* vraća brojač na 0 i pamti datum. Zadani razmaci (lanac 3000, mali servis 2000, veliki servis 6000 km) su okvirni i mijenjaju se. Radi i kad je ostatak aplikacije zaključan, a sinkronizira se na Drive.
-  - **Kako sam vozio:** zone pulsa (60/70/80/90 % maksimalnog pulsa) i zone brzine, po vožnji u detalju i tjedno za zadnjih 8 tjedana, uz opis intenziteta (lagana, tempo, žestoka). Maksimalni puls se procjenjuje iz podataka ili ga upišeš.
-  - **Iste rute:** vožnje s podudarnom putanjom grupiraju se u jednu rutu, a za svaku vidiš graf prosječne brzine kroz vrijeme, najbržu vožnju i trend (prosjek zadnjih vožnji naspram prvih).
+- **Zone pulsa i brzine:** granice zona 2–5 upisuješ u Postavkama (zadano kao na iGPSPORT-u: puls 114/133/152/171 bpm, brzina 18/25/30/35 km/h). U detalju vožnje s GPS-om vidiš vrijeme i postotak po zonama, uz kratku ocjenu intenziteta. Stajanje se ne računa.
+- **Ruta obojena po zonama:** ispod karte u detalju prekidač *Jednobojno / Puls / Brzina* boji putanju bojom zone na svakoj dionici, uz legendu.
 - **Pregled**: tjedan, mjesec, godina i sve, s ukupnim brojkama i grafom (kilometri, sati ili broj treninga, s vrijednošću iznad svakog stupca).
 - **Treninzi**: popis s pretragom po nazivu, opisu, bilješci i oznaci.
 - **Rekordi**: najduža vožnja, najbolji tjedan i slično.
 - **Detalj treninga**: podaci, opis, oznake (Commute, Oporavak, S psom, S djetetom, Utrka, Dugi trening), karta rute (OpenStreetMap) i grafovi visine, brzine, pulsa i snage. Povlačenjem prsta po grafu pomiče se točka na karti.
-- **Podijeli sliku**: slika 4:5 s kartom rute i ključnim podacima za WhatsApp, Instagram i slično. Početak i kraj rute (200 m) po zadanom su skriveni radi privatnosti.
+- **Podijeli sliku:** pet stilova (karta + podaci, preko cijele karte, samo ruta, prozirno za story, zone), tri formata (objava 4:5, story 9:16, kvadrat), svijetla ili tamna tema, bojanje rute po zonama i izbor brzine kao km/h ili tempo (min/km). Početak i kraj rute (200 m) po zadanom su skriveni radi privatnosti.
 - **Filteri** po sportu i oznaci (Commute, S rutom, S opisom) u kalendaru, pregledu i popisu.
 - **Sinkronizacija s Google Driveom**: Drive je izvor istine, a lokalna kopija u pregledniku samo predmemorija. Promjena mobitela ne gubi ništa.
 - **Zaključano po zadanom**: nema dodavanja, uređivanja ni brisanja. Otključava se u Postavke → *Uređivanje* (postavka vrijedi po uređaju).
@@ -30,7 +28,7 @@ Aplikacija je zamišljena kao **pregled**: uređivanje ostaje na Stravi, a ovdje
 | `files.js` | Čitanje ZIP, FIT, GPX i TCX datoteka (i `.gz`) |
 | `trackview.js` | Karta rute i grafovi |
 | `share.js` | Slika za dijeljenje |
-| `analytics.js` | Zone pulsa i brzine, prepoznavanje iste rute, stanje servisa |
+| `analytics.js` | Zone pulsa i brzine |
 | `config.js` | **Tvoj Google Client ID** (vidi dolje) |
 | `config.example.js` | Predložak za `config.js`; aplikacija ga ne učitava |
 | `sw.js` | Service worker (rad bez interneta, osvježavanje verzija) |
@@ -96,8 +94,7 @@ Dodatno: *Dodaj GPS datoteke* (pojedinačni `.gpx`, `.fit`, `.tcx`, i `.gz`) ve�
 - Uspon izračunat iz GPS datoteke je procjena i može odstupati od Stravinog; treninzi iz CSV-a zadržavaju Stravine vrijednosti.
 - Fotografije iz Stravinog exporta (mapa `media`) se ne uvoze.
 - Bez interneta karta nema podlogu (vidi se samo ruta), grafovi rade normalno.
-- Zone ovise o podacima u GPS datotekama (puls, brzina); vožnje samo iz CSV-a nemaju zone ni prepoznatu rutu.
-- Prepoznavanje rute uspoređuje putanje (duljina do 12 % različita, odstupanje nekoliko desetaka metara); obrnuti smjer se računa kao ista ruta, a rute kraće od 1,5 km se ne grupiraju.
+- Zone ovise o podacima u GPS datotekama (puls, brzina). Pace (min/km) se računa iz trajanja i udaljenosti; vožnje samo iz CSV-a nemaju zone.
 - Sportovi osim bicikla, snage, nogometa i hodanja/planinarenja imaju zajedničku boju („ostalo“).
 
 ## Rješavanje problema
