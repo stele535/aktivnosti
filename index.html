@@ -643,7 +643,7 @@ const TABS_DEFAULT = () => [
   { id: 't1', name: 'Bicikl', sport: 'Ride', cols: ['date', 'name', 'dist', 'moving', 'avgSpeed', 'elev', 'avgHr'] },
   { id: 't2', name: 'Sve', sport: 'all', cols: ['date', 'name', 'type', 'dist', 'moving', 'elev'] }
 ];
-const tabsCfg = () => { const t = DB.settings && DB.settings.tabs; return Array.isArray(t) && t.length ? t.map(x => ({ id: String(x.id), name: String(x.name || 'Tab'), sport: x.sport || 'all', cols: (x.cols || []).filter(k => COLS[k]) })) : TABS_DEFAULT(); };
+const tabsCfg = () => { const t = DB.settings && DB.settings.tabs; return Array.isArray(t) && t.length ? t.map(x => ({ id: String(x.id), name: String(x.name || 'Tab'), sport: x.sport || 'all', commute: ['no', 'only'].includes(x.commute) ? x.commute : 'all', cols: (x.cols || []).filter(k => COLS[k]) })) : TABS_DEFAULT(); };
 const curTab = () => { const a = tabsCfg(); return a.find(t => t.id === UI.tab) || a[0]; };
 async function tabsSave(arr, activeId) {
   DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), tabs: arr || undefined });
@@ -661,10 +661,11 @@ function viewTable() {
     const row = (k, on) => '<div class="tcr"><label><input type="checkbox" data-tcol="' + k + '"' + (on ? ' checked' : '') + '> ' + esc(COLS[k].l) + (k === 'dist' ? '' : '') + '</label>' + (on ? '<span><button class="btn" data-tmove="' + k + ':-1">↑</button><button class="btn" data-tmove="' + k + ':1">↓</button></span>' : '') + '</div>';
     return html + '<div class="card"><label>Naziv taba</label><input data-tname value="' + esc(t.name) + '">' +
       '<label>Sport</label><select data-tsport><option value="all"' + (t.sport === 'all' ? ' selected' : '') + '>Svi sportovi</option>' + sports().concat(sports().includes(t.sport) || t.sport === 'all' ? [] : [t.sport]).map(s => '<option value="' + esc(s) + '"' + (t.sport === s ? ' selected' : '') + '>' + esc(typeLabel(s)) + '</option>').join('') + '</select>' +
+      '<label>Commute</label><select data-tcommute>' + [['all', 'Prikaži'], ['no', 'Sakrij commute'], ['only', 'Samo commute']].map(([k, l]) => '<option value="' + k + '"' + (t.commute === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>' +
       '<label>Stupci (redoslijed odozgo prema dolje je slijeva udesno)</label><div class="tcl">' + t.cols.map(k => row(k, true)).join('') + off.map(k => row(k, false)).join('') + '</div>' +
       '<div class="acts"><button class="btn" data-tdel="1"' + (tabs.length < 2 ? ' disabled' : '') + '>Obriši tab</button><div class="row"><button class="btn" data-treset="1">Zadano</button><button class="btn pri" data-tadd="1">+ Novi tab</button></div></div></div>';
   }
-  let list = acts().filter(a => t.sport === 'all' || a.type === t.sport);
+  let list = acts().filter(a => (t.sport === 'all' || a.type === t.sport) && (t.commute === 'no' ? !a.commute : t.commute === 'only' ? !!a.commute : true));
   const years = [...new Set(list.map(a => new Date(a.date).getFullYear()))].sort((x, y) => y - x);
   if (UI.tyear !== 'all' && !years.includes(+UI.tyear)) UI.tyear = 'all';
   if (UI.tyear !== 'all') list = list.filter(a => String(new Date(a.date).getFullYear()) === UI.tyear);
@@ -746,8 +747,9 @@ function bind() {
   v.querySelectorAll('[data-tcol]').forEach(b => b.onclick = () => tabEdit(t => { const i = t.cols.indexOf(b.dataset.tcol); if (i >= 0) t.cols.splice(i, 1); else t.cols.push(b.dataset.tcol); }));
   v.querySelectorAll('[data-tmove]').forEach(b => b.onclick = () => tabEdit(t => { const [k, d] = b.dataset.tmove.split(':'), i = t.cols.indexOf(k), j = i + +d; if (i >= 0 && j >= 0 && j < t.cols.length) [t.cols[i], t.cols[j]] = [t.cols[j], t.cols[i]]; }));
   v.querySelectorAll('[data-tname]').forEach(i => i.onchange = () => tabEdit(t => { t.name = i.value.trim() || t.name; }));
+  v.querySelectorAll('[data-tcommute]').forEach(i => i.onchange = () => tabEdit(t => { t.commute = i.value; }));
   v.querySelectorAll('[data-tsport]').forEach(i => i.onchange = () => tabEdit(t => { t.sport = i.value; }));
-  v.querySelectorAll('[data-tadd]').forEach(b => b.onclick = () => tabsSave(tabsCfg().concat([{ id: 't' + Date.now().toString(36), name: 'Novi tab', sport: 'all', cols: ['date', 'name', 'dist', 'moving'] }]), 't' + 'new'));
+  v.querySelectorAll('[data-tadd]').forEach(b => b.onclick = () => tabsSave(tabsCfg().concat([{ id: 't' + Date.now().toString(36), name: 'Novi tab', sport: 'all', commute: 'all', cols: ['date', 'name', 'dist', 'moving'] }]), 't' + 'new'));
   v.querySelectorAll('[data-tdel]').forEach(b => b.onclick = () => { const a = tabsCfg(); if (a.length > 1) tabsSave(a.filter(t => t.id !== curTab().id)); });
   v.querySelectorAll('[data-treset]').forEach(b => b.onclick = () => tabsSave(null));
   v.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { UI.view = b.dataset.go; render(); });
