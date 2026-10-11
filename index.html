@@ -14,8 +14,11 @@
 <script>
 /* Prikaz grešaka na ekranu (korisno na mobitelu gdje nema konzole). */
 window.addEventListener('error',function(e){
-  var t=e.target,msg;
+  var t=e.target,msg,o=location.origin;
   if(t&&t.src&&/config\.js/.test(t.src)&&!e.message) return;
+  /* greške tuđih skripti (novčanik/ekstenzija u pregledniku, "Script error.") nisu iz aplikacije */
+  if(e.message&&(!e.filename||e.filename.indexOf(o)!==0)) return;
+  if(!e.message&&t&&(t.src||t.href)&&String(t.src||t.href).indexOf(o)!==0) return;
   if(t&&(t.src||t.href)&&!e.message) msg='Ne mogu učitati datoteku: '+(t.src||t.href).split('/').pop();
   else msg=(e.message||'Greška')+(e.filename?'  ('+e.filename.split('/').pop()+':'+e.lineno+')':'');
   var b=document.getElementById('errbox');
@@ -124,6 +127,27 @@ dialog h2{margin:0 0 4px;font-size:18px}
 .tv-cur{stroke:var(--mute);stroke-width:1;stroke-dasharray:3 3}
 .tv-read{font-size:13px;color:var(--mute);min-height:20px;font-variant-numeric:tabular-nums;margin-top:2px}
 progress{height:10px;accent-color:var(--accent)}
+.cal{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.cal-h,.cal-w{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-h span{font-size:11px;color:var(--mute);text-align:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.cal-d{min-height:68px;padding:3px 2px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.cal-d .n{font-size:11px;color:var(--mute);text-align:right;padding-right:3px;line-height:1.3}
+.cal-d.out{opacity:.38}
+.cal-d.today .n{color:var(--accent-ink);background:var(--accent);border-radius:99px;width:18px;margin-left:auto;margin-right:2px;text-align:center;padding:0;font-weight:700}
+.cch{margin-top:2px;border-radius:5px;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:17px;min-height:17px;cursor:pointer;overflow:hidden;font-variant-numeric:tabular-nums}
+@media (prefers-color-scheme:dark){.cch{color:#111}}
+.cal-d .more{font-size:10px;color:var(--mute);text-align:center;margin-top:1px}
+.cch span{display:block;line-height:13px;font-size:10px}.cch span:first-child{padding-top:2px}.cch span:last-child{padding-bottom:2px;font-weight:600;opacity:.92}
+.sm-r{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:14px}.sm-r.tot{font-weight:700;border-top:0}
+.sm-n i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px}.sm-v{color:var(--mute);text-align:right;font-variant-numeric:tabular-nums}.sm-r.tot .sm-v{color:var(--ink)}
+.cal-s{font-size:10px;line-height:1.25;color:var(--mute);padding:4px 2px;text-align:center;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.cal-s small{font-size:9px}
+.cal-w:last-child .cal-d,.cal-w:last-child .cal-s{border-bottom:0}
+.cal-d:nth-child(7){border-right:0}
+.wk-d{margin-bottom:6px}.wk-d.today .day{color:var(--accent)}
+.wk-e{color:var(--mute);padding:2px 4px 6px;font-size:14px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:12px 2px;font-size:13px;color:var(--mute)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .bdg{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;margin-right:6px;background:var(--line);color:var(--ink);vertical-align:1px}
 .bdg.cm{background:color-mix(in srgb,var(--c-ride) 16%,transparent);color:var(--c-ride)}
 .chk{display:inline-flex;align-items:center;gap:6px;margin:0 8px 8px 0;padding:6px 12px;border:1px solid var(--line);border-radius:99px;font-size:14px;color:var(--ink);cursor:pointer}
@@ -142,7 +166,8 @@ progress{height:10px;accent-color:var(--accent)}
 <main id="view"></main>
 
 <nav id="nav">
-  <button data-v="overview" class="on"><b>▦</b>Pregled</button>
+  <button data-v="cal" class="on"><b>▤</b>Kalendar</button>
+  <button data-v="overview"><b>▦</b>Pregled</button>
   <button data-v="list"><b>☰</b>Treninzi</button>
   <button data-v="records"><b>★</b>Rekordi</button>
   <button data-v="settings"><b>⚙</b>Postavke</button>
@@ -222,8 +247,8 @@ const store = {
 
 /* ---------- stanje ---------- */
 let DB = Core.emptyDB();
-let META = { fileId: null, lastSync: null, dirty: false, clientId: '', tracksFileId: null, tracksVer: null, tracksDirty: false };
-const UI = { view: 'overview', sport: 'all', flt: '', period: 'month', cursor: new Date(), metric: 'km', q: '', limit: 60 };
+let META = { fileId: null, lastSync: null, dirty: false, clientId: '', tracksFileId: null, tracksVer: null, tracksDirty: false, locked: true };
+const UI = { view: 'cal', cal: { mode: 'month', cursor: new Date() }, sport: 'all', flt: '', period: 'month', cursor: new Date(), metric: 'km', q: '', limit: 60 };
 const acts = () => Object.values(DB.activities).sort((a, b) => b.date.localeCompare(a.date));
 const sports = () => [...new Set(acts().map(a => a.type))].sort((a, b) => acts().filter(x => x.type === b).length - acts().filter(x => x.type === a).length);
 const FLT = { commute: a => a.commute, nocommute: a => !a.commute, map: a => a.hasTrack, desc: a => a.desc };
@@ -392,7 +417,9 @@ function download(name, text, type) {
 function render() {
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === UI.view));
   const v = $('#view');
-  if (UI.view === 'overview') v.innerHTML = viewOverview();
+  $('#addBtn').classList.toggle('hide', !!META.locked);
+  if (UI.view === 'cal') v.innerHTML = viewCal();
+  else if (UI.view === 'overview') v.innerHTML = viewOverview();
   else if (UI.view === 'list') v.innerHTML = viewList();
   else if (UI.view === 'records') v.innerHTML = viewRecords();
   else v.innerHTML = viewSettings();
@@ -457,7 +484,8 @@ const hoursStr = s => { const h = Math.floor(s / 3600), m = Math.round((s % 3600
 
 function chart(bks, vals, unit) {
   if (!bks.length) return '<p class="empty">Nema podataka.</p>';
-  const W = 340, H = 150, padL = 4, padB = 18, padT = 14, n = bks.length;
+  const n = bks.length, vert = n > 14, W = 340, H = 150, padL = 4, padB = 18, padT = vert ? 30 : 14;
+  const fmtV = v => unit === '×' ? String(v) : (v >= 10 ? String(Math.round(v)) : v.toFixed(1).replace('.', ','));
   const max = Math.max(...vals, 0.0001), bw = (W - padL * 2) / n, gap = Math.min(4, bw * 0.25);
   const every = n > 20 ? 5 : n > 12 ? 2 : 1;
   let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="Graf">';
@@ -467,7 +495,8 @@ function chart(bks, vals, unit) {
     const x = padL + i * bw + gap / 2, y = H - padB - h;
     const col = UI.sport === 'all' ? 'var(--accent)' : typeColor(UI.sport);
     if (h) s += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (bw - gap).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="2" fill="' + col + '"/>';
-    if (h && n <= 14) s += '<text x="' + (x + (bw - gap) / 2).toFixed(1) + '" y="' + (y - 3).toFixed(1) + '" text-anchor="middle">' + (unit === '×' ? v : v >= 10 ? Math.round(v) : v.toFixed(1)) + '</text>';
+    if (h && !vert) s += '<text x="' + (x + (bw - gap) / 2).toFixed(1) + '" y="' + (y - 3).toFixed(1) + '" text-anchor="middle">' + fmtV(v) + '</text>';
+    else if (h) { const tx = (x + (bw - gap) / 2 + 3).toFixed(1), ty = (y - 4).toFixed(1); s += '<text transform="translate(' + tx + ' ' + ty + ') rotate(-90)" text-anchor="start" style="font-size:9px">' + fmtV(v) + '</text>'; }
     if (i % every === 0) s += '<text x="' + (x + (bw - gap) / 2).toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle">' + esc(bks[i].label) + '</text>';
   });
   return s + '</svg>';
@@ -483,6 +512,63 @@ function item(a) {
   if (a.lifted > 0) sub.push(Math.round(a.lifted) + ' kg');
   if (a.hasTrack) sub.push('📍');
   return '<div class="item" data-id="' + esc(a.id) + '"><div class="bar" style="background:' + typeColor(a.type) + '"></div><div class="main"><div class="nm">' + esc(a.name || typeLabel(a.type)) + (a.tags || []).map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div><div class="sub">' + badgesHtml(a) + esc(sub.map(x => String(x).replace(/ /g, '\u00a0')).join(' · ')) + (a.notes ? ' · 📝' : '') + '</div>' + (a.desc ? '<div class="dsc">' + esc(a.desc) + '</div>' : '') + '</div><div class="rt">' + esc(bits.join(' · ')) + '</div></div>';
+}
+
+const durShort = sec => { const m = Math.round(sec / 60); return m >= 60 ? Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0') : m + '′'; };
+const chipTxt = a => { const t = durShort(a.moving || a.elapsed || 0); return a.dist > 0 ? '<span>' + (a.dist >= 1 ? Math.round(a.dist) : '<1') + ' km</span><span>' + t + '</span>' : t; };
+function calSummary(list, label) {
+  if (!list.length) return '';
+  const row = (name, col, l, cls) => { const t = Core.totals(l); return '<div class="sm-r' + (cls || '') + '"><span class="sm-n">' + (col ? '<i style="background:' + col + '"></i>' : '') + esc(name) + '</span><span class="sm-v">' + l.length + '×' + (t.km > 0 ? ' · ' + fmtKm(t.km) + ' km' : '') + ' · ' + hoursStr(t.sec).replace(/<\/?small>/g, '') + '</span></div>'; };
+  const sec = l => Core.totals(l).sec, types = [...new Set(list.map(a => a.type))].sort((x, y) => sec(list.filter(a => a.type === y)) - sec(list.filter(a => a.type === x)));
+  return '<div class="card"><h3>' + esc(label) + '</h3>' + row('Ukupno', null, list, ' tot') + types.map(t => row(typeLabel(t), typeColor(t), list.filter(a => a.type === t))).join('') + '</div>';
+}
+function viewCal() {
+  if (!acts().length) return emptyState();
+  const C = UI.cal, cur = new Date(C.cursor), all = filtered(), by = {};
+  all.forEach(a => { const k = Core.ymd(new Date(a.date)); (by[k] = by[k] || []).push(a); });
+  Object.values(by).forEach(l => l.sort((x, y) => new Date(x.date) - new Date(y.date)));
+  const today = Core.ymd(new Date()), month = C.mode === 'month';
+  let start, weeks, title;
+  if (month) {
+    const first = new Date(cur.getFullYear(), cur.getMonth(), 1), last = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
+    start = Core.mondayOf(first); weeks = Math.ceil((Core.addDays(last, 1) - start) / (7 * 864e5) - 0.01);
+    title = first.toLocaleDateString('hr', { month: 'long', year: 'numeric' });
+  } else {
+    start = Core.mondayOf(cur); weeks = 1;
+    const e = Core.addDays(start, 6);
+    title = start.toLocaleDateString('hr', { day: 'numeric', month: 'numeric' }) + ' – ' + e.toLocaleDateString('hr', { day: 'numeric', month: 'numeric', year: 'numeric' });
+  }
+  const used = new Set();
+  let html = filterBar();
+  html += '<div class="seg">' + [['week', 'Tjedan'], ['month', 'Mjesec']].map(([k, l]) => '<button data-cmode="' + k + '" class="' + (C.mode === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
+  html += '<div class="pager"><button data-cpage="-1">‹</button><div class="t">' + esc(title) + '</div><button data-cpage="1">›</button></div>';
+  html += '<div class="row" style="justify-content:flex-end;margin:-4px 0 8px"><button class="chip" data-ctoday="1">Danas</button></div>';
+  const dn = ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'];
+  if (month) {
+    html += '<div class="cal"><div class="cal-h">' + dn.map(d => '<span>' + d + '</span>').join('') + '</div>';
+    for (let w = 0; w < weeks; w++) {
+      const wl = []; html += '<div class="cal-w">';
+      for (let i = 0; i < 7; i++) {
+        const d = Core.addDays(start, w * 7 + i), k = Core.ymd(d), l = by[k] || [];
+        wl.push(...l); l.forEach(a => used.add(a.type));
+        html += '<div class="cal-d' + (d.getMonth() !== cur.getMonth() ? ' out' : '') + (k === today ? ' today' : '') + '"><div class="n">' + d.getDate() + '</div>' +
+          l.slice(0, 3).map(a => '<div class="cch" data-id="' + esc(a.id) + '" style="background:' + typeColor(a.type) + '">' + chipTxt(a) + '</div>').join('') +
+          (l.length > 3 ? '<div class="more">+' + (l.length - 3) + '</div>' : '') + '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  } else {
+    const wl = [];
+    for (let i = 0; i < 7; i++) {
+      const d = Core.addDays(start, i), k = Core.ymd(d), l = by[k] || []; wl.push(...l); l.forEach(a => used.add(a.type));
+      html += '<div class="wk-d' + (k === today ? ' today' : '') + '"><div class="day">' + dn[i] + ', ' + d.toLocaleDateString('hr', { day: 'numeric', month: 'numeric' }) + '</div>' + (l.length ? '<div class="list">' + l.map(item).join('') + '</div>' : '<div class="wk-e">–</div>') + '</div>';
+    }
+  }
+  const lg = [...used]; if (lg.length) html += '<div class="legend">' + lg.map(t => '<span><i style="background:' + typeColor(t) + '"></i>' + esc(typeLabel(t)) + '</span>').join('') + '</div>';
+  const from = month ? new Date(cur.getFullYear(), cur.getMonth(), 1) : start, to = month ? new Date(cur.getFullYear(), cur.getMonth() + 1, 1) : Core.addDays(start, 7);
+  html += calSummary(all.filter(a => { const d = new Date(a.date); return d >= from && d < to; }), month ? 'Zbroj mjeseca' : 'Zbroj tjedna');
+  return html;
 }
 
 function viewList() {
@@ -524,6 +610,7 @@ function viewSettings() {
   return '<div class="card" style="margin-top:0"><h3>Podaci</h3><p style="margin:0 0 10px">' + n + ' treninga u evidenciji.</p>' +
     '<div class="row" style="flex-wrap:wrap"><button class="btn pri" data-act="csv">Uvezi Strava ZIP ili CSV</button><button class="btn" data-act="gps">Dodaj GPS datoteke</button><button class="btn" data-act="export">Izvezi backup (JSON)</button><button class="btn" data-act="exportcsv">Izvezi CSV</button><button class="btn" data-act="import">Vrati iz backupa</button></div>' +
     '<p class="note">Najlakše je odabrati cijeli ZIP koji dobiješ od Strave: aplikacija sama pročita treninge, opise i sve .gpx/.fit.gz rute. Postojeći treninzi se preskaču (bez dupliciranja), a tvoje bilješke i oznake ostaju. „GPS datoteke“ služe za pojedinačne .gpx, .fit, .tcx (i .gz) datoteke, npr. s drugog sata ili aplikacije.</p></div>' +
+    '<div class="card"><h3>Uređivanje</h3><p style="margin:0 0 10px">' + (META.locked ? 'Zaključano: treninzi se samo pregledavaju.' : 'Otključano: možeš dodavati i uređivati treninge.') + '</p><button class="btn" data-act="lock">' + (META.locked ? 'Otključaj uređivanje' : 'Zaključaj uređivanje') + '</button></div>' +
     '<div class="card"><h3>Google Drive</h3>' +
     '<p class="note" style="margin:0 0 6px">Aplikacija trenutno koristi ID:</p><p style="margin:0;word-break:break-all"><code>' + (cid ? esc(cid) : '(prazno)') + '</code></p><p class="note" style="margin:4px 0 8px;color:' + (!cid ? 'var(--mute)' : idOk(cid) ? 'var(--c-foot)' : 'var(--c-weight)') + '">' + (!cid ? 'Nije postavljen.' : cid.length + ' znakova · ' + (idOk(cid) ? '✓ oblik je ispravan' : '✗ oblik NIJE ispravan – ID je nepotpun ili pogrešan')) + '</p>' +
     (GOOGLE_CLIENT_ID ? '<p style="margin:0">ID je postavljen u config.js.</p>' :
@@ -540,6 +627,9 @@ function bind() {
   v.querySelectorAll('[data-sport]').forEach(b => b.onclick = () => { UI.sport = b.dataset.sport; UI.limit = 60; render(); });
   v.querySelectorAll('[data-flt]').forEach(b => b.onclick = () => { UI.flt = UI.flt === b.dataset.flt ? '' : b.dataset.flt; UI.limit = 60; render(); });
   v.querySelectorAll('[data-period]').forEach(b => b.onclick = () => { UI.period = b.dataset.period; UI.cursor = new Date(); render(); });
+  v.querySelectorAll('[data-cmode]').forEach(b => b.onclick = () => { UI.cal.mode = b.dataset.cmode; render(); });
+  v.querySelectorAll('[data-ctoday]').forEach(b => b.onclick = () => { UI.cal.cursor = new Date(); render(); });
+  v.querySelectorAll('[data-cpage]').forEach(b => b.onclick = () => { const d = +b.dataset.cpage, c = new Date(UI.cal.cursor); if (UI.cal.mode === 'week') c.setDate(c.getDate() + 7 * d); else c.setMonth(c.getMonth() + d, 1); UI.cal.cursor = c; render(); });
   v.querySelectorAll('[data-metric]').forEach(b => b.onclick = () => { UI.metric = b.dataset.metric; render(); });
   v.querySelectorAll('[data-page]').forEach(b => b.onclick = () => {
     const d = +b.dataset.page, c = new Date(UI.cursor);
@@ -557,6 +647,7 @@ document.querySelectorAll('#nav button').forEach(b => b.onclick = () => { UI.vie
 $('#addBtn').onclick = () => openEdit(null);
 
 const actions = {
+  lock: async () => { META.locked = !META.locked; await persist(false); render(); },
   csv: () => $('#csvIn').click(),
   gps: () => $('#gpsIn').click(),
   import: () => $('#jsonIn').click(),
@@ -727,8 +818,39 @@ $('#jsonIn').onchange = async e => {
 const toLocalInput = iso => { const d = new Date(iso), p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes()); };
 let detailView = null, openSeq = 0;
 const chk = (n, l, on) => '<label class="chk"><input type="checkbox" name="' + n + '"' + (on ? ' checked' : '') + '> ' + esc(l) + '</label>';
+function openView(a) {
+  const dlg = $('#dlg'), seq = ++openSeq, sum = [];
+  if (a.dist > 0) sum.push([fmtKm(a.dist), 'km']);
+  sum.push([Core.fmtDur(a.moving || a.elapsed), '']);
+  if (a.avgSpeed && a.dist >= 1) sum.push([a.avgSpeed.toFixed(1).replace('.', ','), 'km/h']);
+  if (a.elev > 0) sum.push([Math.round(a.elev), 'm ↑']);
+  if (a.avgHr > 0) sum.push([Math.round(a.avgHr), 'bpm']);
+  if (a.temp != null) sum.push([a.temp.toFixed(1).replace('.', ','), '°C']);
+  dlg.innerHTML = '<div><h2>' + esc(a.name || typeLabel(a.type)) + '</h2>' +
+    '<div class="note" style="margin:2px 0 0">' + esc(typeLabel(a.type) + ' · ' + fmtDate(a.date) + ' ' + fmtTime(a.date)) + (a.gear ? ' · ' + esc(a.gear) : '') + '</div>' +
+    '<div class="sum">' + sum.map(([v, u]) => '<div>' + esc(v) + (u ? '<small>' + esc(u) + '</small>' : '') + '</div>').join('') + '</div>' +
+    (badgesHtml(a) || (a.tags || []).length ? '<div style="margin-top:8px">' + badgesHtml(a) + (a.tags || []).map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>' : '') +
+    (a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
+    (a.notes ? '<p class="adesc"><b>Bilješka:</b> ' + esc(a.notes) + '</p>' : '') +
+    (a.hasTrack ? '<div id="trk"></div>' : '') +
+    '<div class="acts"><div>' + (a.hasTrack ? '<button type="button" class="btn pri" id="shareBtn">Podijeli sliku</button>' : '') + '</div><button type="button" class="btn" id="cancel">Zatvori</button></div></div>';
+  dlg.onclose = () => { if (detailView) { detailView.destroy(); detailView = null; } };
+  dlg.showModal();
+  if (a.hasTrack) {
+    const box = $('#trk'); box.innerHTML = '<p class="note">Učitavam rutu…</p>';
+    store.get('tr:' + a.id).then(tr => {
+      if (seq !== openSeq || !dlg.open) return;
+      if (tr && tr.n) detailView = TrackView.mount(box, tr);
+      else box.innerHTML = '<p class="note">Ruta još nije preuzeta na ovaj uređaj. Dodirni sinkronizaciju u zaglavlju.</p>';
+    });
+  }
+  $('#cancel').onclick = () => dlg.close();
+  const sb = $('#shareBtn'); if (sb) sb.onclick = () => openShare(a.id);
+}
+
 function openEdit(id) {
   const a = id ? DB.activities[id] : null;
+  if (META.locked) { if (a) openView(a); return; }
   const isNew = !a;
   const x = a || { type: UI.sport !== 'all' ? UI.sport : 'Ride', date: new Date().toISOString(), name: '', dist: 0, moving: 0, tags: [], notes: '', desc: '' };
   const types = [...new Set(['Ride', 'Weight Training', 'Football (Soccer)', 'Run', 'Walk', 'Workout', 'Swim', 'Hike', x.type].concat(sports()))];

@@ -26,6 +26,8 @@ Web aplikacija za evidenciju treninga uvezenih iz Strave. Podaci su tvoji: lokal
 - Strava export mora biti na engleskom jeziku (nazivi stupaca).
 
 ## Što vidiš
+- **Kalendar** (prvi tab): mjesečni ili tjedni prikaz u stilu intervals.icu. Svaki trening je obojeni blok (plavo bicikl, crveno snaga, zeleno nogomet, ljubičasto hodanje/planinarenje, žuto ostalo) (bicikl s kilometrima i vremenom, ostalo s trajanjem). Ispod kalendara su legenda boja i zbroj mjeseca (ili tjedna), ukupno i po sportu. Dodir na blok otvara detalj.
+- **Zaključano (zadano)**: aplikacija služi samo za pregled, pa nema dodavanja, uređivanja ni brisanja. Detalj prikazuje podatke, opis, bilješku, kartu i grafove i gumb Podijeli sliku. Uređivanje se otključava u Postavke → *Uređivanje* (postavka je po uređaju). Uvoz iz Strave i dalje radi u Postavkama.
 - Pregled po tjednu/mjesecu/godini, filteri po sportu i po oznaci (Commute, S rutom, S opisom).
 - U popisu: oznake (Commute, Oporavak…), opis aktivnosti i 📍 za treninge s rutom.
 - U detalju: karta rute (OpenStreetMap), grafovi visine/brzine/pulsa/snage (povuci prstom po grafu pa se na karti pomiče točka), opis, oznake, bilješke.
