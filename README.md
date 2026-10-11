@@ -6,7 +6,7 @@ Aplikacija je zamišljena kao **pregled**: uređivanje ostaje na Stravi, a ovdje
 
 ## Mogućnosti
 
-- **Kalendar** (prvi tab): mjesečni i tjedni prikaz u stilu intervals.icu. Svaki trening je blok u boji sporta (bicikl s km i vremenom, ostalo s trajanjem). Ispod su legenda boja i zbroj mjeseca ili tjedna, ukupno i po sportu.
+- **Kalendar** (prvi tab): mjesečni i tjedni prikaz. Svaki trening je blok u boji sporta (bicikl s km i vremenom, ostalo s trajanjem). Ispod su legenda boja i zbroj mjeseca ili tjedna, ukupno i po sportu.
 - **Zone pulsa i brzine:** granice zona 2–5 upisuješ u Postavkama (zadano kao na iGPSPORT-u: puls 114/133/152/171 bpm, brzina 18/25/30/35 km/h). U detalju vožnje s GPS-om vidiš vrijeme i postotak po zonama, uz kratku ocjenu intenziteta. Stajanje se ne računa.
 - **Ruta obojena po zonama:** ispod karte u detalju prekidač *Jednobojno / Puls / Brzina* boji putanju bojom zone na svakoj dionici, uz legendu.
 - **Karta** (tab): sve rute na jednoj karti kao heat map. Linije su prozirne, pa se češće vožene dionice vide jače. Vožnje i commute imaju različite boje i svaki se uključuje i isključuje posebno. Prikazuje se samo bicikl. Filter po godini, jačina linija (tanko, srednje, jako) i siva podloga za bolji kontrast.
