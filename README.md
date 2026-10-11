@@ -14,7 +14,7 @@ Aplikacija je zamišljena kao **pregled**: uređivanje ostaje na Stravi, a ovdje
 
 - **Rekordi**: najduža vožnja, najbolji tjedan i slično.
 - **Detalj treninga**: podaci, opis, oznake (Commute, Oporavak, S psom, S djetetom, Utrka, Dugi trening), karta rute (OpenStreetMap) i grafovi visine, brzine, pulsa i snage. Povlačenjem prsta po grafu pomiče se točka na karti.
-- **Podijeli sliku:** pet stilova (karta + podaci, preko cijele karte, samo ruta, prozirno za story, zone), tri formata (objava 4:5, story 9:16, kvadrat), svijetla ili tamna tema, bojanje rute po zonama i izbor brzine kao km/h ili tempo (min/km). Početak i kraj rute (200 m) po zadanom su skriveni radi privatnosti.
+- **Podijeli sliku:** pet stilova (karta + podaci, preko cijele karte, samo ruta, prozirno za story, zone), tri formata (objava 4:5, story 9:16, kvadrat), svijetla ili tamna tema, podloga karte šarena ili siva (zadano siva) i izbor brzine kao km/h ili tempo (min/km). Ruta na slici je uvijek jednobojna. Početak i kraj rute (200 m) po zadanom su skriveni radi privatnosti.
 - **Filteri** po sportu i oznaci (Commute, S rutom, S opisom) u kalendaru, pregledu i popisu.
 - **Sinkronizacija s Google Driveom**: Drive je izvor istine, a lokalna kopija u pregledniku samo predmemorija. Promjena mobitela ne gubi ništa.
 - **Zaključano po zadanom**: nema dodavanja, uređivanja ni brisanja. Otključava se u Postavke → *Uređivanje* (postavka vrijedi po uređaju).
