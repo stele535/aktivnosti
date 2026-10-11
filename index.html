@@ -11,6 +11,21 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <title>Trening</title>
+<script>
+/* Prikaz grešaka na ekranu (korisno na mobitelu gdje nema konzole). */
+window.addEventListener('error',function(e){
+  var t=e.target,msg;
+  if(t&&t.src&&/config\.js/.test(t.src)&&!e.message) return;
+  if(t&&(t.src||t.href)&&!e.message) msg='Ne mogu učitati datoteku: '+(t.src||t.href).split('/').pop();
+  else msg=(e.message||'Greška')+(e.filename?'  ('+e.filename.split('/').pop()+':'+e.lineno+')':'');
+  var b=document.getElementById('errbox');
+  if(!b){b=document.createElement('pre');b.id='errbox';
+    b.style.cssText='position:fixed;z-index:99;left:8px;right:8px;top:64px;background:#b00020;color:#fff;padding:10px 12px;border-radius:10px;font:12px/1.4 monospace;white-space:pre-wrap;max-height:50vh;overflow:auto';
+    (document.body||document.documentElement).appendChild(b);}
+  b.textContent+=msg+'\n';
+},true);
+</script>
+
 <style>
 :root{
   --bg:#f6f5f1; --card:#ffffff; --ink:#1c1e22; --mute:#6b7078; --line:#e4e2db; --accent:#d8561f; --accent-ink:#fff;
@@ -84,6 +99,37 @@ dialog h2{margin:0 0 4px;font-size:18px}
 .note{font-size:13px;color:var(--mute);margin:6px 0 0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-size:14px;z-index:20;max-width:90vw;text-align:center}
 .hide{display:none!important}
+
+.sum{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0 2px}
+.sum div{font-size:20px;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.sum small{font-size:12px;font-weight:500;color:var(--mute);margin-left:3px}
+.adesc{margin:10px 0 0;padding:10px 12px;background:var(--bg);border-radius:10px;white-space:pre-wrap}
+.dsc{font-size:13px;color:var(--ink);opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mm{position:relative;height:250px;overflow:hidden;border-radius:12px;background:var(--line);touch-action:none;user-select:none;-webkit-user-select:none;margin-top:12px}
+.mm-tiles{position:absolute;inset:0}
+.mm-tiles img{position:absolute;left:0;top:0;width:256px;height:256px;max-width:none;-webkit-user-drag:none;user-select:none}
+.mm-route{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.mm-casing{fill:none;stroke:#fff;stroke-width:6;stroke-linejoin:round;stroke-linecap:round;opacity:.9}
+.mm-line{fill:none;stroke:var(--accent);stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round}
+.mm-start{fill:#2a8f55;stroke:#fff;stroke-width:2.5}.mm-end{fill:#1c1e22;stroke:#fff;stroke-width:2.5}.mm-mark{fill:var(--accent);stroke:#fff;stroke-width:3}
+.mm-ctl{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:6px}
+.mm-ctl button{width:36px;height:36px;border-radius:9px;border:1px solid rgba(0,0,0,.2);background:rgba(255,255,255,.93);color:#1c1e22;font-size:21px;line-height:1;cursor:pointer;padding:0}
+.mm-att{position:absolute;right:4px;bottom:2px;font-size:10px;background:rgba(255,255,255,.78);color:#333;padding:0 4px;border-radius:4px}
+.tv-tabs{display:flex;gap:6px;margin:14px 0 4px}
+.tv-tabs button{border:0;background:none;color:var(--mute);font:inherit;font-size:13px;padding:4px 11px;border-radius:99px;cursor:pointer}
+.tv-tabs button.on{background:var(--line);color:var(--ink)}
+.tv-chart{display:block;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.tv-grid{stroke:var(--line);stroke-width:1}
+.tv-area{opacity:.16}.tv-line{fill:none;stroke-width:1.6;stroke-linejoin:round}
+.tv-cur{stroke:var(--mute);stroke-width:1;stroke-dasharray:3 3}
+.tv-read{font-size:13px;color:var(--mute);min-height:20px;font-variant-numeric:tabular-nums;margin-top:2px}
+progress{height:10px;accent-color:var(--accent)}
+.bdg{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;margin-right:6px;background:var(--line);color:var(--ink);vertical-align:1px}
+.bdg.cm{background:color-mix(in srgb,var(--c-ride) 16%,transparent);color:var(--c-ride)}
+.chk{display:inline-flex;align-items:center;gap:6px;margin:0 8px 8px 0;padding:6px 12px;border:1px solid var(--line);border-radius:99px;font-size:14px;color:var(--ink);cursor:pointer}
+.chk input{width:auto;margin:0;accent-color:var(--accent)}
+.shr-box{min-height:160px;display:flex;align-items:center;justify-content:center;color:var(--mute)}
+.shr-box img{width:100%;border-radius:12px;display:block;border:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -103,18 +149,27 @@ dialog h2{margin:0 0 4px;font-size:18px}
 </nav>
 
 <dialog id="dlg"></dialog>
-<input type="file" id="csvIn" accept=".csv,text/csv" class="hide">
+<dialog id="shr"></dialog>
+<dialog id="prog"><div id="progTxt" style="margin-bottom:10px">…</div><progress id="progBar" style="width:100%"></progress></dialog>
+<input type="file" id="csvIn" accept=".zip,.csv,application/zip,text/csv" class="hide">
+<input type="file" id="gpsIn" multiple class="hide">
+<input type="file" id="oneIn" class="hide">
 <input type="file" id="jsonIn" accept=".json,application/json" class="hide">
 
+<script src="config.js"></script>
 <script src="core.js"></script>
+<script src="files.js"></script>
+<script src="trackview.js"></script>
+<script src="share.js"></script>
 <script>
 'use strict';
 /* =====================================================================
    POSTAVKE – ovdje zalijepi svoj Google OAuth Client ID (vidi upute).
    Ako ostane prazno, aplikacija radi lokalno + ručni backup (JSON).
    ===================================================================== */
-const GOOGLE_CLIENT_ID = '526289827306-llmeoh7jbafkh5fhug0plhnshff5p8go.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = (window.TRENING_CONFIG && window.TRENING_CONFIG.googleClientId) || '';
 const DRIVE_FILE_NAME = 'trening-evidencija.json';
+const TRACKS_FILE_NAME = 'trening-tragovi.json';
 const SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
 const { typeLabel, ymd } = Core;
@@ -145,16 +200,34 @@ const store = {
       if (!this._db) await this.open();
       await new Promise((res, rej) => { const t = this._db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); });
     } catch (e) { try { localStorage.setItem('kv_' + k, JSON.stringify(v)); } catch (_) {} }
+  },
+  async setTrack(id, v) { // trase su prevelike za localStorage: bez rezerve, greška se prijavljuje
+    if (!this._db) await this.open();
+    await new Promise((res, rej) => { const t = this._db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, 'tr:' + id); t.oncomplete = res; t.onerror = () => rej(t.error); });
+  },
+  async keys(prefix) {
+    try {
+      if (!this._db) await this.open();
+      return await new Promise((res, rej) => {
+        const out = [], q = this._db.transaction('kv').objectStore('kv').openKeyCursor(IDBKeyRange.bound(prefix, prefix + '\uffff'));
+        q.onsuccess = () => { const c = q.result; if (c) { out.push(c.key); c.continue(); } else res(out); };
+        q.onerror = () => rej(q.error);
+      });
+    } catch (e) { return []; }
+  },
+  async del(k) {
+    try { if (!this._db) await this.open(); await new Promise((res, rej) => { const t = this._db.transaction('kv', 'readwrite'); t.objectStore('kv').delete(k); t.oncomplete = res; t.onerror = () => rej(t.error); }); } catch (e) {}
   }
 };
 
 /* ---------- stanje ---------- */
 let DB = Core.emptyDB();
-let META = { fileId: null, lastSync: null, dirty: false, clientId: '' };
-const UI = { view: 'overview', sport: 'all', period: 'month', cursor: new Date(), metric: 'km', q: '', limit: 60 };
+let META = { fileId: null, lastSync: null, dirty: false, clientId: '', tracksFileId: null, tracksVer: null, tracksDirty: false };
+const UI = { view: 'overview', sport: 'all', flt: '', period: 'month', cursor: new Date(), metric: 'km', q: '', limit: 60 };
 const acts = () => Object.values(DB.activities).sort((a, b) => b.date.localeCompare(a.date));
 const sports = () => [...new Set(acts().map(a => a.type))].sort((a, b) => acts().filter(x => x.type === b).length - acts().filter(x => x.type === a).length);
-const filtered = () => acts().filter(a => UI.sport === 'all' || a.type === UI.sport);
+const FLT = { commute: a => a.commute, nocommute: a => !a.commute, map: a => a.hasTrack, desc: a => a.desc };
+const filtered = () => acts().filter(a => (UI.sport === 'all' || a.type === UI.sport) && (!UI.flt || FLT[UI.flt](a)));
 
 async function persist(markDirty = true) {
   if (markDirty) META.dirty = true;
@@ -164,7 +237,8 @@ async function persist(markDirty = true) {
 }
 
 /* ---------- sinkronizacija s Google Driveom ---------- */
-const clientId = () => GOOGLE_CLIENT_ID || META.clientId || '';
+const clientId = () => String(GOOGLE_CLIENT_ID || META.clientId || '').replace(/\s+/g, '');
+const idOk = id => /^\d{6,}-[a-z0-9_-]+\.apps\.googleusercontent\.com$/i.test(id);
 let token = null, tokenExp = 0, tokenClient = null, syncTimer = null, syncing = false, lastErr = '';
 
 function renderSync() {
@@ -181,6 +255,7 @@ function renderSync() {
 function getToken(interactive) {
   return new Promise((resolve, reject) => {
     if (token && Date.now() < tokenExp - 60000) return resolve(token);
+    if (!idOk(clientId())) return reject(new Error('Client ID nije u ispravnom obliku (treba biti BROJ-tekst.apps.googleusercontent.com). Vidi Postavke.'));
     if (!window.google || !google.accounts) return reject(new Error('Google skripta nije učitana (nema interneta?).'));
     if (!tokenClient || tokenClient._cid !== clientId()) {
       tokenClient = google.accounts.oauth2.initTokenClient({ client_id: clientId(), scope: SCOPE, callback: () => {} });
@@ -240,12 +315,54 @@ async function sync(interactive = false) {
     }
     META.dirty = false; META.lastSync = Date.now();
     await persist(false);
-    if (changedLocal) render();
+    const pulled = await syncTracks();
+    if (changedLocal || pulled) render();
     if (interactive) toast(changedLocal ? 'Sinkronizirano – stigle su promjene s drugog uređaja.' : 'Sinkronizirano.');
   } catch (e) {
     lastErr = e.message || String(e);
     if (interactive) toast(lastErr.slice(0, 140), 4500);
   } finally { syncing = false; renderSync(); }
+}
+async function findByName(name) {
+  const q = encodeURIComponent("name='" + name + "' and trashed=false");
+  const r = await (await drive('drive/v3/files?q=' + q + '&spaces=drive&fields=files(id,modifiedTime)&orderBy=modifiedTime desc')).json();
+  return r.files && r.files.length ? r.files[0].id : null;
+}
+async function upsertDriveJson(fileId, name, body) {
+  if (fileId) return (await drive('upload/drive/v3/files/' + fileId + '?uploadType=media&fields=id,version', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body })).json();
+  const b = '-----trening' + Date.now();
+  const multi = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify({ name, mimeType: 'application/json' }) + '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + body + '\r\n--' + b + '--';
+  return (await drive('upload/drive/v3/files?uploadType=multipart&fields=id,version', { method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: multi })).json();
+}
+// Trase (rute, visine, brzine) su u zasebnoj datoteci na Driveu; spajaju se unijom po ID-u treninga.
+async function syncTracks(retry = true) {
+  const live = new Set(Object.keys(DB.activities));
+  let localIds = (await store.keys('tr:')).map(k => k.slice(3));
+  for (const id of localIds) if (!live.has(id)) await store.del('tr:' + id); // trase obrisanih treninga
+  localIds = localIds.filter(id => live.has(id));
+  let fid = META.tracksFileId || await findByName(TRACKS_FILE_NAME);
+  if (!fid) {
+    if (!localIds.length) return false;
+    const all = {}; for (const id of localIds) all[id] = await store.get('tr:' + id);
+    const r = await upsertDriveJson(null, TRACKS_FILE_NAME, JSON.stringify({ v: 1, tracks: all }));
+    META.tracksFileId = r.id; META.tracksVer = r.version; META.tracksDirty = false; await persist(false);
+    return false;
+  }
+  let info;
+  try { info = await (await drive('drive/v3/files/' + fid + '?fields=version,trashed')).json(); }
+  catch (e) { if (retry && String(e.message).includes(' 404')) { META.tracksFileId = null; META.tracksVer = null; return syncTracks(false); } throw e; }
+  if (String(info.version) === String(META.tracksVer) && !META.tracksDirty && META.tracksFileId === fid) return false; // ništa novo
+  const remote = (await (await drive('drive/v3/files/' + fid + '?alt=media')).json()).tracks || {};
+  const have = new Set(localIds); let pulled = 0;
+  for (const id of Object.keys(remote)) if (live.has(id) && !have.has(id)) { await store.setTrack(id, remote[id]); have.add(id); pulled++; }
+  const needPush = localIds.some(id => !(id in remote)) || Object.keys(remote).some(id => !live.has(id));
+  if (needPush) {
+    const all = {}; for (const id of have) all[id] = id in remote ? remote[id] : await store.get('tr:' + id);
+    const r = await upsertDriveJson(fid, TRACKS_FILE_NAME, JSON.stringify({ v: 1, tracks: all }));
+    META.tracksVer = r.version;
+  } else META.tracksVer = info.version;
+  META.tracksFileId = fid; META.tracksDirty = false; await persist(false);
+  return pulled > 0;
 }
 function scheduleSync() {
   clearTimeout(syncTimer);
@@ -288,6 +405,17 @@ function sportChips() {
     s.map(t => '<button class="chip ' + (UI.sport === t ? 'on' : '') + '" data-sport="' + esc(t) + '">' + esc(typeLabel(t)) + '</button>').join('') + '</div>';
 }
 
+function flagBar() {
+  const A = acts(), opts = [];
+  if (A.some(a => a.commute)) opts.push(['commute', 'Commute'], ['nocommute', 'Bez commutea']);
+  if (A.some(a => a.hasTrack)) opts.push(['map', 'S rutom']);
+  if (A.some(a => a.desc)) opts.push(['desc', 'S opisom']);
+  if (!opts.length) return '';
+  return '<div class="chips">' + opts.map(([k, l]) => '<button class="chip ' + (UI.flt === k ? 'on' : '') + '" data-flt="' + k + '">' + l + '</button>').join('') + '</div>';
+}
+const filterBar = () => sportChips() + flagBar();
+const badgesHtml = a => (a.commute ? '<span class="bdg cm">Commute</span>' : '') + (a.flags || []).map(k => '<span class="bdg">' + esc(Core.FLAG_LABELS[k] || k) + '</span>').join('');
+
 function periodTitle() {
   const [s, e] = Core.periodRange(UI.period, UI.cursor);
   if (UI.period === 'week') { const last = Core.addDays(e, -1); return s.toLocaleDateString('hr', { day: 'numeric', month: 'numeric' }) + ' – ' + last.toLocaleDateString('hr', { day: 'numeric', month: 'numeric', year: 'numeric' }); }
@@ -310,7 +438,7 @@ function viewOverview() {
   const unit = metric === 'km' ? 'km' : metric === 'h' ? 'h' : '×';
 
   const stat = (v, l, u) => '<div class="stat"><div class="v">' + v + (u ? '<small>' + u + '</small>' : '') + '</div><div class="l">' + l + '</div></div>';
-  let html = sportChips();
+  let html = filterBar();
   html += '<div class="seg">' + [['week', 'Tjedan'], ['month', 'Mjesec'], ['year', 'Godina'], ['all', 'Sve']].map(([k, l]) => '<button data-period="' + k + '" class="' + (UI.period === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
   html += '<div class="pager"><button data-page="-1" ' + (UI.period === 'all' ? 'disabled style="visibility:hidden"' : '') + '>‹</button><div class="t">' + esc(periodTitle()) + '</div><button data-page="1" ' + (UI.period === 'all' ? 'disabled style="visibility:hidden"' : '') + '>›</button></div>';
   html += '<div class="grid">' + stat(t.n, 'treninga') + stat(hoursStr(t.sec), 'ukupno vrijeme');
@@ -353,7 +481,8 @@ function item(a) {
   if (a.avgSpeed && a.dist >= 1) sub.push(a.avgSpeed.toFixed(1).replace('.', ',') + ' km/h');
   if (a.elev > 0) sub.push('↑' + Math.round(a.elev) + ' m');
   if (a.lifted > 0) sub.push(Math.round(a.lifted) + ' kg');
-  return '<div class="item" data-id="' + esc(a.id) + '"><div class="bar" style="background:' + typeColor(a.type) + '"></div><div class="main"><div class="nm">' + esc(a.name || typeLabel(a.type)) + (a.tags || []).map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div><div class="sub">' + esc(sub.join(' · ')) + (a.notes ? ' · 📝' : '') + '</div></div><div class="rt">' + esc(bits.join(' · ')) + '</div></div>';
+  if (a.hasTrack) sub.push('📍');
+  return '<div class="item" data-id="' + esc(a.id) + '"><div class="bar" style="background:' + typeColor(a.type) + '"></div><div class="main"><div class="nm">' + esc(a.name || typeLabel(a.type)) + (a.tags || []).map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div><div class="sub">' + badgesHtml(a) + esc(sub.map(x => String(x).replace(/ /g, '\u00a0')).join(' · ')) + (a.notes ? ' · 📝' : '') + '</div>' + (a.desc ? '<div class="dsc">' + esc(a.desc) + '</div>' : '') + '</div><div class="rt">' + esc(bits.join(' · ')) + '</div></div>';
 }
 
 function viewList() {
@@ -361,7 +490,7 @@ function viewList() {
   const q = UI.q.trim().toLowerCase();
   let list = filtered();
   if (q) list = list.filter(a => [a.name, a.desc, a.notes, (a.tags || []).join(' '), typeLabel(a.type), a.gear].join(' ').toLowerCase().includes(q));
-  let html = '<input id="q" type="search" placeholder="Traži po nazivu, bilješci, oznaci…" value="' + esc(UI.q) + '">' + sportChips() + '<div class="list">';
+  let html = '<input id="q" type="search" placeholder="Traži po nazivu, opisu, bilješci, oznaci…" value="' + esc(UI.q) + '">' + filterBar() + '<div class="list">';
   let last = '';
   list.slice(0, UI.limit).forEach(a => {
     const d = new Date(a.date); const key = d.getFullYear() + '-' + d.getMonth();
@@ -376,7 +505,7 @@ function viewList() {
 function viewRecords() {
   if (!acts().length) return emptyState();
   const recs = Core.records(filtered());
-  let html = sportChips() + '<div class="card" style="margin-top:6px">';
+  let html = filterBar() + '<div class="card" style="margin-top:6px">';
   if (!recs.length) html += '<p class="empty">Nema dovoljno podataka za rekorde.</p>';
   recs.forEach(r => {
     const sub = r.a ? esc((r.a.name || typeLabel(r.a.type)) + ' · ' + fmtDate(r.a.date)) : esc(r.note || '');
@@ -386,21 +515,22 @@ function viewRecords() {
 }
 
 function emptyState() {
-  return '<div class="empty"><p style="font-size:18px;color:var(--ink);margin-bottom:6px">Evidencija je prazna</p><p>Uvezi <b>activities.csv</b> iz Strava exporta ili unesi trening ručno.</p><p><button class="btn pri" data-act="csv">Uvezi Strava CSV</button></p></div>';
+  return '<div class="empty"><p style="font-size:18px;color:var(--ink);margin-bottom:6px">Evidencija je prazna</p><p>Uvezi cijeli <b>Strava export (ZIP)</b>: dobiješ treninge, opise i rute. Može i samo <b>activities.csv</b>.</p><p><button class="btn pri" data-act="csv">Uvezi Strava ZIP ili CSV</button></p></div>';
 }
 
 function viewSettings() {
   const n = acts().length;
   const cid = clientId();
   return '<div class="card" style="margin-top:0"><h3>Podaci</h3><p style="margin:0 0 10px">' + n + ' treninga u evidenciji.</p>' +
-    '<div class="row" style="flex-wrap:wrap"><button class="btn pri" data-act="csv">Uvezi Strava CSV</button><button class="btn" data-act="export">Izvezi backup (JSON)</button><button class="btn" data-act="exportcsv">Izvezi CSV</button><button class="btn" data-act="import">Vrati iz backupa</button></div>' +
-    '<p class="note">Uvoz preskače treninge koji već postoje (isti Strava ID), pa možeš uvoziti svježi export bez dupliciranja. Tvoje bilješke i oznake se ne prepisuju.</p></div>' +
+    '<div class="row" style="flex-wrap:wrap"><button class="btn pri" data-act="csv">Uvezi Strava ZIP ili CSV</button><button class="btn" data-act="gps">Dodaj GPS datoteke</button><button class="btn" data-act="export">Izvezi backup (JSON)</button><button class="btn" data-act="exportcsv">Izvezi CSV</button><button class="btn" data-act="import">Vrati iz backupa</button></div>' +
+    '<p class="note">Najlakše je odabrati cijeli ZIP koji dobiješ od Strave: aplikacija sama pročita treninge, opise i sve .gpx/.fit.gz rute. Postojeći treninzi se preskaču (bez dupliciranja), a tvoje bilješke i oznake ostaju. „GPS datoteke“ služe za pojedinačne .gpx, .fit, .tcx (i .gz) datoteke, npr. s drugog sata ili aplikacije.</p></div>' +
     '<div class="card"><h3>Google Drive</h3>' +
-    (GOOGLE_CLIENT_ID ? '<p style="margin:0">Client ID je ugrađen u aplikaciju.</p>' :
-      '<label for="cid">OAuth Client ID</label><input id="cid" placeholder="123456-abc.apps.googleusercontent.com" value="' + esc(META.clientId) + '" autocapitalize="off" autocorrect="off"><p class="note">Bolje ga je jednom upisati u konstantu <code>GOOGLE_CLIENT_ID</code> na vrhu skripte u index.html, pa ga nećeš morati unositi na novom mobitelu.</p>') +
+    '<p class="note" style="margin:0 0 6px">Aplikacija trenutno koristi ID:</p><p style="margin:0;word-break:break-all"><code>' + (cid ? esc(cid) : '(prazno)') + '</code></p><p class="note" style="margin:4px 0 8px;color:' + (!cid ? 'var(--mute)' : idOk(cid) ? 'var(--c-foot)' : 'var(--c-weight)') + '">' + (!cid ? 'Nije postavljen.' : cid.length + ' znakova · ' + (idOk(cid) ? '✓ oblik je ispravan' : '✗ oblik NIJE ispravan – ID je nepotpun ili pogrešan')) + '</p>' +
+    (GOOGLE_CLIENT_ID ? '<p style="margin:0">ID je postavljen u config.js.</p>' :
+      '<label for="cid">OAuth Client ID</label><input id="cid" placeholder="123456-abc.apps.googleusercontent.com" value="' + esc(META.clientId) + '" autocapitalize="off" autocorrect="off"><p class="note">Bolje ga je jednom upisati u datoteku <code>config.js</code> na GitHubu, pa ga nećeš morati unositi na svakom uređaju.</p>') +
     '<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn pri" data-act="sync">Sinkroniziraj sada</button>' + (META.lastSync ? '<span class="note" style="margin:0">zadnji put: ' + esc(new Date(META.lastSync).toLocaleString('hr')) + '</span>' : '') + '</div>' +
     (lastErr ? '<p class="note" style="color:var(--c-weight)">' + esc(lastErr) + '</p>' : '') +
-    '<p class="note">Aplikacija na Driveu stvara jednu datoteku <b>' + DRIVE_FILE_NAME + '</b> (vidi samo datoteke koje je sama napravila). Lokalna kopija je samo predmemorija, Drive je izvor istine.</p></div>' +
+    '<p class="note">Aplikacija na Driveu stvara jednu datoteku <b>' + DRIVE_FILE_NAME + '</b> (evidencija) i <b>' + TRACKS_FILE_NAME + '</b> (rute i grafovi); vidi samo datoteke koje je sama napravila. Lokalna kopija je samo predmemorija, Drive je izvor istine.</p></div>' +
     '<div class="card"><h3>Opasna zona</h3><button class="btn danger" data-act="wipe">Obriši lokalne podatke na ovom uređaju</button><p class="note">Ne briše Drive. Nakon toga dodirni sinkronizaciju pa se sve vrati s Drivea.</p></div>';
 }
 
@@ -408,6 +538,7 @@ function viewSettings() {
 function bind() {
   const v = $('#view');
   v.querySelectorAll('[data-sport]').forEach(b => b.onclick = () => { UI.sport = b.dataset.sport; UI.limit = 60; render(); });
+  v.querySelectorAll('[data-flt]').forEach(b => b.onclick = () => { UI.flt = UI.flt === b.dataset.flt ? '' : b.dataset.flt; UI.limit = 60; render(); });
   v.querySelectorAll('[data-period]').forEach(b => b.onclick = () => { UI.period = b.dataset.period; UI.cursor = new Date(); render(); });
   v.querySelectorAll('[data-metric]').forEach(b => b.onclick = () => { UI.metric = b.dataset.metric; render(); });
   v.querySelectorAll('[data-page]').forEach(b => b.onclick = () => {
@@ -427,30 +558,161 @@ $('#addBtn').onclick = () => openEdit(null);
 
 const actions = {
   csv: () => $('#csvIn').click(),
+  gps: () => $('#gpsIn').click(),
   import: () => $('#jsonIn').click(),
   sync: () => { const c = $('#cid'); if (c) META.clientId = c.value.trim(); if (!clientId()) return toast('Prvo upiši Client ID.'); sync(true); },
   export: () => download('trening-backup-' + ymd(new Date()) + '.json', JSON.stringify(DB, null, 1), 'application/json'),
   exportcsv: () => {
-    const cols = ['id', 'date', 'name', 'type', 'dist', 'moving', 'elapsed', 'avgSpeed', 'elev', 'avgHr', 'maxHr', 'watts', 'cal', 'gear', 'lifted', 'sets', 'reps', 'tags', 'notes', 'desc'];
+    const cols = ['id', 'date', 'name', 'type', 'dist', 'moving', 'elapsed', 'avgSpeed', 'elev', 'avgHr', 'maxHr', 'watts', 'cal', 'gear', 'lifted', 'sets', 'reps', 'commute', 'flags', 'temp', 'hasTrack', 'tags', 'notes', 'desc'];
     const q = v => { v = Array.isArray(v) ? v.join(';') : v ?? ''; v = String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
     download('trening-' + ymd(new Date()) + '.csv', [cols.join(',')].concat(acts().map(a => cols.map(c => q(a[c])).join(','))).join('\n'), 'text/csv');
   },
   wipe: async () => {
     if (!confirm('Obrisati sve lokalne podatke na ovom uređaju? (Drive ostaje netaknut.)')) return;
     DB = Core.emptyDB(); META.dirty = false; META.lastSync = null;
+    for (const k of await store.keys('tr:')) await store.del(k);
+    META.tracksVer = null; META.tracksDirty = false;
     await store.set('db', DB); await store.set('meta', META); render(); renderSync();
   }
 };
 
+/* ---------- uvoz: Strava ZIP/CSV i GPS datoteke ---------- */
+const prog = {
+  open(t) { $('#progTxt').textContent = t; const b = $('#progBar'); b.removeAttribute('value'); if (!$('#prog').open) $('#prog').showModal(); },
+  set(t, v, m) { $('#progTxt').textContent = t; const b = $('#progBar'); b.max = m; b.value = v; },
+  close() { if ($('#prog').open) $('#prog').close(); }
+};
+$('#prog').addEventListener('cancel', e => e.preventDefault());
+const tick = () => new Promise(r => setTimeout(r, 0));
+const r1 = (v, d) => v === null || v === undefined ? null : Math.round(v * Math.pow(10, d)) / Math.pow(10, d);
+
+async function attachTrack(id, track) {
+  await store.setTrack(id, track);
+  DB.activities[id].hasTrack = true;
+  DB.activities[id].updated = Date.now(); // da se oznaka rute prenese i na druge uređaje pri sinkronizaciji
+  META.tracksDirty = true;
+}
+function showReport(title, lines, fails) {
+  const dlg = $('#dlg'); dlg.onclose = null;
+  dlg.innerHTML = '<h2>' + esc(title) + '</h2><div style="margin-top:8px">' + lines.map(l => '<p style="margin:4px 0">' + esc(l) + '</p>').join('') + '</div>' +
+    (fails.length ? '<label>Nije uspjelo (' + fails.length + ')</label><textarea readonly style="min-height:120px;font:12px monospace">' + esc(fails.slice(0, 40).join('\n')) + '</textarea>' : '') +
+    '<div class="acts"><div></div><button class="btn pri" id="ok">U redu</button></div>';
+  dlg.showModal(); $('#ok').onclick = () => dlg.close();
+}
+
+async function importCsvText(text) {
+  const { activities, bad } = Core.importStravaCSV(text);
+  const r = Core.addImported(DB, activities);
+  await persist(r.added > 0 || r.filled > 0);
+  UI.view = 'overview'; render();
+  showReport('Uvoz završen', ['Treninga: ' + r.added + ' novih, ' + r.dup + ' već postoji' + (r.filled ? ' (' + r.filled + ' dopunjeno opisima i oznakama)' : '') + (bad.length ? ', ' + bad.length + ' redaka preskočeno' : '') + '.',
+    'Za rute i grafove uvezi cijeli ZIP ili dodaj GPS datoteke.'], []);
+}
+
+async function importExport(file) {
+  const nm = file.name.toLowerCase();
+  if (nm.endsWith('.csv')) return importCsvText(await file.text());
+  if (!nm.endsWith('.zip')) throw new Error('Odaberi ZIP iz Strave ili datoteku activities.csv.');
+  prog.open('Čitam ZIP…');
+  const zip = await Files.readZip(file);
+  const ce = zip.entries.get('activities.csv') || [...zip.entries.values()].find(e => /(^|\/)activities\.csv$/i.test(e.name));
+  if (!ce) throw new Error('U ZIP-u nema datoteke activities.csv.');
+  const { activities, bad } = Core.importStravaCSV(Files.decodeText(await zip.read(ce)));
+  const r = Core.addImported(DB, activities);
+  await persist(r.added > 0 || r.filled > 0);
+  const byBase = new Map();
+  for (const e of zip.entries.values()) byBase.set(Files.baseName(e.name), e);
+  const withFile = Object.values(DB.activities).filter(a => a.file);
+  const had = withFile.filter(a => a.hasTrack).length;
+  const todo = [], missing = [];
+  for (const a of withFile) {
+    if (a.hasTrack) continue;
+    const en = zip.entries.get(a.file) || byBase.get(Files.baseName(a.file));
+    (en ? todo : missing).push([a, en]);
+  }
+  let okN = 0; const fails = [];
+  for (let i = 0; i < todo.length; i++) {
+    const [a, en] = todo[i];
+    prog.set('Rute: ' + (i + 1) + ' od ' + todo.length, i, todo.length);
+    try {
+      const bt = Files.buildTrack(await Files.parseActivityFile(en.name, await zip.read(en)));
+      await attachTrack(a.id, bt.track); okN++;
+    } catch (e) { fails.push(Files.baseName(en.name) + ' (' + (a.name || a.id) + '): ' + (e.message || e)); }
+    if (i % 15 === 14) { await store.set('db', DB); await store.set('meta', META); await tick(); }
+  }
+  prog.close();
+  await persist(true);
+  UI.view = 'overview'; render();
+  const lines = ['Treninga: ' + r.added + ' novih, ' + r.dup + ' već postoji' + (r.filled ? ' (' + r.filled + ' dopunjeno opisima i oznakama)' : '') + (bad.length ? ', ' + bad.length + ' redaka preskočeno' : '') + '.',
+    'Rute: ' + okN + ' dodano' + (had ? ', ' + had + ' ih je već imalo rutu' : '') + '.'];
+  if (missing.length) lines.push(missing.length + ' treninga u CSV-u navodi datoteku koje nema u ZIP-u.');
+  showReport('Uvoz završen', lines, fails);
+}
+
+async function importGpsFiles(files) {
+  prog.open('Čitam datoteke…');
+  const byBase = new Map(Object.values(DB.activities).filter(a => a.file).map(a => [Files.stripGz(Files.baseName(a.file)).toLowerCase(), a]));
+  let matched = 0, created = 0, skipped = 0; const fails = [];
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    prog.set('Datoteka ' + (i + 1) + ' od ' + files.length, i, files.length);
+    try {
+      const bt = Files.buildTrack(await Files.parseActivityFile(f.name, new Uint8Array(await f.arrayBuffer())));
+      const st = bt.stats;
+      let a = byBase.get(Files.stripGz(f.name).toLowerCase());
+      if (!a && st.start) { const t = Date.parse(st.start); a = Object.values(DB.activities).find(x => Math.abs(Date.parse(x.date) - t) < 10 * 60 * 1000); }
+      if (a) {
+        if (a.hasTrack) { skipped++; continue; }
+        await attachTrack(a.id, bt.track); matched++;
+      } else {
+        const type = bt.sport || Files.guessType(st), date = st.start || new Date(f.lastModified).toISOString();
+        const id = 'f' + Math.round(Date.parse(date) / 1000);
+        delete DB.deleted[id];
+        DB.activities[id] = {
+          id, date, name: bt.name || typeLabel(type), type, desc: '', dist: r1(st.dist, 3) || 0, elapsed: st.elapsed, moving: st.moving,
+          avgSpeed: r1(st.avgSpeed, 2), elev: st.elev != null ? Math.round(st.elev) : null, avgHr: r1(st.avgHr, 0), maxHr: st.maxHr, watts: r1(st.watts, 0), cal: st.cal,
+          gear: '', effort: null, lifted: null, sets: null, reps: null, file: f.name, notes: '', tags: [], src: 'file', updated: Date.now()
+        };
+        await attachTrack(id, bt.track); created++;
+      }
+    } catch (e) { fails.push(f.name + ': ' + (e.message || e)); }
+  }
+  prog.close();
+  await persist(true); render();
+  const lines = [];
+  if (matched) lines.push(matched + ' ruta dodano postojećim treninzima.');
+  if (created) lines.push(created + ' novih treninga napravljeno iz datoteka (provjeri sport i naziv).');
+  if (skipped) lines.push(skipped + ' već ima rutu (preskočeno).');
+  if (!lines.length && !fails.length) lines.push('Ništa za uvesti.');
+  showReport('Uvoz GPS datoteka', lines, fails);
+}
+
 $('#csvIn').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { await importExport(f); } catch (err) { prog.close(); showReport('Uvoz nije uspio', [err.message || String(err)], []); }
+};
+$('#gpsIn').onchange = async e => {
+  const fs = [...e.target.files]; e.target.value = ''; if (!fs.length) return;
+  try { await importGpsFiles(fs); } catch (err) { prog.close(); showReport('Uvoz nije uspio', [err.message || String(err)], []); }
+};
+let oneTarget = null;
+$('#oneIn').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f || !oneTarget) return;
+  const id = oneTarget; oneTarget = null;
   try {
-    const { activities, bad } = Core.importStravaCSV(await f.text());
-    const r = Core.addImported(DB, activities);
-    await persist(r.added > 0);
-    toast('Uvezeno ' + r.added + ' novih, ' + r.dup + ' već postoji' + (bad.length ? ', ' + bad.length + ' redaka preskočeno' : '') + '.', 4500);
-    UI.view = 'overview'; render();
-  } catch (err) { toast('Uvoz nije uspio: ' + err.message, 5000); }
+    prog.open('Čitam ' + f.name + '…');
+    const bt = Files.buildTrack(await Files.parseActivityFile(f.name, new Uint8Array(await f.arrayBuffer())));
+    const A = DB.activities[id], st = bt.stats; // popuni samo ono što trening još nema
+    if (!A.dist && st.dist) A.dist = r1(st.dist, 3);
+    if (!A.moving && st.moving) A.moving = st.moving;
+    if (!A.elapsed && st.elapsed) A.elapsed = st.elapsed;
+    if (A.elev == null && st.elev != null) A.elev = Math.round(st.elev);
+    if (A.avgHr == null && st.avgHr != null) A.avgHr = Math.round(st.avgHr);
+    if (!A.avgSpeed && st.avgSpeed) A.avgSpeed = r1(st.avgSpeed, 2);
+    await attachTrack(id, bt.track);
+    prog.close(); await persist(true); render();
+    $('#dlg').close(); openEdit(id); toast('Ruta dodana.');
+  } catch (err) { prog.close(); toast('Nije uspjelo: ' + (err.message || err), 5000); }
 };
 $('#jsonIn').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
@@ -461,16 +723,32 @@ $('#jsonIn').onchange = async e => {
   } catch (err) { toast('Nije uspjelo: ' + err.message, 4500); }
 };
 
-/* ---------- uređivanje / ručni unos ---------- */
+/* ---------- detalj / uređivanje / ručni unos ---------- */
 const toLocalInput = iso => { const d = new Date(iso), p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes()); };
+let detailView = null, openSeq = 0;
+const chk = (n, l, on) => '<label class="chk"><input type="checkbox" name="' + n + '"' + (on ? ' checked' : '') + '> ' + esc(l) + '</label>';
 function openEdit(id) {
   const a = id ? DB.activities[id] : null;
   const isNew = !a;
-  const x = a || { type: UI.sport !== 'all' ? UI.sport : 'Ride', date: new Date().toISOString(), name: '', dist: 0, moving: 0, tags: [], notes: '' };
+  const x = a || { type: UI.sport !== 'all' ? UI.sport : 'Ride', date: new Date().toISOString(), name: '', dist: 0, moving: 0, tags: [], notes: '', desc: '' };
   const types = [...new Set(['Ride', 'Weight Training', 'Football (Soccer)', 'Run', 'Walk', 'Workout', 'Swim', 'Hike', x.type].concat(sports()))];
-  const dlg = $('#dlg');
-  dlg.innerHTML = '<form method="dialog" id="f"><h2>' + (isNew ? 'Novi trening' : 'Trening') + '</h2>' +
-    (a && a.src === 'strava' ? '<div class="note">Uvezeno sa Strave · ID ' + esc(a.id) + '</div>' : '') +
+  const dlg = $('#dlg'), seq = ++openSeq;
+  const sum = [];
+  if (a) {
+    if (a.dist > 0) sum.push([fmtKm(a.dist), 'km']);
+    sum.push([Core.fmtDur(a.moving || a.elapsed), '']);
+    if (a.avgSpeed && a.dist >= 1) sum.push([a.avgSpeed.toFixed(1).replace('.', ','), 'km/h']);
+    if (a.elev > 0) sum.push([Math.round(a.elev), 'm ↑']);
+    if (a.avgHr > 0) sum.push([Math.round(a.avgHr), 'bpm']);
+    if (a.temp != null) sum.push([a.temp.toFixed(1).replace('.', ','), '°C']);
+  }
+  dlg.innerHTML = '<form method="dialog" id="f"><h2>' + (isNew ? 'Novi trening' : esc(a.name || typeLabel(a.type))) + '</h2>' +
+    (a ? '<div class="note" style="margin:2px 0 0">' + esc(typeLabel(a.type) + ' · ' + fmtDate(a.date) + ' ' + fmtTime(a.date)) + (a.gear ? ' · ' + esc(a.gear) : '') + (a.src === 'strava' ? ' · Strava ID ' + esc(a.id) : '') + '</div>' +
+      '<div class="sum">' + sum.map(([v, u]) => '<div>' + esc(v) + (u ? '<small>' + esc(u) + '</small>' : '') + '</div>').join('') + '</div>' +
+      (badgesHtml(a) ? '<div style="margin-top:8px">' + badgesHtml(a) + '</div>' : '') +
+      (a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
+      (a.hasTrack ? '<div id="trk"></div>' : '') +
+      '<div class="row" style="margin-top:10px;flex-wrap:wrap">' + (a.hasTrack ? '<button type="button" class="btn pri" id="shareBtn">Podijeli sliku</button>' : '') + '<button type="button" class="btn" id="addTrk">' + (a.hasTrack ? 'Zamijeni rutu iz datoteke' : 'Dodaj rutu iz datoteke (GPX, FIT, TCX)') + '</button></div>' : '') +
     '<label>Naziv</label><input name="name" value="' + esc(x.name) + '">' +
     '<div class="two"><div><label>Sport</label><select name="type">' + types.map(t => '<option value="' + esc(t) + '"' + (t === x.type ? ' selected' : '') + '>' + esc(typeLabel(t)) + '</option>').join('') + '</select></div>' +
     '<div><label>Početak</label><input type="datetime-local" name="date" value="' + toLocalInput(x.date) + '" required></div></div>' +
@@ -480,28 +758,88 @@ function openEdit(id) {
     '<div><label>Prosječni puls</label><input name="avgHr" inputmode="decimal" value="' + (x.avgHr ?? '') + '"></div></div>' +
     '<div class="two"><div><label>Kalorije</label><input name="cal" inputmode="decimal" value="' + (x.cal ?? '') + '"></div>' +
     '<div><label>Podignuto (kg)</label><input name="lifted" inputmode="decimal" value="' + (x.lifted ?? '') + '"></div></div>' +
-    '<label>Oznake (odvoji zarezom)</label><input name="tags" value="' + esc((x.tags || []).join(', ')) + '" placeholder="npr. s prijateljima, utrka, kiša">' +
-    '<label>Bilješke</label><textarea name="notes" placeholder="Kako je bilo, osjećaj, oprema…">' + esc(x.notes) + '</textarea>' +
-    '<div class="acts"><div>' + (isNew ? '' : '<button type="button" class="btn danger" id="del">Obriši</button>') + '</div><div class="row"><button type="button" class="btn" id="cancel">Odustani</button><button class="btn pri" value="ok">Spremi</button></div></div></form>';
+    '<label>Opis</label><textarea name="desc" style="min-height:56px" placeholder="Opis aktivnosti (kao na Stravi)">' + esc(x.desc) + '</textarea>' +
+    '<label>Oznake aktivnosti</label><div>' + chk('commute', 'Commute', x.commute) + Object.entries(Core.FLAG_LABELS).map(([k, l]) => chk('flag_' + k, l, (x.flags || []).includes(k))).join('') + '</div>' +
+    '<label>Vlastite oznake (odvoji zarezom)</label><input name="tags" value="' + esc((x.tags || []).join(', ')) + '" placeholder="npr. s prijateljima, utrka, kiša">' +
+    '<label>Privatne bilješke</label><textarea name="notes" placeholder="Kako je bilo, osjećaj, oprema…">' + esc(x.notes) + '</textarea>' +
+    '<div class="acts"><div>' + (isNew ? '' : '<button type="button" class="btn danger" id="del">Obriši</button>') + '</div><div class="row"><button type="button" class="btn" id="cancel">Zatvori</button><button class="btn pri" value="ok">Spremi</button></div></div></form>';
+  dlg.onclose = () => { if (detailView) { detailView.destroy(); detailView = null; } };
   dlg.showModal();
+  if (a && a.hasTrack) {
+    const box = $('#trk');
+    box.innerHTML = '<p class="note">Učitavam rutu…</p>';
+    store.get('tr:' + a.id).then(tr => {
+      if (seq !== openSeq || !dlg.open) return;
+      if (tr && tr.n) detailView = TrackView.mount(box, tr);
+      else box.innerHTML = '<p class="note">Ruta još nije preuzeta na ovaj uređaj. Dodirni sinkronizaciju u zaglavlju.</p>';
+    });
+  }
   $('#cancel').onclick = () => dlg.close();
+  const shareBtn = $('#shareBtn'); if (shareBtn) shareBtn.onclick = () => openShare(a.id);
+  const addTrk = $('#addTrk'); if (addTrk) addTrk.onclick = () => { oneTarget = a.id; $('#oneIn').click(); };
   const del = $('#del');
-  if (del) del.onclick = async () => { if (!confirm('Obrisati ovaj trening? Neće se vratiti pri sljedećem uvozu.')) return; delete DB.activities[a.id]; DB.deleted[a.id] = Date.now(); dlg.close(); await persist(); render(); };
+  if (del) del.onclick = async () => { if (!confirm('Obrisati ovaj trening? Neće se vratiti pri sljedećem uvozu.')) return; delete DB.activities[a.id]; DB.deleted[a.id] = Date.now(); await store.del('tr:' + a.id); dlg.close(); await persist(); render(); };
   $('#f').onsubmit = async e => {
     e.preventDefault();
     const f = new FormData(e.target), n = k => { const v = String(f.get(k) || '').trim().replace(',', '.'); return v === '' ? null : (isFinite(+v) ? +v : null); };
     const min = n('min') || 0, dist = n('dist') || 0;
+    const sameMin = !!a && min === (a.moving ? Math.round(a.moving / 60 * 10) / 10 : 0), sameDist = !!a && dist === (a.dist || 0);
     const rec = Object.assign({}, x, {
       id: a ? a.id : 'm' + Date.now(), name: String(f.get('name')).trim(), type: f.get('type'),
-      date: new Date(f.get('date')).toISOString(), moving: Math.round(min * 60), elapsed: a ? Math.max(a.elapsed || 0, Math.round(min * 60)) : Math.round(min * 60),
+      date: new Date(f.get('date')).toISOString(), moving: sameMin ? a.moving : Math.round(min * 60), elapsed: a ? Math.max(a.elapsed || 0, Math.round(min * 60)) : Math.round(min * 60),
       dist, elev: n('elev'), avgHr: n('avgHr'), cal: n('cal'), lifted: n('lifted'),
-      avgSpeed: dist > 0 && min > 0 ? Math.round(dist / (min / 60) * 100) / 100 : (a ? a.avgSpeed : null),
-      tags: String(f.get('tags')).split(',').map(s => s.trim()).filter(Boolean), notes: String(f.get('notes')).trim(),
+      avgSpeed: sameMin && sameDist ? a.avgSpeed : dist > 0 && min > 0 ? Math.round(dist / (min / 60) * 100) / 100 : (a ? a.avgSpeed : null),
+      commute: f.has('commute'), flags: Object.keys(Core.FLAG_LABELS).filter(k => f.has('flag_' + k)),
+      desc: String(f.get('desc')).trim(), tags: String(f.get('tags')).split(',').map(s => s.trim()).filter(Boolean), notes: String(f.get('notes')).trim(),
       src: a ? a.src : 'manual', updated: Date.now()
     });
     DB.activities[rec.id] = rec; delete DB.deleted[rec.id];
     dlg.close(); await persist(); render(); toast('Spremljeno.');
   };
+}
+
+/* ---------- dijeljenje slike ---------- */
+async function openShare(id) {
+  const a = DB.activities[id], tr = await store.get('tr:' + id);
+  if (!tr || !tr.poly) { toast('Ruta još nije preuzeta na ovaj uređaj. Dodirni sinkronizaciju.'); return; }
+  const pts = Files.decPoly(tr.poly);
+  const stats = [];
+  if (a.dist > 0) stats.push([fmtKm(a.dist), 'km']);
+  stats.push([Core.fmtDur(a.moving || a.elapsed), 'vrijeme']);
+  if (a.avgSpeed && a.dist >= 1) stats.push([a.avgSpeed.toFixed(1).replace('.', ','), 'km/h']);
+  if (a.elev > 0) stats.push([Math.round(a.elev), 'm uspona']);
+  if (stats.length < 4 && a.avgHr > 0) stats.push([Math.round(a.avgHr), 'bpm']);
+  const opts = { title: a.name || typeLabel(a.type), sub: typeLabel(a.type) + ' · ' + fmtDate(a.date), stats, pts, d: tr.d, hideEnds: true };
+  const fname = 'trening-' + ymd(new Date(a.date)) + '.png';
+  const dlg = $('#shr'); let blob = null, url = null, seq = 0;
+  dlg.innerHTML = '<h2>Podijeli vožnju</h2><div class="shr-box" id="shrBox">Pripremam sliku…</div>' +
+    '<label class="chk" style="margin-top:12px"><input type="checkbox" id="shrHide" checked> Sakrij početak i kraj rute (200 m)</label>' +
+    '<p class="note" id="shrNote" style="margin-top:0"></p>' +
+    '<div class="acts"><button type="button" class="btn" id="shrClose">Zatvori</button><div class="row"><button type="button" class="btn" id="shrSave" disabled>Spremi</button><button type="button" class="btn pri" id="shrDo" disabled>Podijeli</button></div></div>';
+  const draw = async () => {
+    const my = ++seq; $('#shrDo').disabled = $('#shrSave').disabled = true; $('#shrBox').textContent = 'Pripremam sliku…';
+    try {
+      opts.hideEnds = $('#shrHide').checked;
+      const r = await Share.render(opts);
+      if (my !== seq) return;
+      blob = r.blob; if (url) URL.revokeObjectURL(url); url = URL.createObjectURL(blob);
+      $('#shrBox').innerHTML = '<img alt="Slika za dijeljenje" src="' + url + '">';
+      $('#shrNote').textContent = (r.tilesLoaded ? '' : 'Podloga karte nije se učitala (nema veze?), slika ima samo rutu. ') + (opts.hideEnds && !r.trimmed ? 'Ruta je prekratka za skrivanje početka i kraja.' : '');
+      $('#shrDo').disabled = $('#shrSave').disabled = false;
+    } catch (e) { if (my === seq) $('#shrBox').textContent = 'Slika nije uspjela: ' + (e.message || e); }
+  };
+  const save = () => { const l = document.createElement('a'); l.href = url; l.download = fname; document.body.appendChild(l); l.click(); l.remove(); };
+  dlg.onclose = () => { seq++; if (url) URL.revokeObjectURL(url); url = null; };
+  $('#shrHide').onchange = draw;
+  $('#shrClose').onclick = () => dlg.close();
+  $('#shrSave').onclick = save;
+  $('#shrDo').onclick = async () => {
+    const file = new File([blob], fname, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: opts.title }); } catch (e) { if (e && e.name !== 'AbortError') toast('Dijeljenje nije uspjelo: ' + e.message, 4000); }
+    } else { save(); toast('Ovaj preglednik ne podržava izravno dijeljenje pa je slika spremljena.', 4000); }
+  };
+  dlg.showModal(); draw();
 }
 
 /* ---------- pokretanje ---------- */

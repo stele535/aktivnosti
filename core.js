@@ -4,11 +4,14 @@
 
   const TYPE_LABELS = {
     'Ride': 'Bicikl', 'Run': 'Trčanje', 'Walk': 'Hodanje', 'Hike': 'Planinarenje',
-    'Swim': 'Plivanje', 'Weight Training': 'Snaga', 'Workout': 'Trening',
+    'Swim': 'Plivanje', 'Weight Training': 'Snaga', 'Workout': 'Workout',
     'Football (Soccer)': 'Nogomet', 'Yoga': 'Yoga', 'Virtual Ride': 'Virtualni bicikl',
     'Elliptical': 'Eliptični', 'Rowing': 'Veslanje'
   };
   const typeLabel = t => TYPE_LABELS[t] || t || 'Ostalo';
+  // oznake iz Stravinih stupaca (commute je zaseban boolean)
+  const FLAG_LABELS = { recovery: 'Oporavak', pet: 'S psom', kid: 'S djetetom', race: 'Utrka', long: 'Dugi trening' };
+  const FLAG_COLS = { recovery: 'Recovery', pet: 'With Pet', kid: 'With Kid', race: 'Competition', long: 'Long Run' };
 
   /* ---------- CSV ---------- */
   function parseCSV(text) {
@@ -62,14 +65,17 @@
     for (const n of need) if (col(n) < 0) throw new Error('Nedostaje stupac "' + n + '". Export mora biti na engleskom jeziku (Strava → Postavke → Jezik).');
     const C = {
       id: col('Activity ID'), date: col('Activity Date'), name: col('Activity Name'), type: col('Activity Type'),
-      desc: col('Activity Description'), elapsed1: col('Elapsed Time', 1), elapsed0: col('Elapsed Time', 0),
+      desc: col('Activity Description'), note: col('Activity Private Note'), elapsed1: col('Elapsed Time', 1), elapsed0: col('Elapsed Time', 0),
       moving: col('Moving Time'), dist1: col('Distance', 1), dist0: col('Distance', 0),
       avgSpeed: col('Average Speed'), elev: col('Elevation Gain'), avgHr: col('Average Heart Rate'),
       maxHr: col('Max Heart Rate', 1) >= 0 ? col('Max Heart Rate', 1) : col('Max Heart Rate', 0),
       watts: col('Average Watts'), cal: col('Calories'), gear: col('Activity Gear'),
       effort: col('Relative Effort', 0), lifted: col('Total Weight Lifted'),
-      sets: col('Total Sets'), reps: col('Total Reps'), file: col('Filename')
+      sets: col('Total Sets'), reps: col('Total Reps'), file: col('Filename'),
+      commute: col('Commute'), wTemp: col('Weather Temperature'), aTemp: col('Average Temperature')
     };
+    for (const k of Object.keys(FLAG_COLS)) C['f_' + k] = col(FLAG_COLS[k]);
+    const truthy = v => { v = String(v === undefined ? '' : v).trim().toLowerCase(); return v === 'true' || v === 'yes' || (isFinite(parseFloat(v)) && parseFloat(v) > 0); };
     const get = (r, k) => (C[k] >= 0 ? r[C[k]] : undefined);
     const out = [], bad = [];
     for (let i = 1; i < rows.length; i++) {
@@ -89,7 +95,9 @@
         avgHr: num(get(r, 'avgHr')), maxHr: num(get(r, 'maxHr')), watts: num(get(r, 'watts')),
         cal: num(get(r, 'cal')), gear: (get(r, 'gear') || '').trim(), effort: num(get(r, 'effort')),
         lifted: num(get(r, 'lifted')), sets: num(get(r, 'sets')), reps: num(get(r, 'reps')),
-        file: (get(r, 'file') || '').trim(), notes: '', tags: [], src: 'strava', updated: 0
+        file: (get(r, 'file') || '').trim(), notes: (get(r, 'note') || '').trim(), tags: [], src: 'strava', updated: 0,
+        commute: truthy(get(r, 'commute')), flags: Object.keys(FLAG_COLS).filter(k => truthy(get(r, 'f_' + k))),
+        temp: num(get(r, 'wTemp')) ?? num(get(r, 'aTemp'))
       });
     }
     return { activities: out, bad };
@@ -101,14 +109,23 @@
 
   // Dodaje uvezene aktivnosti; postojeće (isti ID) se ne diraju, da ne pregazimo tvoje bilješke.
   function addImported(db, list) {
-    let added = 0, dup = 0; const now = Date.now();
+    let added = 0, dup = 0, filled = 0; const now = Date.now();
     for (const a of list) {
-      if (db.activities[a.id]) { dup++; continue; }
+      const ex = db.activities[a.id];
+      if (ex) { // postojeći se ne prepisuju; samo se dopune prazni opis/bilješka i putanja datoteke
+        let ch = false;
+        if (!ex.desc && a.desc) { ex.desc = a.desc; ch = true; }
+        if (!ex.notes && a.notes) { ex.notes = a.notes; ch = true; }
+        if (!ex.file && a.file) { ex.file = a.file; ch = true; }
+        if (ex.src === 'strava') for (const k of ['commute', 'flags', 'temp']) if (ex[k] === undefined && a[k] !== undefined) { ex[k] = a[k]; ch = true; }
+        if (ch) { ex.updated = now; filled++; }
+        dup++; continue;
+      }
       if (db.deleted[a.id]) { dup++; continue; } // namjerno obrisano – ne vraćaj
       db.activities[a.id] = Object.assign({}, a, { updated: now });
       added++;
     }
-    return { added, dup };
+    return { added, dup, filled };
   }
 
   // Spajanje dviju baza: po aktivnosti pobjeđuje novija izmjena; brisanje (tombstone) pobjeđuje ako je novije.
@@ -121,7 +138,7 @@
       const x = (a.activities || {})[id], y = (b.activities || {})[id];
       const best = !x ? y : !y ? x : ((y.updated || 0) > (x.updated || 0) ? y : x);
       if (deleted[id] && deleted[id] >= (best.updated || 0)) continue;
-      out.activities[id] = best;
+      out.activities[id] = (x && y && (x.hasTrack || y.hasTrack) && !best.hasTrack) ? Object.assign({}, best, { hasTrack: true }) : best;
     }
     out.deleted = deleted;
     return out;
@@ -216,6 +233,6 @@
   // Trajanje h:mm
   function fmtDur(sec) { sec = Math.round(sec || 0); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60); return h ? h + ':' + pad(m) + ' h' : m + ' min'; }
 
-  const api = { TYPE_LABELS, typeLabel, parseCSV, parseStravaDate, importStravaCSV, emptyDB, addImported, mergeDB, sameDB, ymd, mondayOf, addDays, totals, periodRange, inRange, buckets, bucketValues, records, fmtDur };
+  const api = { TYPE_LABELS, FLAG_LABELS, typeLabel, parseCSV, parseStravaDate, importStravaCSV, emptyDB, addImported, mergeDB, sameDB, ymd, mondayOf, addDays, totals, periodRange, inRange, buckets, bucketValues, records, fmtDur };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== 'undefined' ? self : this);
