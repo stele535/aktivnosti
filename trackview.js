@@ -204,17 +204,25 @@
   }
 
   /* ---------- graf ---------- */
-  const METRICS = [['ele', 'Visina', 'm', 0, 'var(--c-walk)'], ['spd', 'Brzina', 'km/h', 1, 'var(--accent)'], ['hr', 'Puls', 'bpm', 0, 'var(--c-weight)'], ['pw', 'Snaga', 'W', 0, 'var(--c-other)']];
+  const METRICS = [['ele', 'Visina', 'm', 0, 'var(--c-walk)'], ['spd', 'Brzina', 'km/h', 1, 'var(--accent)'], ['pace', 'Tempo', 'min/km', 2, 'var(--c-foot)'], ['hr', 'Puls', 'bpm', 0, 'var(--c-weight)'], ['pw', 'Snaga', 'W', 0, 'var(--c-other)']];
   const fmt = (v, dec) => v === null || v === undefined ? '–' : v.toFixed(dec).replace('.', ',');
   const fmtT = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), q = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(q).padStart(2, '0'); };
 
-  function ChartView(el, tr, onScrub) {
+  const mmss = v => { const s = Math.round(v * 60); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  function ChartView(el, tr, onScrub, defKey) {
     const n = tr.n, hasD = tr.d && tr.d[n - 1] > 0;
     const xs = hasD ? tr.d.map(v => v / 1000) : tr.t.map(v => v / 60), xUnit = hasD ? 'km' : 'min';
     const xmin = xs[0], xmax = Math.max(xs[n - 1], xmin + 1e-6);
-    const avail = METRICS.filter(m => tr[m[0]] && tr[m[0]].filter(v => v !== null && v !== undefined).length >= 3);
+    /* tempo (min/km) se izvodi iz brzine; stajanje (< 2 km/h) se izostavlja, a krivulja se blago zagladi */
+    const paceArr = (() => {
+      if (!tr.spd) return null;
+      const raw = tr.spd.map(v => v !== null && v !== undefined && v >= 2 ? 60 / v : null);
+      return raw.map((v, i) => { if (v === null) return null; let s = 0, c = 0; for (let j = Math.max(0, i - 2); j <= Math.min(raw.length - 1, i + 2); j++) if (raw[j] !== null) { s += raw[j]; c++; } return s / c; });
+    })();
+    const D = { ele: tr.ele, spd: tr.spd, hr: tr.hr, pw: tr.pw, pace: paceArr };
+    const avail = METRICS.filter(m => D[m[0]] && D[m[0]].filter(v => v !== null && v !== undefined).length >= 3);
     if (!avail.length) { el.style.display = 'none'; return { destroy() {} }; }
-    let cur = avail[0], idx = null, Yf = null;
+    let cur = avail.find(m => m[0] === defKey) || avail[0], idx = null, Yf = null;
     const W = 340, H = 150, pl = 34, pr = 6, pt = 8, pb = 18;
     el.innerHTML = '<div class="tv-tabs"></div><svg class="tv-chart" viewBox="0 0 ' + W + ' ' + H + '" width="100%"></svg><div class="tv-read"></div>';
     const tabs = el.querySelector('.tv-tabs'), svg = el.querySelector('.tv-chart'), read = el.querySelector('.tv-read');
@@ -222,16 +230,18 @@
     const X = v => pl + (v - xmin) / (xmax - xmin) * (W - pl - pr);
 
     function draw() {
-      const k = cur[0], vals = tr[k], valid = vals.filter(v => v !== null && v !== undefined);
+      const k = cur[0], vals = D[k], valid = vals.filter(v => v !== null && v !== undefined), isP = k === 'pace';
       let lo = Math.min(...valid), hi = Math.max(...valid);
+      if (isP) { const sv = valid.slice().sort((a, b) => a - b); lo = sv[Math.floor(sv.length * 0.02)]; hi = sv[Math.min(sv.length - 1, Math.floor(sv.length * 0.98))]; }
       if (k === 'spd' || k === 'pw') lo = 0;
       if (hi - lo < 1) { hi = lo + 1; }
       const padv = (hi - lo) * 0.06; if (k === 'ele' || k === 'hr') lo -= padv; hi += padv;
-      const Y = Yf = v => pt + (1 - (v - lo) / (hi - lo)) * (H - pt - pb);
+      const Y = Yf = v => { if (isP) v = Math.min(hi, Math.max(lo, v)); const f = (v - lo) / (hi - lo); return pt + (isP ? f : 1 - f) * (H - pt - pb); };
+      const lab = v => isP ? mmss(v) : String(Math.round(v));
       let s = '';
       for (let g = 0; g <= 2; g++) {
         const v = lo + (hi - lo) * g / 2, y = Y(v);
-        s += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" class="tv-grid"/><text x="' + (pl - 4) + '" y="' + (y + 3).toFixed(1) + '" text-anchor="end">' + Math.round(v) + '</text>';
+        s += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" class="tv-grid"/><text x="' + (pl - 4) + '" y="' + (y + 3).toFixed(1) + '" text-anchor="end">' + lab(v) + '</text>';
       }
       let path = '', started = false, first = null, lastX = null;
       vals.forEach((v, i) => {
@@ -257,10 +267,10 @@
       }
       const x = X(xs[i]);
       line.setAttribute('x1', x); line.setAttribute('x2', x); line.style.display = '';
-      const v = tr[cur[0]][i];
+      const v = D[cur[0]][i];
       if (v !== null && v !== undefined && Yf) { dot.setAttribute('cx', x); dot.setAttribute('cy', Yf(v)); dot.style.display = ''; } else dot.style.display = 'none';
       const parts = [xUnit === 'km' ? fmt(xs[i], 2) + ' km' : fmt(xs[i], 1) + ' min', fmtT(tr.t[i])];
-      avail.forEach(m => { const q = tr[m[0]][i]; if (q !== null && q !== undefined) parts.push(m[1] + ' ' + fmt(q, m[3]) + ' ' + m[2]); });
+      avail.forEach(m => { const q = D[m[0]][i]; if (q !== null && q !== undefined) parts.push(m[1] + ' ' + (m[0] === 'pace' ? mmss(q) : fmt(q, m[3])) + ' ' + m[2]); });
       read.textContent = parts.join(' · ');
     }
     function at(clientX) {
@@ -286,10 +296,10 @@
     box.innerHTML = '';
     let map = null;
     const pts = tr.poly ? (root.Files || {}).decPoly(tr.poly) : [];
-    if (pts.length >= 2) { const m = document.createElement('div'); m.className = 'tv-map'; box.appendChild(m); map = MiniMap(m, pts); }
+    if (pts.length >= 2 && !(opts && opts.noMap)) { const m = document.createElement('div'); m.className = 'tv-map'; box.appendChild(m); map = MiniMap(m, pts); }
     const A = root.Analytics;
     if (map && opts && opts.cfg && A) {
-      const modes = [['plain', 'Jednobojno'], ['hr', 'Puls'], ['spd', 'Brzina']].filter(m => m[0] === 'plain' || (tr[m[0]] && tr[m[0]].filter(v => v !== null && v !== undefined).length >= 3));
+      const modes = [['plain', 'Jednobojno'], ['hr', 'Puls'], ['spd', 'Brzina']].filter(m => m[0] === 'plain' || (opts.cfg[m[0]] && tr[m[0]] && tr[m[0]].filter(v => v !== null && v !== undefined).length >= 3));
       if (modes.length > 1) {
         const bar = document.createElement('div'); bar.className = 'tv-zc';
         bar.innerHTML = '<div class="tv-tabs">' + modes.map(m => '<button type="button" data-m="' + m[0] + '">' + m[1] + '</button>').join('') + '</div><div class="tv-leg"></div>';
@@ -301,11 +311,11 @@
           leg.innerHTML = k === 'plain' ? '' : (opts.labels[k] || []).map((l, i) => '<span><i style="background:' + ZCOL[i] + '"></i>' + l.replace(/ (bpm|km\/h)$/, '') + '</span>').join('');
         };
         bar.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { mount.mode = b.dataset.m; set(b.dataset.m); } });
-        set(modes.some(m => m[0] === mount.mode) ? mount.mode : 'plain');
+        set(modes.some(m => m[0] === (opts.mode || 'plain')) ? (opts.mode || 'plain') : 'plain');
       }
     }
-    const cd = document.createElement('div'); cd.className = 'tv-chartbox'; box.appendChild(cd);
-    const chart = ChartView(cd, tr, i => { if (map) map.setMarker(i); });
+    let chart = { destroy() {} };
+    if (!(opts && opts.noChart)) { const cd = document.createElement('div'); cd.className = 'tv-chartbox'; box.appendChild(cd); chart = ChartView(cd, tr, i => { if (map) map.setMarker(i); }, opts && opts.chart); }
     return { map, chart, destroy() { if (map) map.destroy(); } };
   }
 

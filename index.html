@@ -157,7 +157,7 @@ progress{height:10px;accent-color:var(--accent)}
 .opt{margin:10px 0 0}.opt>b{display:block;font-size:12px;color:var(--mute);font-weight:600;margin-bottom:4px}.opt .chips{margin:0;padding:0 0 2px}.opt .chip{padding:5px 11px;font-size:13px}
 .shr-box.chk-bg{background:repeating-conic-gradient(#d9d9d9 0 25%,#fff 0 50%) 0 0/20px 20px;border-radius:12px}
 .pt{display:grid;gap:0;font-size:13px}.pt>div{display:grid;grid-template-columns:1.1fr .55fr .7fr 1fr 1.15fr;gap:4px;padding:6px 0;white-space:nowrap;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}.pt>div span:nth-child(n+2){text-align:right}.pt-h{color:var(--mute);font-size:11px;border-top:0!important}
-.tbl-wrap{overflow-x:auto;margin:0 -16px;padding:0 16px;-webkit-overflow-scrolling:touch}.tbl{border-collapse:separate;border-spacing:0;font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums;width:100%}.tbl td.l:not(.f){max-width:120px;overflow:hidden;text-overflow:ellipsis}.tbl th,.tbl td{padding:8px 8px;text-align:right;border-bottom:1px solid var(--line);background:var(--card)}.tbl th{color:var(--mute);font-size:11px;font-weight:600;cursor:pointer;user-select:none}.tbl .l{text-align:left}.tbl .f{position:sticky;left:0;z-index:1;text-align:left;box-shadow:1px 0 0 var(--line);max-width:46vw;overflow:hidden;text-overflow:ellipsis}.tbl tbody tr{cursor:pointer}.tbl tr.tt td{font-weight:700;cursor:default}.tcl{margin-top:4px}.tcr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid var(--line)}.tcr input{width:auto}.tcr label{margin:0;display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px}.tcr .btn{padding:3px 11px;margin-left:6px}
+.tbl-wrap{overflow-x:auto;margin:0 -16px;padding:0 16px;-webkit-overflow-scrolling:touch}.tbl{border-collapse:separate;border-spacing:0;font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums;width:100%}.tbl td.l:not(.f){max-width:120px;overflow:hidden;text-overflow:ellipsis}.tbl th,.tbl td{padding:8px 8px;text-align:right;border-bottom:1px solid var(--line);background:var(--card)}.tbl th{color:var(--mute);font-size:11px;font-weight:600;cursor:pointer;user-select:none}.tbl .l{text-align:left}.tbl .f{position:sticky;left:0;z-index:1;text-align:left;box-shadow:1px 0 0 var(--line);max-width:46vw;overflow:hidden;text-overflow:ellipsis}.tbl tbody tr{cursor:pointer}.tbl tr.tt td{font-weight:700;cursor:default}.tcl{margin-top:4px}.tcr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid var(--line)}.tcr input{width:auto}.tcr input[type=color]{width:38px;height:30px;padding:0;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer}.tcr label{margin:0;display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px}.tcr .btn{padding:3px 11px;margin-left:6px}
 @media (min-width:1000px){
   body{padding-bottom:24px}
   header{min-height:56px}
@@ -235,7 +235,12 @@ const SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const { typeLabel, ymd } = Core;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const typeColor = t => ({ 'Ride': 'var(--c-ride)', 'Virtual Ride': 'var(--c-ride)', 'Weight Training': 'var(--c-weight)', 'Football (Soccer)': 'var(--c-foot)', 'Walk': 'var(--c-walk)', 'Hike': 'var(--c-walk)' }[t] || 'var(--c-other)');
+const TYPE_BASE = t => ({ 'Ride': 'var(--c-ride)', 'Virtual Ride': 'var(--c-ride)', 'Weight Training': 'var(--c-weight)', 'Football (Soccer)': 'var(--c-foot)', 'Walk': 'var(--c-walk)', 'Hike': 'var(--c-walk)' }[t] || 'var(--c-other)');
+const COL_DEF = { 'Ride': '#2f6fd0', 'Virtual Ride': '#2f6fd0', 'Weight Training': '#c8452f', 'Football (Soccer)': '#2a8f55', 'Walk': '#7b62c4', 'Hike': '#7b62c4' };
+const customCol = t => { const c = DB && DB.settings && DB.settings.colors && DB.settings.colors[t]; return /^#[0-9a-f]{6}$/i.test(c || '') ? c : null; };
+const typeColor = t => customCol(t) || TYPE_BASE(t);
+const typeHex = t => customCol(t) || COL_DEF[t] || '#b58217';
+const typeInk = t => { const c = customCol(t); if (!c) return ''; const r = parseInt(c.slice(1, 3), 16), g = parseInt(c.slice(3, 5), 16), b = parseInt(c.slice(5, 7), 16); return (0.299 * r + 0.587 * g + 0.114 * b) > 165 ? '#111' : '#fff'; };
 
 /* ---------- lokalna pohrana (IndexedDB, uz localStorage rezervu) ---------- */
 const store = {
@@ -489,6 +494,19 @@ function periodTitle() {
   return 'Cijelo vrijeme';
 }
 
+/* Što Pregled pokazuje po sportu: kartice sa zbrojevima i početni graf. Postavke se čuvaju u settings.ov (ključ 'all' ili tip sporta). */
+const OV_STATS = [['n', 'Broj treninga'], ['time', 'Ukupno vrijeme'], ['km', 'Prijeđeno (km)'], ['elev', 'Visinska razlika'], ['spd', 'Prosječna brzina'], ['pace', 'Prosječni tempo'], ['hr', 'Prosječni puls'], ['cal', 'Kalorije']];
+const OV_DEF = ['n', 'time', 'km', 'elev', 'spd', 'cal'];
+function ovCfg(sport) {
+  const o = DB.settings && DB.settings.ov && DB.settings.ov[sport];
+  const st = o && Array.isArray(o.stats) ? OV_STATS.map(x => x[0]).filter(k => o.stats.includes(k)) : OV_DEF;
+  return { stats: st, metric: o && ['km', 'h', 'n'].includes(o.metric) ? o.metric : 'km', custom: !!o };
+}
+async function ovSave(sport, fn) {
+  const cur = ovCfg(sport), n = { stats: cur.stats.slice(), metric: cur.metric }; fn(n);
+  const ov = Object.assign({}, DB.settings && DB.settings.ov); ov[sport] = n;
+  DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), ov }); UI.metricFor = null; await persist(); render();
+}
 function viewOverview() {
   if (!acts().length) return emptyState();
   if (UI.q.trim()) return viewList();
@@ -498,6 +516,7 @@ function viewOverview() {
   const t = Core.totals(list);
   const hasKm = all.some(a => a.dist > 0);
   const hasElev = all.some(a => a.elev > 0);
+  if (UI.metricFor !== UI.sport) { UI.metricFor = UI.sport; UI.metric = ovCfg(UI.sport).metric; }
   const bks = Core.buckets(UI.period, UI.cursor, all);
   let metric = UI.metric; if (metric === 'km' && !hasKm) metric = 'h';
   const vals = Core.bucketValues(bks, all, metric);
@@ -507,13 +526,17 @@ function viewOverview() {
   let html = '<input id="q" type="search" placeholder="Traži treninge po nazivu, opisu, bilješci, oznaci…" value="">' + '<div class="chips"><button class="chip" data-go="records">★ Rekordi</button></div>' + filterBar();
   html += '<div class="seg">' + [['week', 'Tjedan'], ['month', 'Mjesec'], ['year', 'Godina'], ['all', 'Sve']].map(([k, l]) => '<button data-period="' + k + '" class="' + (UI.period === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
   html += '<div class="pager"><button data-page="-1" ' + (UI.period === 'all' ? 'disabled style="visibility:hidden"' : '') + '>‹</button><div class="t">' + esc(periodTitle()) + '</div><button data-page="1" ' + (UI.period === 'all' ? 'disabled style="visibility:hidden"' : '') + '>›</button></div>';
-  html += '<div class="grid">' + stat(t.n, 'treninga') + stat(hoursStr(t.sec), 'ukupno vrijeme');
-  if (hasKm) html += stat(fmtKm(t.km), 'prijeđeno', 'km');
-  if (hasElev) html += stat(Math.round(t.elev).toLocaleString('hr'), 'visinska razlika', 'm');
-  const moving = Core.totals(list.filter(a => a.dist > 0));
-  if (moving.sec > 0 && moving.km > 0) html += stat((moving.km / (moving.sec / 3600)).toFixed(1).replace('.', ','), 'prosječna brzina', 'km/h');
-  if (t.cal > 0) html += stat(Math.round(t.cal).toLocaleString('hr'), 'kalorija', 'kcal');
-  html += '</div>';
+  const moving = Core.totals(list.filter(a => a.dist > 0)), hrs = list.filter(a => a.avgHr > 0);
+  const cards = {
+    n: stat(t.n, 'treninga'), time: stat(hoursStr(t.sec), 'ukupno vrijeme'),
+    km: hasKm ? stat(fmtKm(t.km), 'prijeđeno', 'km') : '',
+    elev: hasElev ? stat(Math.round(t.elev).toLocaleString('hr'), 'visinska razlika', 'm') : '',
+    spd: moving.sec > 0 && moving.km > 0 ? stat((moving.km / (moving.sec / 3600)).toFixed(1).replace('.', ','), 'prosječna brzina', 'km/h') : '',
+    pace: moving.sec > 0 && moving.km >= 1 ? stat(Math.floor(moving.sec / moving.km / 60) + ':' + String(Math.round(moving.sec / moving.km) % 60).padStart(2, '0'), 'prosječni tempo', 'min/km') : '',
+    hr: hrs.length ? stat(Math.round(hrs.reduce((p, a) => p + a.avgHr, 0) / hrs.length), 'prosječni puls', 'bpm') : '',
+    cal: t.cal > 0 ? stat(Math.round(t.cal).toLocaleString('hr'), 'kalorija', 'kcal') : ''
+  };
+  html += '<div class="grid">' + ovCfg(UI.sport).stats.map(k => cards[k] || '').join('') + '</div>';
   html += '<div class="card"><div class="metric">' + [['km', 'Kilometri', hasKm], ['h', 'Sati', true], ['n', 'Treninzi', true]].filter(x => x[2]).map(([k, l]) => '<button data-metric="' + k + '" class="' + (metric === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>' + chart(bks, vals, unit) + '</div>';
   if (UI.period !== 'all' && !list.length) html += '<p class="empty">Nema treninga u ovom razdoblju.</p>';
   else if (list.length) html += '<div class="list" style="margin-top:6px"><div class="day">Treninzi u razdoblju</div>' + (UI.ovAll ? list.slice(0, UI.limit) : list.slice(0, 8)).map(item).join('') + (UI.ovAll ? (list.length > UI.limit ? '<button class="btn" style="width:100%" id="more">Prikaži još (' + (list.length - UI.limit) + ')</button>' : '') : list.length > 8 ? '<button class="btn" style="width:100%" data-ovall="1">Prikaži svih ' + list.length + '</button>' : '') + '</div>';
@@ -595,7 +618,7 @@ function viewCal() {
         const d = Core.addDays(start, w * 7 + i), k = Core.ymd(d), l = by[k] || [];
         wl.push(...l); l.forEach(a => used.add(a.type));
         html += '<div class="cal-d' + (d.getMonth() !== cur.getMonth() ? ' out' : '') + (k === today ? ' today' : '') + '"><div class="n">' + d.getDate() + '</div>' +
-          l.slice(0, 3).map(a => '<div class="cch" data-id="' + esc(a.id) + '" style="background:' + typeColor(a.type) + '">' + chipTxt(a) + '</div>').join('') +
+          l.slice(0, 3).map(a => '<div class="cch" data-id="' + esc(a.id) + '" style="background:' + typeColor(a.type) + (typeInk(a.type) ? ';color:' + typeInk(a.type) : '') + '">' + chipTxt(a) + '</div>').join('') +
           (l.length > 3 ? '<div class="more">+' + (l.length - 3) + '</div>' : '') + '</div>';
       }
       const wt = Core.totals(wl);
@@ -733,9 +756,22 @@ function viewSettings() {
   return '<div class="card" style="margin-top:0"><h3>Podaci</h3><p style="margin:0 0 10px">' + n + ' treninga u evidenciji.</p>' +
     '<div class="row" style="flex-wrap:wrap"><button class="btn pri" data-act="csv">Uvezi Strava ZIP ili CSV</button><button class="btn" data-act="gps">Dodaj GPS datoteke</button><button class="btn" data-act="export">Izvezi backup (JSON)</button><button class="btn" data-act="exportcsv">Izvezi CSV</button><button class="btn" data-act="import">Vrati iz backupa</button></div>' +
     '<p class="note">Najlakše je odabrati cijeli ZIP koji dobiješ od Strave: aplikacija sama pročita treninge, opise i sve .gpx/.fit.gz rute. Postojeći treninzi se preskaču (bez dupliciranja), a tvoje bilješke i oznake ostaju. „GPS datoteke“ služe za pojedinačne .gpx, .fit, .tcx (i .gz) datoteke, npr. s drugog sata ili aplikacije.</p></div>' +
-    '<div class="card"><h3>Zone pulsa i brzine</h3><p class="note" style="margin-top:0">Upiši donje granice zona 2–5 (npr. kao na iGPSPORT-u). Zona 1 je sve ispod prve granice. Vrijedi na svim uređajima i za sve vožnje.</p>' +
-    (() => { const c = zoneCfg(), row = (key, title, unit, step) => '<b style="font-size:13px">' + title + '</b><div class="zset">' + c[key].map((v, i) => '<div><label>Z' + (i + 2) + ' od</label><input data-z="' + key + '" data-i="' + i + '" inputmode="decimal" value="' + v + '" aria-label="' + title + ' zona ' + (i + 2) + '"></div>').join('') + '</div>'; return row('hr', 'Puls (bpm)') + '<div style="height:8px"></div>' + row('spd', 'Brzina (km/h)'); })() +
+    '<div class="card"><h3>Zone pulsa i brzine</h3><p class="note" style="margin-top:0">Upiši donje granice zona 2–5 (npr. kao na iGPSPORT-u). Zona 1 je sve ispod prve granice. Puls vrijedi za sve sportove, a brzina posebno za bicikl i za hodanje (hodanje i planinarenje). Ostali sportovi imaju samo zone pulsa.</p>' +
+    (() => { const c = zoneCfgAll(), row = (key, title, unit, step) => '<b style="font-size:13px">' + title + '</b><div class="zset">' + c[key].map((v, i) => '<div><label>Z' + (i + 2) + ' od</label><input data-z="' + key + '" data-i="' + i + '" inputmode="decimal" value="' + v + '" aria-label="' + title + ' zona ' + (i + 2) + '"></div>').join('') + '</div>'; return row('hr', 'Puls (bpm)') + '<div style="height:8px"></div>' + row('spd', 'Brzina bicikl (km/h)') + '<div style="height:8px"></div>' + row('walk', 'Brzina hodanje (km/h)'); })() +
     '<div class="row" style="margin-top:10px"><button class="btn" data-act="zreset">Vrati zadano</button></div></div>' +
+    '<div class="card"><h3>Boje sportova</h3><p class="note" style="margin-top:0">Boja se koristi u kalendaru, popisima i grafovima. Prikazuju se sportovi koje imaš u evidenciji.</p>' +
+    (sports().length ? sports().map(t => '<div class="tcr"><label><input type="color" data-col="' + esc(t) + '" value="' + typeHex(t) + '"> ' + esc(typeLabel(t)) + '</label>' + (customCol(t) ? '<button class="btn" data-colreset="' + esc(t) + '">Zadano</button>' : '') + '</div>').join('') : '<p class="note">Još nema treninga.</p>') + '</div>' +
+    (() => { const sp = UI.ovSport && (UI.ovSport === 'all' || sports().includes(UI.ovSport)) ? UI.ovSport : 'all', c = ovCfg(sp);
+      return '<div class="card"><h3>Prikaz po sportu</h3><p class="note" style="margin-top:0">Odaberi sport pa namjesti što vidiš u kartici Pregled i što se prikazuje kad otvoriš trening. „Svi sportovi“ je zadano za sve sportove koje nisi posebno namjestio.</p>' +
+        '<select data-ovsport>' + [['all', 'Svi sportovi']].concat(sports().map(t => [t, typeLabel(t)])).map(([k, l]) => '<option value="' + esc(k) + '"' + (sp === k ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>' +
+        '<label style="color:var(--ink);font-weight:600">Pregled</label><div class="tcl">' + OV_STATS.map(([k, l]) => '<div class="tcr"><label><input type="checkbox" data-ovstat="' + k + '"' + (c.stats.includes(k) ? ' checked' : '') + '> ' + l + '</label></div>').join('') + '</div>' +
+        '<label>Graf na početku</label><select data-ovmetric>' + [['km', 'Kilometri'], ['h', 'Sati'], ['n', 'Treninzi']].map(([k, l]) => '<option value="' + k + '"' + (c.metric === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>' +
+        (c.custom ? '<div class="row" style="margin-top:10px"><button class="btn" data-ovreset="1">Vrati zadano za Pregled</button></div>' : '') +
+        (() => { const d = detCfg(sp), cb = (attr, list, sel) => '<div class="tcl">' + list.map(([k, l]) => '<div class="tcr"><label><input type="checkbox" data-' + attr + '="' + k + '"' + (sel.includes(k) ? ' checked' : '') + '> ' + l + '</label></div>').join('') + '</div>';
+          return '<label style="color:var(--ink);font-weight:600;margin-top:18px">Kad otvorim trening</label><label>Brojke na vrhu</label>' + cb('detstat', DET_STATS, d.stats) + '<label>Dijelovi</label>' + cb('detsec', DET_SECS, d.secs) +
+            '<label>Graf na početku</label><select data-detchart>' + [['', 'Visina (zadano)'], ['spd', 'Brzina'], ['pace', 'Tempo'], ['hr', 'Puls'], ['pw', 'Snaga']].map(([k, l]) => '<option value="' + k + '"' + (d.chart === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>' +
+            '<label>Ruta na karti je obojena po</label><select data-detroute>' + [['plain', 'Jednobojno'], ['hr', 'Pulsu'], ['spd', 'Brzini']].map(([k, l]) => '<option value="' + k + '"' + (d.route === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>' +
+            (d.custom ? '<div class="row" style="margin-top:10px"><button class="btn" data-detreset="1">Vrati zadano za detalj treninga</button></div>' : '') + '<p class="note">Graf tempa je u izborniku grafa kad trening ima GPS brzinu.</p>'; })() + '</div>'; })() +
     '<div class="card"><h3>Uređivanje</h3><p style="margin:0 0 10px">' + (META.locked ? 'Zaključano: treninzi se samo pregledavaju.' : 'Otključano: možeš dodavati i uređivati treninge.') + '</p><button class="btn" data-act="lock">' + (META.locked ? 'Otključaj uređivanje' : 'Zaključaj uređivanje') + '</button></div>' +
     '<div class="card"><h3>Google Drive</h3>' +
     '<p class="note" style="margin:0 0 6px">Aplikacija trenutno koristi ID:</p><p style="margin:0;word-break:break-all"><code>' + (cid ? esc(cid) : '(prazno)') + '</code></p><p class="note" style="margin:4px 0 8px;color:' + (!cid ? 'var(--mute)' : idOk(cid) ? 'var(--c-foot)' : 'var(--c-weight)') + '">' + (!cid ? 'Nije postavljen.' : cid.length + ' znakova · ' + (idOk(cid) ? '✓ oblik je ispravan' : '✗ oblik NIJE ispravan – ID je nepotpun ili pogrešan')) + '</p>' +
@@ -767,6 +803,18 @@ function bind() {
   v.querySelectorAll('[data-ovall]').forEach(b => b.onclick = () => { UI.ovAll = true; render(); });
   v.querySelectorAll('[data-myear]').forEach(b => b.onclick = () => { MAPD.year = b.dataset.myear; render(); });
   v.querySelectorAll('[data-mt]').forEach(b => b.onclick = () => mapToggle(b));
+  v.querySelectorAll('[data-col]').forEach(i => i.onchange = async () => { const colors = Object.assign({}, DB.settings && DB.settings.colors, { [i.dataset.col]: i.value }); DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), colors }); await persist(); render(); });
+  v.querySelectorAll('[data-colreset]').forEach(b => b.onclick = async () => { const colors = Object.assign({}, DB.settings && DB.settings.colors); delete colors[b.dataset.colreset]; DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), colors }); await persist(); render(); });
+  v.querySelectorAll('[data-ovsport]').forEach(i => i.onchange = () => { UI.ovSport = i.value; render(); });
+  v.querySelectorAll('[data-ovstat]').forEach(i => i.onchange = () => { const sp = UI.ovSport || 'all'; ovSave(sp, n => { n.stats = i.checked ? OV_STATS.map(x => x[0]).filter(k => k === i.dataset.ovstat || n.stats.includes(k)) : n.stats.filter(k => k !== i.dataset.ovstat); }); });
+  v.querySelectorAll('[data-ovmetric]').forEach(i => i.onchange = () => ovSave(UI.ovSport || 'all', n => { n.metric = i.value; }));
+  const dsp = () => UI.ovSport || 'all';
+  v.querySelectorAll('[data-detstat]').forEach(i => i.onchange = () => detSave(dsp(), n => { n.stats = i.checked ? DET_STATS.map(x => x[0]).filter(k => k === i.dataset.detstat || n.stats.includes(k)) : n.stats.filter(k => k !== i.dataset.detstat); }));
+  v.querySelectorAll('[data-detsec]').forEach(i => i.onchange = () => detSave(dsp(), n => { n.secs = i.checked ? DET_SECS.map(x => x[0]).filter(k => k === i.dataset.detsec || n.secs.includes(k)) : n.secs.filter(k => k !== i.dataset.detsec); }));
+  v.querySelectorAll('[data-detchart]').forEach(i => i.onchange = () => detSave(dsp(), n => { n.chart = i.value; }));
+  v.querySelectorAll('[data-detroute]').forEach(i => i.onchange = () => detSave(dsp(), n => { n.route = i.value; }));
+  v.querySelectorAll('[data-detreset]').forEach(b => b.onclick = async () => { const det = Object.assign({}, DB.settings && DB.settings.det); delete det[dsp()]; DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), det }); await persist(); render(); });
+  v.querySelectorAll('[data-ovreset]').forEach(b => b.onclick = async () => { const ov = Object.assign({}, DB.settings && DB.settings.ov); delete ov[UI.ovSport || 'all']; DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), ov }); UI.metricFor = null; await persist(); render(); });
   v.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { UI.tab = b.dataset.tab; UI.tedit = false; UI.limit = 60; render(); });
   v.querySelectorAll('[data-tsort]').forEach(b => b.onclick = () => { const k = b.dataset.tsort; UI.tsort = UI.tsort && UI.tsort.k === k ? { k, dir: -UI.tsort.dir } : { k, dir: ['name', 'type', 'gear', 'tags'].includes(k) ? 1 : -1 }; render(); });
   v.querySelectorAll('[data-tyear]').forEach(b => b.onclick = () => { UI.tyear = b.dataset.tyear; UI.limit = 60; render(); });
@@ -789,7 +837,7 @@ document.querySelectorAll('#nav button').forEach(b => b.onclick = () => { UI.vie
 $('#addBtn').onclick = () => openEdit(null);
 
 const actions = {
-  zreset: async () => { DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), hr: undefined, spd: undefined }); await persist(); render(); toast('Zadane zone vraćene.'); },
+  zreset: async () => { DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), hr: undefined, spd: undefined, walk: undefined }); await persist(); render(); toast('Zadane zone vraćene.'); },
   lock: async () => { META.locked = !META.locked; await persist(false); render(); },
   csv: () => $('#csvIn').click(),
   gps: () => $('#gpsIn').click(),
@@ -821,11 +869,11 @@ const tick = () => new Promise(r => setTimeout(r, 0));
 const r1 = (v, d) => v === null || v === undefined ? null : Math.round(v * Math.pow(10, d)) / Math.pow(10, d);
 
 async function saveZones() {
-  const cur = zoneCfg(), n = { hr: [], spd: [] };
+  const n = { hr: [], spd: [], walk: [] };
   document.querySelectorAll('.zset input').forEach(i => { n[i.dataset.z][+i.dataset.i] = +String(i.value).replace(',', '.'); });
   const ok = Analytics.cfgFrom(n), same = k => ok[k].every((v, i) => v === n[k][i]);
-  if (!same('hr') || !same('spd')) { toast('Granice moraju biti brojevi koji rastu: Z2 < Z3 < Z4 < Z5.', 3600); render(); return; }
-  DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), hr: n.hr, spd: n.spd });
+  if (!same('hr') || !same('spd') || !same('walk')) { toast('Granice moraju biti brojevi koji rastu: Z2 < Z3 < Z4 < Z5.', 3600); render(); return; }
+  DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), hr: n.hr, spd: n.spd, walk: n.walk });
   await persist(); toast('Zone spremljene.');
 }
 async function attachTrack(id, track) {
@@ -969,21 +1017,34 @@ $('#jsonIn').onchange = async e => {
 const toLocalInput = iso => { const d = new Date(iso), p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes()); };
 let detailView = null, openSeq = 0;
 const chk = (n, l, on) => '<label class="chk"><input type="checkbox" name="' + n + '"' + (on ? ' checked' : '') + '> ' + esc(l) + '</label>';
+/* Što se vidi u detalju treninga po sportu (settings.det; ključ 'all' ili tip sporta; sport nadjačava 'all'). */
+const DET_STATS = [['dist', 'Udaljenost'], ['time', 'Vrijeme'], ['spd', 'Brzina'], ['pace', 'Tempo'], ['elev', 'Uspon'], ['hr', 'Puls'], ['temp', 'Temperatura']];
+const DET_SECS = [['map', 'Karta'], ['chart', 'Graf'], ['zones', 'Zone'], ['text', 'Opis i bilješka']];
+function detCfg(type) {
+  const d = (DB.settings && DB.settings.det) || {}, o = d[type] || d.all;
+  const ks = l => l.map(x => x[0]), pick = (arr, all) => Array.isArray(arr) ? ks(all).filter(k => arr.includes(k)) : ks(all);
+  return { stats: pick(o && o.stats, DET_STATS), secs: pick(o && o.secs, DET_SECS), chart: o && ['ele', 'spd', 'pace', 'hr', 'pw'].includes(o.chart) ? o.chart : '', route: o && ['plain', 'hr', 'spd'].includes(o.route) ? o.route : 'plain', custom: !!d[type] };
+}
+async function detSave(sport, fn) {
+  const cur = detCfg(sport), n = { stats: cur.stats.slice(), secs: cur.secs.slice(), chart: cur.chart, route: cur.route }; fn(n);
+  const det = Object.assign({}, DB.settings && DB.settings.det); det[sport] = n;
+  DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), det }); await persist(); render();
+}
 function openView(a) {
-  const dlg = $('#dlg'), seq = ++openSeq, sum = [];
-  if (a.dist > 0) sum.push([fmtKm(a.dist), 'km']);
-  sum.push([Core.fmtDur(a.moving || a.elapsed), '']);
-  if (a.avgSpeed && a.dist >= 1) sum.push([a.avgSpeed.toFixed(1).replace('.', ','), 'km/h']);
-  if (paceStr(a) && a.dist >= 1) sum.push([paceStr(a), 'min/km']);
-  if (a.elev > 0) sum.push([Math.round(a.elev), 'm ↑']);
-  if (a.avgHr > 0) sum.push([Math.round(a.avgHr), 'bpm']);
-  if (a.temp != null) sum.push([a.temp.toFixed(1).replace('.', ','), '°C']);
+  const dlg = $('#dlg'), seq = ++openSeq, sum = [], dc = detCfg(a.type), on = k => dc.stats.includes(k), sec = k => dc.secs.includes(k);
+  if (a.dist > 0 && on('dist')) sum.push([fmtKm(a.dist), 'km']);
+  if (on('time')) sum.push([Core.fmtDur(a.moving || a.elapsed), '']);
+  if (a.avgSpeed && a.dist >= 1 && on('spd')) sum.push([a.avgSpeed.toFixed(1).replace('.', ','), 'km/h']);
+  if (paceStr(a) && a.dist >= 1 && on('pace')) sum.push([paceStr(a), 'min/km']);
+  if (a.elev > 0 && on('elev')) sum.push([Math.round(a.elev), 'm ↑']);
+  if (a.avgHr > 0 && on('hr')) sum.push([Math.round(a.avgHr), 'bpm']);
+  if (a.temp != null && on('temp')) sum.push([a.temp.toFixed(1).replace('.', ','), '°C']);
   dlg.innerHTML = '<div><h2>' + esc(a.name || typeLabel(a.type)) + '</h2>' +
     '<div class="note" style="margin:2px 0 0">' + esc(typeLabel(a.type) + ' · ' + fmtDate(a.date) + ' ' + fmtTime(a.date)) + (a.gear ? ' · ' + esc(a.gear) : '') + '</div>' +
-    '<div class="sum">' + sum.map(([v, u]) => '<div>' + esc(v) + (u ? '<small>' + esc(u) + '</small>' : '') + '</div>').join('') + '</div>' +
+    (sum.length ? '<div class="sum">' + sum.map(([v, u]) => '<div>' + esc(v) + (u ? '<small>' + esc(u) + '</small>' : '') + '</div>').join('') + '</div>' : '') +
     (badgesHtml(a) || (a.tags || []).length ? '<div style="margin-top:8px">' + badgesHtml(a) + (a.tags || []).map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>' : '') +
-    (a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
-    (a.notes ? '<p class="adesc"><b>Bilješka:</b> ' + esc(a.notes) + '</p>' : '') +
+    (sec('text') && a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
+    (sec('text') && a.notes ? '<p class="adesc"><b>Bilješka:</b> ' + esc(a.notes) + '</p>' : '') +
     (a.hasTrack ? '<div id="trk"></div><div id="zn"></div>' : '') +
     '<div class="acts"><div>' + (a.hasTrack ? '<button type="button" class="btn pri" id="shareBtn">Podijeli sliku</button>' : '') + '</div><button type="button" class="btn" id="cancel">Zatvori</button></div></div>';
   dlg.onclose = () => { if (detailView) { detailView.destroy(); detailView = null; } };
@@ -992,7 +1053,7 @@ function openView(a) {
     const box = $('#trk'); box.innerHTML = '<p class="note">Učitavam rutu…</p>';
     store.get('tr:' + a.id).then(tr => {
       if (seq !== openSeq || !dlg.open) return;
-      if (tr && tr.n) { detailView = TrackView.mount(box, tr, { cfg: zoneCfg(), labels: zoneLabels() }); showZones(tr); }
+      if (tr && tr.n) { detailView = TrackView.mount(box, tr, { cfg: zoneCfg(a.type), labels: zoneLabels(a.type), noMap: !sec('map'), noChart: !sec('chart'), chart: dc.chart, mode: dc.route }); if (sec('zones')) showZones(tr, a.type); }
       else box.innerHTML = '<p class="note">Ruta još nije preuzeta na ovaj uređaj. Dodirni sinkronizaciju u zaglavlju.</p>';
     });
   }
@@ -1079,7 +1140,7 @@ try { Object.assign(SHR, JSON.parse(localStorage.getItem('shr') || '{}')); } cat
 async function openShare(id) {
   const a = DB.activities[id], tr = await store.get('tr:' + id);
   if (!tr || !tr.poly) { toast('Ruta još nije preuzeta na ovaj uređaj. Dodirni sinkronizaciju.'); return; }
-  const pts = Files.decPoly(tr.poly), cfg = zoneCfg(), L = zoneLabels(), z = Analytics.zonesFor(tr, cfg), has = { hr: !!(z && z.hr), spd: !!(z && z.spd) };
+  const pts = Files.decPoly(tr.poly), cfg = zoneCfg(a.type), L = zoneLabels(a.type), z = Analytics.zonesFor(tr, cfg), has = { hr: !!(z && z.hr), spd: !!(z && z.spd) };
   const fname = 'trening-' + ymd(new Date(a.date)) + '.png';
   const dlg = $('#shr'); let blob = null, url = null, seq = 0, photo = null;
   const STYLES = [['split', 'Karta + podaci'], ['full', 'Preko cijele karte'], ['route', 'Samo ruta'], ['overlay', 'Prozirno (story)']].concat(has.hr || has.spd ? [['zones', 'Zone']] : []).concat([['photo', 'Karta + foto']]);
@@ -1148,18 +1209,19 @@ async function openShare(id) {
 
 /* ---------- zone pulsa i brzine ---------- */
 const ZCOL = ['#6aa2f0', '#5cc388', '#e8c04a', '#ef8a4c', '#d6453a'];
-const zoneCfg = () => Analytics.cfgFrom(DB.settings);
-const zoneLabels = () => { const c = zoneCfg(); return { hr: Analytics.hrLabels(c), spd: Analytics.spdLabels(c) }; };
+const zoneCfgAll = () => Analytics.cfgFrom(DB.settings);
+const zoneCfg = type => Analytics.forType(zoneCfgAll(), type);
+const zoneLabels = type => { const c = zoneCfg(type); return { hr: Analytics.hrLabels(c), spd: Analytics.spdLabels(c) }; };
 function zoneBars(arr, labels) {
   const tot = arr.reduce((a, b) => a + b, 0); if (!tot) return '';
   return '<div class="zb">' + arr.map((v, i) => '<div class="zr"><span class="zl">' + esc(labels[i]) + '</span><span class="zt"><i style="width:' + (v / tot * 100).toFixed(1) + '%;background:' + ZCOL[i] + '"></i></span><span class="zv">' + durShort(v) + ' · ' + Math.round(v / tot * 100) + ' %</span></div>').join('') + '</div>';
 }
-function showZones(tr) {
+function showZones(tr, type) {
   const box = $('#zn'); if (!box) return;
-  const cfg = zoneCfg(), L = zoneLabels(), z = Analytics.zonesFor(tr, cfg); if (!z) return;
+  const cfg = zoneCfg(type), L = zoneLabels(type), z = Analytics.zonesFor(tr, cfg); if (!z) return;
   let h = '';
   if (z.hr) h += '<h3 class="zh">Zone pulsa</h3>' + zoneBars(z.hr, L.hr) + (Analytics.verdict(z) ? '<p style="margin:8px 0 0"><b>' + esc(Analytics.verdict(z)) + '</b></p>' : '');
-  if (z.spd) h += '<h3 class="zh">Zone brzine</h3>' + zoneBars(z.spd, L.spd);
+  if (z.spd) h += '<h3 class="zh">Zone brzine' + (Analytics.group(type) === 'walk' ? ' (hodanje)' : '') + '</h3>' + zoneBars(z.spd, L.spd);
   box.innerHTML = h;
 }
 const paceStr = a => { if (!(a.dist > 0) || !(a.moving || a.elapsed)) return null; const s = Math.round((a.moving || a.elapsed) / a.dist); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
