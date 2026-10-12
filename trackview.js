@@ -129,7 +129,7 @@
     const g = cv.getContext('2d');
     let w = el.clientWidth || 320, h = el.clientHeight || 400, z = 8, c = [0.5, 0.5], layers = [], raf = 0, dead = false, gray = true;
     const tiles = new Map();
-    const prep = ll => { const n = ll.length, xs = new Float64Array(n), ys = new Float64Array(n); let a = 1, b = 0, d = 1, e = 0; for (let i = 0; i < n; i++) { const s = Math.sin(ll[i][0] * Math.PI / 180); xs[i] = (ll[i][1] + 180) / 360; ys[i] = 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI); a = Math.min(a, xs[i]); b = Math.max(b, xs[i]); d = Math.min(d, ys[i]); e = Math.max(e, ys[i]); } return { xs, ys, x0: a, x1: b, y0: d, y1: e }; };
+        const prep = ll => { const n = ll.length, xs = new Float64Array(n), ys = new Float64Array(n); let a = 1, b = 0, d = 1, e = 0; for (let i = 0; i < n; i++) { const s = Math.sin(ll[i][0] * Math.PI / 180); xs[i] = (ll[i][1] + 180) / 360; ys[i] = 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI); a = Math.min(a, xs[i]); b = Math.max(b, xs[i]); d = Math.min(d, ys[i]); e = Math.max(e, ys[i]); } return { xs, ys, x0: a, x1: b, y0: d, y1: e }; };
 
     function fit() {
       let a = 1, b = 0, d = 1, e = 0, any = false;

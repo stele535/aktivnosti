@@ -3,8 +3,7 @@
   'use strict';
   const T = 256;
   const FORMATS = { '4:5': [1080, 1350], '9:16': [1080, 1920], '1:1': [1080, 1080] };
-  const STYLES = ['split', 'full', 'route', 'overlay', 'zones', 'photo'];
-  const ZCOL = ['#6aa2f0', '#5cc388', '#e8c04a', '#ef8a4c', '#d6453a'];  // boje stupaca zona
+  const STYLES = ['split', 'full', 'route', 'overlay', 'photo'];
   const THEMES = {
     light: { bg: '#f6f5f1', ink: '#1c1e22', mute: '#6b7078', line: '#e4e2db', map: '#e8e4d8', routeBg: '#ebe9e2', casing: 'rgba(255,255,255,.95)' },
     dark: { bg: '#14161a', ink: '#eceae4', mute: '#9a9ea6', line: '#2b2f37', map: '#2a2e35', routeBg: '#1b1e24', casing: 'rgba(0,0,0,.65)' }
@@ -41,7 +40,7 @@
   }
   const dur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + ':' + String(m).padStart(2, '0') + ' h' : m + ' min'; };
 
-  /* o: { title, sub, stats: [[vrijednost, oznaka], ...] (do 4), pts: [[lat, lon], ...], d, style, gray, format, theme, hideEnds, tiles, zoneBars: { title, rows: [{ label, sec }] } | null, photo: slika | null, photoSide: 'left' | 'right' }
+  /* o: { title, sub, stats: [[vrijednost, oznaka], ...] (do 4), pts: [[lat, lon], ...], d, style, gray, format, theme, hideEnds, tiles, photo: slika | null, photoSide: 'left' | 'right', rside: 'left' | 'center' | 'right' (ruta u prozirnom stilu), msg: posveta }
      Vraća Promise<{ blob, trimmed, points, tilesLoaded }> */
   async function draw(o) {
     let style = STYLES.includes(o.style) ? o.style : 'split'; if (style === 'photo' && !o.photo) style = 'split';
@@ -49,14 +48,33 @@
     const [W, H] = FORMATS[o.format] || FORMATS['4:5'];
     const tr = o.hideEnds ? trimEnds(o.pts, o.d, 200) : { pts: o.pts, trimmed: false };
     const pts = tr.pts;
-    const overlay = style === 'overlay', full = style === 'full', wantTiles = (style === 'split' || full || style === 'zones' || style === 'photo') && o.tiles !== false;
-    const zb = style === 'zones' && o.zoneBars && o.zoneBars.rows.some(r => r.sec > 0) ? o.zoneBars : null;
-    const panelH = full ? 0 : overlay ? 0 : style === 'photo' ? (H === 1080 ? 520 : H === 1350 ? 640 : 760) : zb ? 760 : (H === 1080 ? 430 : H === 1350 ? 550 : 620);
+    const overlay = style === 'overlay', full = style === 'full', wantTiles = (style === 'split' || full || style === 'photo') && o.tiles !== false;
+    /* posveta: do 2 retka ispod podataka (ili iznad naslova u prozirnom i punom stilu) */
+    const mg = document.createElement('canvas').getContext('2d'), msgW = overlay || full ? W - 120 : W - 120;
+    const msgLines = (() => {
+      const txt = String(o.msg || '').replace(/\s+/g, ' ').trim(); if (!txt) return [];
+      mg.font = 'italic 500 ' + (overlay || full ? 40 : 32) + 'px ' + FONT;
+      const out = []; let cur = '';
+      for (const w of txt.split(' ')) { const t = cur ? cur + ' ' + w : w; if (mg.measureText(t).width <= msgW || !cur) cur = t; else { out.push(cur); cur = w; } }
+      if (cur) out.push(cur);
+      if (out.length > 2) { out.length = 2; out[1] = out[1].replace(/.{0,2}$/, '…'); }
+      return out;
+    })();
+    const msgLH = overlay || full ? 50 : 40, msgH = msgLines.length ? msgLines.length * msgLH + 24 : 0, ovMsg = overlay || full ? msgH : 0;
+    const panelH = (full ? 0 : overlay ? 0 : style === 'photo' ? (H === 1080 ? 520 : H === 1350 ? 640 : 760) : (H === 1080 ? 430 : H === 1350 ? 550 : 620)) + (overlay || full ? 0 : msgH);
     const mapH = overlay || full ? H : H - panelH;
-    const fitH = full ? H - 470 : overlay ? H - 380 : mapH;         // dio platna u koji se uklapa ruta
+    const fitH = full ? H - 470 - ovMsg : overlay ? H - 380 - ovMsg : mapH;         // dio platna u koji se uklapa ruta
+    const rside = overlay ? (o.rside === 'left' || o.rside === 'center' ? o.rside : 'right') : 'center';
+    const boxW = rside === 'center' ? W : Math.round(W * 0.6), boxCx = rside === 'left' ? boxW / 2 : rside === 'right' ? W - boxW / 2 : W / 2;
     const c = document.createElement('canvas'); c.width = W; c.height = H;
     const g = c.getContext('2d');
     if (!overlay) { g.fillStyle = th.bg; g.fillRect(0, 0, W, H); }
+    const bgPh = overlay && o.photo ? o.photo : null;
+    if (bgPh) {
+      const iw = bgPh.width || bgPh.naturalWidth, ih = bgPh.height || bgPh.naturalHeight, k = Math.max(W / iw, H / ih), sw = W / k, sh = H / k;
+      g.drawImage(bgPh, (iw - sw) / 2, (ih - sh) / 2, sw, sh, 0, 0, W, H);
+      const gr = g.createLinearGradient(0, H - 700, 0, H); gr.addColorStop(0, 'rgba(10,12,16,0)'); gr.addColorStop(1, 'rgba(10,12,16,.62)'); g.fillStyle = gr; g.fillRect(0, H - 700, W, 700);
+    }
 
     /* ---- karta ---- */
     g.save(); g.beginPath(); g.rect(0, 0, W, mapH); g.clip();
@@ -64,9 +82,9 @@
     const P = pts.map(([la, lo]) => merc01(la, lo));
     let minx = 1, maxx = 0, miny = 1, maxy = 0;
     for (const [x, y] of P) { minx = Math.min(minx, x); maxx = Math.max(maxx, x); miny = Math.min(miny, y); maxy = Math.max(maxy, y); }
-    const pad = overlay ? 150 : 120, sx = Math.max(maxx - minx, 1e-9), sy = Math.max(maxy - miny, 1e-9);
-    const zf = clamp(Math.log2(Math.min((W - 2 * pad) / (T * sx), (fitH - 2 * pad) / (T * sy))), 2, 17.5);
-    const scale = T * Math.pow(2, zf), x0 = (minx + maxx) / 2 * scale - W / 2, y0 = (miny + maxy) / 2 * scale - fitH / 2;
+    const pad = overlay ? (rside === 'center' ? 150 : 70) : 120, sx = Math.max(maxx - minx, 1e-9), sy = Math.max(maxy - miny, 1e-9);
+    const zf = clamp(Math.log2(Math.min((boxW - 2 * pad) / (T * sx), (fitH - 2 * pad) / (T * sy))), 2, 17.5);
+    const scale = T * Math.pow(2, zf), x0 = (minx + maxx) / 2 * scale - boxCx, y0 = (miny + maxy) / 2 * scale - fitH / 2;
     let tilesLoaded = 0;
     if (wantTiles) {
       const zt = clamp(Math.floor(zf), 0, 18), ts = T * Math.pow(2, zf - zt), n = Math.pow(2, zt);
@@ -113,6 +131,7 @@
       if (full) { const gr = g.createLinearGradient(0, H - 560, 0, H); gr.addColorStop(0, 'rgba(10,12,16,0)'); gr.addColorStop(0.55, 'rgba(10,12,16,.72)'); gr.addColorStop(1, 'rgba(10,12,16,.88)'); g.fillStyle = gr; g.fillRect(0, H - 560, W, 560); }
       const by = H - 340, sh = overlay;
       if (sh) { g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 14; }
+      if (msgLines.length) { g.fillStyle = '#fff'; g.font = 'italic 500 40px ' + FONT; msgLines.forEach((t, i) => g.fillText(t, 60, by - 84 - (msgLines.length - 1 - i) * msgLH)); }
       g.fillStyle = '#fff'; g.font = '700 62px ' + FONT; g.fillText(fitText(g, o.title || 'Trening', W - 120), 60, by);
       g.fillStyle = 'rgba(255,255,255,.82)'; g.font = '500 34px ' + FONT; g.fillText(fitText(g, o.sub || '', W - 120), 60, by + 54); g.shadowBlur = 0;
       statsRow(60, by + 150, W - 120, '#fff', 'rgba(255,255,255,.8)', sh);
@@ -123,7 +142,7 @@
       g.fillStyle = th.ink; g.font = '700 58px ' + FONT; g.fillText(fitText(g, o.title || 'Trening', W - 120), 60, top + 84);
       g.fillStyle = th.mute; g.font = '500 32px ' + FONT; g.fillText(fitText(g, o.sub || '', W - 120), 60, top + 126);
       g.fillStyle = th.line; g.fillRect(60, top + 152, W - 120, 2);
-      const cy = top + 182, ch = H - 70 - cy, gap = 30, pw = Math.round((W - 120 - gap) / 2);
+      const cy = top + 182, ch = H - 70 - msgH - cy, gap = 30, pw = Math.round((W - 120 - gap) / 2);
       const px = left ? 60 : 60 + pw + gap, tx = left ? 60 + pw + gap : 60;
       const iw = ph.width || ph.naturalWidth, ih = ph.height || ph.naturalHeight, k = Math.max(pw / iw, ch / ih), sw = pw / k, sh2 = ch / k;
       g.save(); g.beginPath();
@@ -135,26 +154,17 @@
         g.fillStyle = th.ink; g.font = '700 ' + (String(v).length > 4 ? 38 : 48) + 'px ' + MONO; g.fillText(String(v), xx, yy);
         g.fillStyle = th.mute; g.font = '500 26px ' + FONT; g.fillText(l, xx, yy + 38);
       });
+      if (msgLines.length) { g.fillStyle = th.ink; g.font = 'italic 500 32px ' + FONT; msgLines.forEach((t, i) => g.fillText(t, 60, cy + ch + 48 + i * msgLH)); }
       g.fillStyle = th.mute; g.font = '500 24px ' + FONT;
       if (tr.trimmed) g.fillText('Početak i kraj rute su skriveni', 60, H - 30);
       g.textAlign = 'right'; g.fillText('Trening', W - 60, H - 30); g.textAlign = 'left';
     } else {
-      const top = mapH, compact = H === 1080 && !zb;
+      const top = mapH, compact = H === 1080;
       g.fillStyle = th.ink; g.font = '700 62px ' + FONT; g.fillText(fitText(g, o.title || 'Trening', W - 120), 60, top + (compact ? 84 : 100));
       g.fillStyle = th.mute; g.font = '500 34px ' + FONT; g.fillText(fitText(g, o.sub || '', W - 120), 60, top + (compact ? 130 : 154));
       g.fillStyle = th.line; g.fillRect(60, top + (compact ? 160 : 192), W - 120, 2);
       statsRow(60, top + (compact ? 236 : 290), W - 120, th.ink, th.mute, false);
-      if (zb) {
-        const ry = top + 410, tot = zb.rows.reduce((a, r) => a + r.sec, 0) || 1;
-        g.font = '600 26px ' + FONT; g.fillStyle = th.mute; g.fillText(zb.title, 60, ry);
-        zb.rows.forEach((r, i) => {
-          const y = ry + 34 + i * 46, bw = W - 60 - 300 - 250;
-          g.font = '500 26px ' + FONT; g.fillStyle = th.ink; g.fillText(r.label, 60, y + 24);
-          g.fillStyle = th.line; g.fillRect(300, y + 4, bw, 26);
-          g.fillStyle = ZCOL[i]; g.fillRect(300, y + 4, Math.max(r.sec > 0 ? 4 : 0, bw * r.sec / tot), 26);
-          g.fillStyle = th.ink; g.textAlign = 'right'; g.fillText(dur(r.sec) + ' · ' + Math.round(r.sec / tot * 100) + ' %', W - 60, y + 24); g.textAlign = 'left';
-        });
-      }
+      if (msgLines.length) { g.fillStyle = th.ink; g.font = 'italic 500 32px ' + FONT; const my = H - 40 - 30 - (msgLines.length - 1) * msgLH; msgLines.forEach((t, k) => g.fillText(t, 60, my + k * msgLH)); }
       g.fillStyle = th.mute; g.font = '500 24px ' + FONT;
       if (tr.trimmed) g.fillText('Početak i kraj rute su skriveni', 60, H - 40);
       g.textAlign = 'right'; g.fillText('Trening', W - 60, H - 40); g.textAlign = 'left';
@@ -169,5 +179,5 @@
     catch (e) { return draw(Object.assign({}, o, { tiles: false })); }
   }
 
-  root.Share = { render, trimEnds, FORMATS, STYLES, ZCOL };
+  root.Share = { render, trimEnds, FORMATS, STYLES };
 })(typeof self !== 'undefined' ? self : this);

@@ -1233,22 +1233,25 @@ function openEdit(id) {
 }
 
 /* ---------- dijeljenje slike ---------- */
-const SHR = { style: 'split', format: '4:5', theme: 'light', gray: true, hide: true, side: 'left' };
+const SHR = { style: 'split', format: '4:5', theme: 'light', gray: true, hide: true, side: 'left', rside: 'right' };
 try { Object.assign(SHR, JSON.parse(localStorage.getItem('shr') || '{}')); } catch (_) {}
 async function openShare(id) {
   const a = DB.activities[id], tr = await store.get('tr:' + id);
   if (!tr || !tr.poly) { toast('Ruta još nije preuzeta na ovaj uređaj. Dodirni sinkronizaciju.'); return; }
-  const pts = Files.decPoly(tr.poly), cfg = zoneCfg(a.type), L = zoneLabels(a.type), z = Analytics.zonesFor(tr, cfg), has = { hr: !!(z && z.hr), spd: !!(z && z.spd) };
+  const pts = Files.decPoly(tr.poly);
   const fname = 'trening-' + ymd(new Date(a.date)) + '.png';
   const dlg = $('#shr'); let blob = null, url = null, seq = 0, photo = null;
-  const STYLES = [['split', 'Karta + podaci'], ['full', 'Preko cijele karte'], ['route', 'Samo ruta'], ['overlay', 'Prozirno (story)']].concat(has.hr || has.spd ? [['zones', 'Zone']] : []).concat([['photo', 'Karta + foto']]);
+  const STYLES = [['split', 'Karta + podaci'], ['full', 'Preko cijele karte'], ['route', 'Samo ruta'], ['overlay', 'Prozirno (story)'], ['photo', 'Karta + foto']];
+  let msg = '';
   if (!STYLES.some(x => x[0] === SHR.style)) SHR.style = 'split';
   const opt = (title, key, items) => '<div class="opt"><b>' + title + '</b><div class="chips">' + items.map(([k, l]) => '<button type="button" class="chip ' + (String(SHR[key]) === String(k) ? 'on' : '') + '" data-o="' + key + '" data-v="' + k + '">' + l + '</button>').join('') + '</div></div>';
   const optionsHtml = () => opt('Stil', 'style', STYLES) + opt('Format', 'format', [['4:5', 'Objava 4:5'], ['9:16', 'Story 9:16'], ['1:1', 'Kvadrat']]) +
+    (SHR.style === 'overlay' ? opt('Položaj rute', 'rside', [['left', 'Lijevo'], ['center', 'Sredina'], ['right', 'Desno']]) + '<div class="opt"><b>Pozadina</b><div class="chips"><button type="button" class="chip ' + (photo ? '' : 'on') + '" data-ph="clear">Prozirna</button><button type="button" class="chip ' + (photo ? 'on' : '') + '" data-ph="pick">' + (photo ? 'Promijeni fotku' : 'Fotka iza rute') + '</button></div></div>' : '') +
     (SHR.style === 'full' || SHR.style === 'overlay' ? '' : opt('Tema', 'theme', [['light', 'Svijetla'], ['dark', 'Tamna']])) +
     (SHR.style === 'photo' ? '<div class="opt"><b>Fotka</b><div class="chips"><button type="button" class="chip on" data-ph="pick">' + (photo ? 'Promijeni fotku' : 'Odaberi iz galerije') + '</button>' + (photo ? '<button type="button" class="chip" data-ph="clear">Ukloni</button>' : '') + '</div></div>' + opt('Fotka je', 'side', [['left', 'Lijevo'], ['right', 'Desno']]) : '') +
-    (SHR.style === 'split' || SHR.style === 'full' || SHR.style === 'zones' || SHR.style === 'photo' ? opt('Podloga karte', 'gray', [[false, 'Šarena'], [true, 'Siva']]) : '');
+    (SHR.style === 'split' || SHR.style === 'full' || SHR.style === 'photo' ? opt('Podloga karte', 'gray', [[false, 'Šarena'], [true, 'Siva']]) : '');
   dlg.innerHTML = '<h2>Podijeli vožnju</h2><div class="shr-box" id="shrBox">Pripremam sliku…</div><div id="shrOpts">' + optionsHtml() + '</div>' +
+    '<label class="opt" style="display:block;margin-top:10px"><b>Posveta / poruka (neobavezno)</b><input type="text" id="shrMsg" maxlength="120" placeholder="npr. Za tatu, najljepši krug do sada" value="' + esc(msg) + '"></label>' +
     '<input type="file" id="shrFile" accept="image/*" hidden>' +
     '<label class="chk" style="margin-top:12px"><input type="checkbox" id="shrHide"' + (SHR.hide ? ' checked' : '') + '> Sakrij početak i kraj rute (200 m)</label>' +
     '<p class="note" id="shrNote" style="margin-top:0"></p>' +
@@ -1260,13 +1263,11 @@ async function openShare(id) {
     if (a.avgSpeed && a.dist >= 1) stats.push([a.avgSpeed.toFixed(1).replace('.', ','), 'km/h']);
     if (a.elev > 0) stats.push([Math.round(a.elev), 'm uspona']);
     if (stats.length < 4 && a.avgHr > 0) stats.push([Math.round(a.avgHr), 'bpm']);
-    const zk = has.hr ? 'hr' : 'spd';
-    return { title: a.name || typeLabel(a.type), sub: typeLabel(a.type) + ' · ' + fmtDate(a.date), stats, pts, d: tr.d, hideEnds: SHR.hide, style: SHR.style, format: SHR.format, theme: SHR.theme, gray: SHR.gray, photo, photoSide: SHR.side,
-      zoneBars: SHR.style === 'zones' && z && z[zk] ? { title: zk === 'hr' ? 'Zone pulsa' : 'Zone brzine', rows: z[zk].map((sec, i) => ({ label: L[zk][i], sec })) } : null };
+    return { title: a.name || typeLabel(a.type), sub: typeLabel(a.type) + ' · ' + fmtDate(a.date), stats, pts, d: tr.d, hideEnds: SHR.hide, style: SHR.style, format: SHR.format, theme: SHR.theme, gray: SHR.gray, photo, photoSide: SHR.side, rside: SHR.rside, msg };
   };
   const draw = async () => {
     const my = ++seq; $('#shrDo').disabled = $('#shrSave').disabled = true; $('#shrBox').textContent = 'Pripremam sliku…';
-    $('#shrBox').classList.toggle('chk-bg', SHR.style === 'overlay');
+    $('#shrBox').classList.toggle('chk-bg', SHR.style === 'overlay' && !photo);
     try {
       const r = await Share.render(mkOpts());
       if (my !== seq) return;
@@ -1293,6 +1294,7 @@ async function openShare(id) {
     } catch (e) { toast('Fotka se ne može otvoriti: ' + (e.message || e), 4000); return; }
     $('#shrOpts').innerHTML = optionsHtml(); draw();
   };
+  let mt = 0; $('#shrMsg').oninput = () => { msg = $('#shrMsg').value; clearTimeout(mt); mt = setTimeout(draw, 350); };
   $('#shrHide').onchange = () => { SHR.hide = $('#shrHide').checked; persistOpts(); draw(); };
   $('#shrClose').onclick = () => dlg.close();
   $('#shrSave').onclick = save;
@@ -1367,6 +1369,7 @@ function mountMap() {
   if (MAPD.routes) applyMap(true);
 }
 function destroyMap() { if (MAPD.map) { MAPD.map.destroy(); MAPD.map = null; } }
+
 function applyMap(refit) {
   if (!MAPD.map) return;
   const spec = mapSpec();
