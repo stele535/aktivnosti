@@ -137,7 +137,7 @@ progress{height:10px;accent-color:var(--accent)}
 .cch{margin-top:2px;border-radius:5px;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:17px;min-height:17px;cursor:pointer;overflow:hidden;font-variant-numeric:tabular-nums}
 @media (prefers-color-scheme:dark){.cch{color:#111}}
 .cal-d .more{font-size:10px;color:var(--mute);text-align:center;margin-top:1px}
-.cch span{display:block;line-height:13px;font-size:10px}.cch span:first-child{padding-top:2px}.cch span:last-child{padding-bottom:2px;font-weight:600;opacity:.92}
+.cch span{display:block;line-height:13px;font-size:10px}.cch .a{padding-top:2px}.cch .b{padding-bottom:2px;font-weight:600;opacity:.92}.cch .x,.cal-ws,.cal-h .ws{display:none}
 .sm-r{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:14px}.sm-r.tot{font-weight:700;border-top:0}
 .sm-n i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px}.sm-v{color:var(--mute);text-align:right;font-variant-numeric:tabular-nums}.sm-r.tot .sm-v{color:var(--ink)}
 .cal-s{font-size:10px;line-height:1.25;color:var(--mute);padding:4px 2px;text-align:center;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
@@ -158,6 +158,27 @@ progress{height:10px;accent-color:var(--accent)}
 .shr-box.chk-bg{background:repeating-conic-gradient(#d9d9d9 0 25%,#fff 0 50%) 0 0/20px 20px;border-radius:12px}
 .pt{display:grid;gap:0;font-size:13px}.pt>div{display:grid;grid-template-columns:1.1fr .55fr .7fr 1fr 1.15fr;gap:4px;padding:6px 0;white-space:nowrap;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}.pt>div span:nth-child(n+2){text-align:right}.pt-h{color:var(--mute);font-size:11px;border-top:0!important}
 .tbl-wrap{overflow-x:auto;margin:0 -16px;padding:0 16px;-webkit-overflow-scrolling:touch}.tbl{border-collapse:separate;border-spacing:0;font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums;width:100%}.tbl td.l:not(.f){max-width:120px;overflow:hidden;text-overflow:ellipsis}.tbl th,.tbl td{padding:8px 8px;text-align:right;border-bottom:1px solid var(--line);background:var(--card)}.tbl th{color:var(--mute);font-size:11px;font-weight:600;cursor:pointer;user-select:none}.tbl .l{text-align:left}.tbl .f{position:sticky;left:0;z-index:1;text-align:left;box-shadow:1px 0 0 var(--line);max-width:46vw;overflow:hidden;text-overflow:ellipsis}.tbl tbody tr{cursor:pointer}.tbl tr.tt td{font-weight:700;cursor:default}.tcl{margin-top:4px}.tcr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid var(--line)}.tcr input{width:auto}.tcr label{margin:0;display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px}.tcr .btn{padding:3px 11px;margin-left:6px}
+@media (min-width:1000px){
+  body{padding-bottom:24px}
+  header{min-height:56px}
+  main{max-width:960px;padding:18px 24px}main.wide{max-width:1440px}
+  nav{top:0;bottom:auto;left:50%;right:auto;transform:translateX(-50%);width:auto;background:none;border:0;padding:0;height:56px;align-items:center}
+  nav button{flex:none;padding:8px 20px;font-size:14px;border-radius:10px}nav button:hover{background:var(--card)}nav button b{display:inline;font-size:16px;margin-right:7px}
+  .grid{grid-template-columns:repeat(3,1fr)}
+  .cal-h,.cal-w{grid-template-columns:repeat(7,1fr) 150px}
+  .cal-h span{font-size:12px}.cal-h .ws,.cal-ws{display:block}
+  .cal-d{min-height:138px;padding:4px 5px}.cal-d:nth-child(7){border-right:1px solid var(--line)}.cal-d .n{font-size:12px}
+  .cch{text-align:left;font-size:12px;line-height:1.3;padding:3px 7px;margin-top:3px;min-height:0}
+  .cch span{display:inline;font-size:12px;line-height:1.3}.cch .a,.cch .b{padding:0}.cch .a::after{content:' · '}
+  .cch .x{display:block;font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cch .dt{font-weight:500;font-size:11px;opacity:.9}.cch .x.nm{margin-bottom:1px}
+  .cal-d .more{font-size:11px}
+  .cal-ws{padding:8px 10px;font-size:12px;color:var(--mute);line-height:1.5;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}.cal-ws b{display:block;color:var(--ink);font-size:15px}.cal-ws span{display:block}
+  .cal-w:last-child .cal-ws{border-bottom:0}
+  .tbl-wrap{margin:0;padding:0}.tbl{font-size:14px}.tbl th{font-size:12px}.tbl th,.tbl td{padding:10px 14px}.tbl td.l:not(.f){max-width:360px}.tbl .f{max-width:none}
+  main.wide .hm{height:calc(100vh - 230px);height:calc(100dvh - 230px)}
+  svg[aria-label=Graf]{max-width:640px;display:block;margin:0 auto}
+  .seg{max-width:260px}.pager{justify-content:center;gap:18px}.pager .t{flex:none;min-width:160px;text-align:center}
+}
 .chips.wrap{flex-wrap:wrap;overflow:visible}.hm-wrap{margin-top:4px}.hm{position:relative;height:calc(100vh - 360px);height:calc(100dvh - 360px);min-height:330px;border-radius:14px;overflow:hidden;background:var(--line);touch-action:none;user-select:none;-webkit-user-select:none}
 .hm-cv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .chip.lay i{display:inline-block;width:10px;height:10px;border-radius:99px;margin-right:6px;vertical-align:-1px}
@@ -431,7 +452,7 @@ function download(name, text, type) {
 function render() {
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === (UI.view === 'records' ? 'overview' : UI.view)));
   const v = $('#view');
-  $('#addBtn').classList.toggle('hide', !!META.locked);
+  $('#addBtn').classList.toggle('hide', !!META.locked); v.classList.toggle('wide', ['cal', 'table', 'map'].includes(UI.view));
   if (UI.view === 'cal') v.innerHTML = viewCal();
   else if (UI.view === 'overview') v.innerHTML = viewOverview();
   else if (UI.view === 'map') v.innerHTML = viewMap();
@@ -533,7 +554,11 @@ function item(a) {
 }
 
 const durShort = sec => { const m = Math.round(sec / 60); return m >= 60 ? Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0') : m + '′'; };
-const chipTxt = a => { const t = durShort(a.moving || a.elapsed || 0); return a.dist > 0 ? '<span>' + (a.dist >= 1 ? Math.round(a.dist) : '<1') + ' km</span><span>' + t + '</span>' : t; };
+const chipTxt = a => {
+  const t = durShort(a.moving || a.elapsed || 0), s = spdOf(a), det = [s ? s.toFixed(1).replace('.', ',') + ' km/h' : '', a.avgHr > 0 ? Math.round(a.avgHr) + ' bpm' : '', a.elev > 0 ? Math.round(a.elev) + ' m' : ''].filter(Boolean).join(' · ');
+  const x = '<div class="x nm">' + esc(a.name || typeLabel(a.type)) + '</div>' + (det ? '<div class="x dt">' + det + '</div>' : '');
+  return x + (a.dist > 0 ? '<span class="a">' + (a.dist >= 1 ? Math.round(a.dist) : '<1') + ' km</span><span class="b">' + t + '</span>' : '<span class="b">' + t + '</span>');
+};
 function calSummary(list, label) {
   if (!list.length) return '';
   const row = (name, col, l, cls) => { const t = Core.totals(l); return '<div class="sm-r' + (cls || '') + '"><span class="sm-n">' + (col ? '<i style="background:' + col + '"></i>' : '') + esc(name) + '</span><span class="sm-v">' + l.length + '×' + (t.km > 0 ? ' · ' + fmtKm(t.km) + ' km' : '') + ' · ' + hoursStr(t.sec).replace(/<\/?small>/g, '') + '</span></div>'; };
@@ -563,7 +588,7 @@ function viewCal() {
   html += '<div class="row" style="justify-content:flex-end;margin:-4px 0 8px"><button class="chip" data-ctoday="1">Danas</button></div>';
   const dn = ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'];
   if (month) {
-    html += '<div class="cal"><div class="cal-h">' + dn.map(d => '<span>' + d + '</span>').join('') + '</div>';
+    html += '<div class="cal"><div class="cal-h">' + dn.map(d => '<span>' + d + '</span>').join('') + '<span class="ws">Tjedan</span></div>';
     for (let w = 0; w < weeks; w++) {
       const wl = []; html += '<div class="cal-w">';
       for (let i = 0; i < 7; i++) {
@@ -573,7 +598,8 @@ function viewCal() {
           l.slice(0, 3).map(a => '<div class="cch" data-id="' + esc(a.id) + '" style="background:' + typeColor(a.type) + '">' + chipTxt(a) + '</div>').join('') +
           (l.length > 3 ? '<div class="more">+' + (l.length - 3) + '</div>' : '') + '</div>';
       }
-      html += '</div>';
+      const wt = Core.totals(wl);
+      html += '<div class="cal-ws">' + (wl.length ? (wt.km > 0 ? '<b>' + fmtKm(wt.km) + ' km</b>' : '') + '<span>' + Core.fmtDur(wt.sec) + '</span><span>' + wl.length + '× ' + (wt.elev > 0 ? '· ' + Math.round(wt.elev) + ' m' : '') + '</span>' : '') + '</div></div>';
     }
     html += '</div>';
   } else {
@@ -640,10 +666,11 @@ const COLS = {
   route: { l: 'Ruta', get: a => a.hasTrack ? 1 : null, fmt: () => '✓' }
 };
 const TABS_DEFAULT = () => [
-  { id: 't1', name: 'Bicikl', sport: 'Ride', cols: ['date', 'name', 'dist', 'moving', 'avgSpeed', 'elev', 'avgHr'] },
-  { id: 't2', name: 'Sve', sport: 'all', cols: ['date', 'name', 'type', 'dist', 'moving', 'elev'] }
+  { id: 't1', name: 'Bicikl', sport: 'Ride', cols: ['date', 'name', 'dist', 'moving', 'avgSpeed', 'elev', 'avgHr', 'maxHr', 'watts', 'cal'] },
+  { id: 't2', name: 'Sve', sport: 'all', cols: ['date', 'name', 'type', 'dist', 'moving', 'elev', 'avgHr', 'cal'] }
 ];
 const tabsCfg = () => { const t = DB.settings && DB.settings.tabs; return Array.isArray(t) && t.length ? t.map(x => ({ id: String(x.id), name: String(x.name || 'Tab'), sport: x.sport || 'all', commute: ['no', 'only'].includes(x.commute) ? x.commute : 'all', cols: (x.cols || []).filter(k => COLS[k]) })) : TABS_DEFAULT(); };
+const isRideTab = t => t.sport === 'Ride';
 const curTab = () => { const a = tabsCfg(); return a.find(t => t.id === UI.tab) || a[0]; };
 async function tabsSave(arr, activeId) {
   DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), tabs: arr || undefined });
@@ -661,14 +688,14 @@ function viewTable() {
     const row = (k, on) => '<div class="tcr"><label><input type="checkbox" data-tcol="' + k + '"' + (on ? ' checked' : '') + '> ' + esc(COLS[k].l) + (k === 'dist' ? '' : '') + '</label>' + (on ? '<span><button class="btn" data-tmove="' + k + ':-1">↑</button><button class="btn" data-tmove="' + k + ':1">↓</button></span>' : '') + '</div>';
     return html + '<div class="card"><label>Naziv taba</label><input data-tname value="' + esc(t.name) + '">' +
       '<label>Sport</label><select data-tsport><option value="all"' + (t.sport === 'all' ? ' selected' : '') + '>Svi sportovi</option>' + sports().concat(sports().includes(t.sport) || t.sport === 'all' ? [] : [t.sport]).map(s => '<option value="' + esc(s) + '"' + (t.sport === s ? ' selected' : '') + '>' + esc(typeLabel(s)) + '</option>').join('') + '</select>' +
-      '<label>Commute</label><select data-tcommute>' + [['all', 'Prikaži'], ['no', 'Sakrij commute'], ['only', 'Samo commute']].map(([k, l]) => '<option value="' + k + '"' + (t.commute === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>' +
       '<label>Stupci (redoslijed odozgo prema dolje je slijeva udesno)</label><div class="tcl">' + t.cols.map(k => row(k, true)).join('') + off.map(k => row(k, false)).join('') + '</div>' +
       '<div class="acts"><button class="btn" data-tdel="1"' + (tabs.length < 2 ? ' disabled' : '') + '>Obriši tab</button><div class="row"><button class="btn" data-treset="1">Zadano</button><button class="btn pri" data-tadd="1">+ Novi tab</button></div></div></div>';
   }
-  let list = acts().filter(a => (t.sport === 'all' || a.type === t.sport) && (t.commute === 'no' ? !a.commute : t.commute === 'only' ? !!a.commute : true));
+  let list = acts().filter(a => (t.sport === 'all' || a.type === t.sport) && (!isRideTab(t) || (t.commute === 'no' ? !a.commute : t.commute === 'only' ? !!a.commute : true)));
   const years = [...new Set(list.map(a => new Date(a.date).getFullYear()))].sort((x, y) => y - x);
   if (UI.tyear !== 'all' && !years.includes(+UI.tyear)) UI.tyear = 'all';
   if (UI.tyear !== 'all') list = list.filter(a => String(new Date(a.date).getFullYear()) === UI.tyear);
+  if (isRideTab(t)) html += '<div class="chips">' + [['all', 'Svi'], ['no', 'Bez commutea'], ['only', 'Samo commute']].map(([k, l]) => '<button class="chip ' + (t.commute === k ? 'on' : '') + '" data-tcm="' + k + '">' + l + '</button>').join('') + '</div>';
   if (years.length > 1) html += '<div class="chips">' + [['all', 'Sve godine']].concat(years.map(y => [String(y), y])).map(([k, l]) => '<button class="chip ' + (UI.tyear === k ? 'on' : '') + '" data-tyear="' + k + '">' + l + '</button>').join('') + '</div>';
   if (!t.cols.length) return html + '<p class="empty">Tab nema stupaca. Dodirni Uredi i odaberi ih.</p>';
   const so = UI.tsort && t.cols.includes(UI.tsort.k) ? UI.tsort : { k: t.cols.includes('date') ? 'date' : t.cols[0], dir: -1 };
@@ -747,8 +774,8 @@ function bind() {
   v.querySelectorAll('[data-tcol]').forEach(b => b.onclick = () => tabEdit(t => { const i = t.cols.indexOf(b.dataset.tcol); if (i >= 0) t.cols.splice(i, 1); else t.cols.push(b.dataset.tcol); }));
   v.querySelectorAll('[data-tmove]').forEach(b => b.onclick = () => tabEdit(t => { const [k, d] = b.dataset.tmove.split(':'), i = t.cols.indexOf(k), j = i + +d; if (i >= 0 && j >= 0 && j < t.cols.length) [t.cols[i], t.cols[j]] = [t.cols[j], t.cols[i]]; }));
   v.querySelectorAll('[data-tname]').forEach(i => i.onchange = () => tabEdit(t => { t.name = i.value.trim() || t.name; }));
-  v.querySelectorAll('[data-tcommute]').forEach(i => i.onchange = () => tabEdit(t => { t.commute = i.value; }));
-  v.querySelectorAll('[data-tsport]').forEach(i => i.onchange = () => tabEdit(t => { t.sport = i.value; }));
+  v.querySelectorAll('[data-tcm]').forEach(b => b.onclick = () => tabEdit(t => { t.commute = b.dataset.tcm; }));
+  v.querySelectorAll('[data-tsport]').forEach(i => i.onchange = () => tabEdit(t => { t.sport = i.value; if (t.sport !== 'Ride') t.commute = 'all'; }));
   v.querySelectorAll('[data-tadd]').forEach(b => b.onclick = () => tabsSave(tabsCfg().concat([{ id: 't' + Date.now().toString(36), name: 'Novi tab', sport: 'all', commute: 'all', cols: ['date', 'name', 'dist', 'moving'] }]), 't' + 'new'));
   v.querySelectorAll('[data-tdel]').forEach(b => b.onclick = () => { const a = tabsCfg(); if (a.length > 1) tabsSave(a.filter(t => t.id !== curTab().id)); });
   v.querySelectorAll('[data-treset]').forEach(b => b.onclick = () => tabsSave(null));
