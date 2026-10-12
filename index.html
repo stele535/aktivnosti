@@ -1233,7 +1233,7 @@ function openEdit(id) {
 }
 
 /* ---------- dijeljenje slike ---------- */
-const SHR = { style: 'split', format: '4:5', theme: 'light', gray: true, hide: true, side: 'left', rside: 'right' };
+const SHR = { style: 'split', format: '4:5', theme: 'light', gray: true, hide: true, side: 'left', rside: 'right', layout: 'list' };
 try { Object.assign(SHR, JSON.parse(localStorage.getItem('shr') || '{}')); } catch (_) {}
 async function openShare(id) {
   const a = DB.activities[id], tr = await store.get('tr:' + id);
@@ -1245,7 +1245,7 @@ async function openShare(id) {
   let msg = '';
   if (!STYLES.some(x => x[0] === SHR.style)) SHR.style = 'split';
   const opt = (title, key, items) => '<div class="opt"><b>' + title + '</b><div class="chips">' + items.map(([k, l]) => '<button type="button" class="chip ' + (String(SHR[key]) === String(k) ? 'on' : '') + '" data-o="' + key + '" data-v="' + k + '">' + l + '</button>').join('') + '</div></div>';
-  const optionsHtml = () => opt('Stil', 'style', STYLES) + opt('Format', 'format', [['4:5', 'Objava 4:5'], ['9:16', 'Story 9:16'], ['1:1', 'Kvadrat']]) +
+  const optionsHtml = () => opt('Stil', 'style', STYLES) + opt('Podaci', 'layout', [['list', 'Popis'], ['grid', 'Brojke']]) + opt('Format', 'format', [['4:5', 'Objava 4:5'], ['9:16', 'Story 9:16'], ['1:1', 'Kvadrat']]) +
     (SHR.style === 'overlay' ? opt('Položaj rute', 'rside', [['left', 'Lijevo'], ['center', 'Sredina'], ['right', 'Desno']]) + '<div class="opt"><b>Pozadina</b><div class="chips"><button type="button" class="chip ' + (photo ? '' : 'on') + '" data-ph="clear">Prozirna</button><button type="button" class="chip ' + (photo ? 'on' : '') + '" data-ph="pick">' + (photo ? 'Promijeni fotku' : 'Fotka iza rute') + '</button></div></div>' : '') +
     (SHR.style === 'full' || SHR.style === 'overlay' ? '' : opt('Tema', 'theme', [['light', 'Svijetla'], ['dark', 'Tamna']])) +
     (SHR.style === 'photo' ? '<div class="opt"><b>Fotka</b><div class="chips"><button type="button" class="chip on" data-ph="pick">' + (photo ? 'Promijeni fotku' : 'Odaberi iz galerije') + '</button>' + (photo ? '<button type="button" class="chip" data-ph="clear">Ukloni</button>' : '') + '</div></div>' + opt('Fotka je', 'side', [['left', 'Lijevo'], ['right', 'Desno']]) : '') +
@@ -1263,7 +1263,13 @@ async function openShare(id) {
     if (a.avgSpeed && a.dist >= 1) stats.push([a.avgSpeed.toFixed(1).replace('.', ','), 'km/h']);
     if (a.elev > 0) stats.push([Math.round(a.elev), 'm uspona']);
     if (stats.length < 4 && a.avgHr > 0) stats.push([Math.round(a.avgHr), 'bpm']);
-    return { title: a.name || typeLabel(a.type), sub: typeLabel(a.type) + ' · ' + fmtDate(a.date), stats, pts, d: tr.d, hideEnds: SHR.hide, style: SHR.style, format: SHR.format, theme: SHR.theme, gray: SHR.gray, photo, photoSide: SHR.side, rside: SHR.rside, msg };
+    const rows = [];
+    if (a.dist > 0) rows.push(['Udaljenost', fmtKm(a.dist), 'km']);
+    rows.push(['Vrijeme', Core.fmtDur(a.moving || a.elapsed), '']);
+    if (a.avgSpeed && a.dist >= 1) rows.push(['Prosječna brzina', a.avgSpeed.toFixed(1).replace('.', ','), 'km/h']);
+    if (a.elev > 0) rows.push(['Uspon', String(Math.round(a.elev)), 'm']);
+    if (a.avgHr > 0) rows.push(['Prosječni puls', String(Math.round(a.avgHr)), 'bpm']);
+    return { title: a.name || typeLabel(a.type), sub: fmtDate(a.date), stats, rows, layout: SHR.layout, pts, d: tr.d, hideEnds: SHR.hide, style: SHR.style, format: SHR.format, theme: SHR.theme, gray: SHR.gray, photo, photoSide: SHR.side, rside: SHR.rside, msg };
   };
   const draw = async () => {
     const my = ++seq; $('#shrDo').disabled = $('#shrSave').disabled = true; $('#shrBox').textContent = 'Pripremam sliku…';
