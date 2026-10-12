@@ -25,6 +25,14 @@ Aplikacija je zamišljena kao **pregled**: uređivanje ostaje na Stravi, a ovdje
 - **Zaključano po zadanom**: nema dodavanja, uređivanja ni brisanja. Otključava se u Postavke → *Uređivanje* (postavka vrijedi po uređaju).
 - Izvoz backupa (JSON) i CSV-a, vraćanje iz backupa.
 
+## Izgled
+
+Tehnički, ravan izgled: oštri rubovi (bez zaobljenja), tanke crne i sive linije, brojke u monospace fontu. Mijenja se na jednom mjestu, u `index.html`:
+- **Boje i font:** `:root` na početku stilova (`--bg`, `--card`, `--ink`, `--mute`, `--line`, `--accent`, `--mono`). Tamna tema je isti popis ispod `prefers-color-scheme: dark`.
+- **Zaobljenost:** `--radius` je 0. Ako želiš malo zaobljenje, upiši npr. `2px` i u pravilima `border-radius:0` zamijeni po želji.
+- **Izgled komponenti:** blok *Tehnički izgled* pri kraju stilova nadjačava osnovna pravila (tipke, kartice, tablica, navigacija).
+- **Slika za dijeljenje:** font i veličine su u `share.js` (`FONT`, `MONO`).
+
 ## Datoteke
 
 | Datoteka | Namjena |

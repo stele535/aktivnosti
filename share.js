@@ -11,6 +11,7 @@
   };
   const ACCENT = '#d8561f', START = '#2a8f55';
   const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  const MONO = 'ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace';
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const merc01 = (lat, lon) => { const s = Math.sin(lat * Math.PI / 180); return [(lon + 180) / 360, 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)]; };
 
@@ -104,7 +105,7 @@
       const cw = w / Math.max(st.length, 1);
       st.forEach(([v, l], i) => {
         const xx = x + i * cw; if (shadow) { g.shadowColor = 'rgba(0,0,0,.55)'; g.shadowBlur = 12; }
-        g.fillStyle = ink; g.font = '700 ' + (String(v).length > 6 ? 54 : 66) + 'px ' + FONT; g.fillText(String(v), xx, y);
+        g.fillStyle = ink; g.font = '700 ' + (String(v).length > 4 ? 46 : 58) + 'px ' + MONO; g.fillText(String(v), xx, y);
         g.fillStyle = mute; g.font = '500 28px ' + FONT; g.fillText(l, xx, y + 46); g.shadowBlur = 0;
       });
     };
@@ -126,12 +127,12 @@
       const px = left ? 60 : 60 + pw + gap, tx = left ? 60 + pw + gap : 60;
       const iw = ph.width || ph.naturalWidth, ih = ph.height || ph.naturalHeight, k = Math.max(pw / iw, ch / ih), sw = pw / k, sh2 = ch / k;
       g.save(); g.beginPath();
-      const r = 22; g.moveTo(px + r, cy); g.arcTo(px + pw, cy, px + pw, cy + ch, r); g.arcTo(px + pw, cy + ch, px, cy + ch, r); g.arcTo(px, cy + ch, px, cy, r); g.arcTo(px, cy, px + pw, cy, r); g.closePath(); g.clip();
+      const r = 0; g.moveTo(px + r, cy); g.arcTo(px + pw, cy, px + pw, cy + ch, r); g.arcTo(px + pw, cy + ch, px, cy + ch, r); g.arcTo(px, cy + ch, px, cy, r); g.arcTo(px, cy, px + pw, cy, r); g.closePath(); g.clip();
       g.drawImage(ph, (iw - sw) / 2, (ih - sh2) / 2, sw, sh2, px, cy, pw, ch); g.restore();
       const rh = ch / 2, cw = pw / 2;
       st.forEach(([v, l], i) => {
         const xx = tx + (i % 2) * cw, yy = cy + Math.floor(i / 2) * rh + rh * 0.52;
-        g.fillStyle = th.ink; g.font = '700 ' + (String(v).length > 6 ? 44 : 54) + 'px ' + FONT; g.fillText(String(v), xx, yy);
+        g.fillStyle = th.ink; g.font = '700 ' + (String(v).length > 4 ? 38 : 48) + 'px ' + MONO; g.fillText(String(v), xx, yy);
         g.fillStyle = th.mute; g.font = '500 26px ' + FONT; g.fillText(l, xx, yy + 38);
       });
       g.fillStyle = th.mute; g.font = '500 24px ' + FONT;
