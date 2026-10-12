@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eef0f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1014" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Trening">
 <link rel="manifest" href="manifest.webmanifest">
@@ -29,16 +29,19 @@ window.addEventListener('error',function(e){
 },true);
 </script>
 
+<script>try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <style>
 :root{
-  --bg:#eef0f3; --card:#ffffff; --ink:#0f1419; --mute:#59626c; --line:#cbd1d8; --accent:#d8561f; --accent-ink:#fff;
+  --bg:#eef0f3; --card:#ffffff; --ink:#0f1419; --mute:#59626c; --line:#dde1e6; --edge:#b4bcc6; --accent:#d8561f; --accent-ink:#fff; --sel:#d6e2f3;
   --c-ride:#2f6fd0; --c-weight:#c8452f; --c-foot:#2a8f55; --c-walk:#7b62c4; --c-other:#b58217;
   --radius:0;--mono:ui-monospace,'SF Mono','Cascadia Mono','Roboto Mono',Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){
-  :root{ --bg:#0d1014; --card:#151a20; --ink:#e7eaee; --mute:#8b94a0; --line:#2c333c; --accent:#f07a47; --accent-ink:#1a1008;
+  :root:not([data-theme=light]){ --bg:#0d1014; --card:#151a20; --ink:#e7eaee; --mute:#8b94a0; --line:#262d36; --edge:#3b4450; --accent:#f07a47; --accent-ink:#1a1008; --sel:#2a3a50;
     --c-ride:#6aa2f0; --c-weight:#ef7a64; --c-foot:#5cc388; --c-walk:#a893e6; --c-other:#e0b04a; }
 }
+:root[data-theme=dark]{ --bg:#0d1014; --card:#151a20; --ink:#e7eaee; --mute:#8b94a0; --line:#262d36; --edge:#3b4450; --accent:#f07a47; --accent-ink:#1a1008; --sel:#2a3a50;
+  --c-ride:#6aa2f0; --c-weight:#ef7a64; --c-foot:#5cc388; --c-walk:#a893e6; --c-other:#e0b04a; }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 body{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
@@ -59,10 +62,10 @@ nav button.on{color:var(--accent)}
 .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 13px;border-radius:0;font:inherit;font-size:14px;cursor:pointer}
-.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.on{background:var(--sel);color:var(--ink);border-color:var(--accent)}
 .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:0;padding:3px;margin:10px 0}
 .seg button{flex:1;border:0;background:none;padding:7px 0;border-radius:0;font:inherit;font-size:14px;color:var(--mute);cursor:pointer}
-.seg button.on{background:var(--ink);color:var(--bg)}
+.seg button.on{background:var(--sel);color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
 .pager{display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px}
 .pager .t{font-weight:600}
 .pager button{border:1px solid var(--line);background:var(--card);color:var(--ink);width:40px;height:36px;border-radius:0;font-size:18px;cursor:pointer}
@@ -78,7 +81,7 @@ nav button.on{color:var(--accent)}
 .metric button{border:0;background:none;color:var(--mute);font:inherit;font-size:13px;padding:3px 9px;border-radius:0;cursor:pointer}
 .metric button.on{background:var(--line);color:var(--ink)}
 svg text{fill:var(--mute);font-size:9px;font-family:inherit}
-.list .day{font-size:12px;color:var(--mute);margin:16px 0 6px;padding-bottom:3px;border-bottom:1px solid var(--ink)}
+.list .day{font-size:12px;color:var(--mute);margin:16px 0 6px;padding-bottom:3px;border-bottom:1px solid var(--line)}
 .item{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:0;padding:11px 13px;margin-bottom:8px;cursor:pointer}
 .bar{width:4px;align-self:stretch;border-radius:0;flex:none}
 .item .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -135,7 +138,8 @@ progress{height:10px;accent-color:var(--accent)}
 .cal-d.out{opacity:.38}
 .cal-d.today .n{color:var(--accent-ink);background:var(--accent);border-radius:0;width:18px;margin-left:auto;margin-right:2px;text-align:center;padding:0;font-weight:700}
 .cch{margin-top:2px;border-radius:0;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:17px;min-height:17px;cursor:pointer;overflow:hidden;font-variant-numeric:tabular-nums}
-@media (prefers-color-scheme:dark){.cch{color:#111}}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .cch{color:#111}}
+:root[data-theme=dark] .cch{color:#111}
 .cal-d .more{font-size:10px;color:var(--mute);text-align:center;margin-top:1px}
 .cch span{display:block;line-height:13px;font-size:10px}.cch .a{padding-top:2px}.cch .b{padding-bottom:2px;font-weight:600;opacity:.92}.cch .x,.cal-ws,.cal-h .ws{display:none}
 .sm-r{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:14px}.sm-r.tot{font-weight:700;border-top:0}
@@ -189,21 +193,29 @@ progress{height:10px;accent-color:var(--accent)}
 .shr-box{min-height:160px;display:flex;align-items:center;justify-content:center;color:var(--mute)}
 .shr-box img{max-width:100%;max-height:48vh;width:auto;border-radius:0;display:block;margin:0 auto;border:1px solid var(--line)}
 
+
+.hb{display:grid;gap:0;margin-top:4px}.hbr{display:grid;grid-template-columns:72px 1fr 74px 30px;gap:8px;align-items:center;padding:4px 0;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px}.hbr:first-child{border-top:0}
+.hl{color:var(--mute);white-space:nowrap}.ht{height:10px;background:var(--line);display:flex}.ht i{display:block;height:100%;flex:none}.hlg{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:11px;color:var(--mute)}.hlg b{display:inline-block;width:9px;height:9px;margin-right:5px;vertical-align:-1px}.hv{text-align:right;white-space:nowrap}.hv small{color:var(--mute);font-size:10px}.hc{color:var(--mute);font-size:10px;text-align:right}
+.rcs{margin-top:22px;font-size:11px}.rch{font-size:12px;font-weight:600;border-bottom:1px solid var(--edge);padding-bottom:3px;margin-bottom:2px}
+.rc{display:grid;grid-template-columns:1.7fr auto 1fr;gap:8px;padding:3px 0;border-bottom:1px solid var(--line);cursor:pointer;align-items:baseline}.rc:hover{background:var(--card)}
+.rc .rt1{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rc .rv{font-family:var(--mono);font-weight:600;white-space:nowrap}.rc .rs{color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
 /* ---- Tehnički izgled: oštri rubovi, tanke linije, brojke u monospaceu ---- */
 body{font-size:15px;line-height:1.4}
-header{border-bottom:1px solid var(--ink)}
+header{border-bottom:1px solid var(--edge)}
 header h1{font-size:16px;font-weight:700;letter-spacing:0}
 .dot{width:8px;height:8px}
-.btn{border-color:var(--ink);background:var(--card);padding:8px 14px;font-size:14px}
+.btn{border-color:var(--edge);background:var(--card);padding:8px 14px;font-size:14px}
 .btn:hover{background:var(--ink);color:var(--bg)}
-.btn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}.btn.pri:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri{background:var(--ink);color:var(--bg);border-color:var(--edge);font-weight:600}.btn.pri:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.danger{color:var(--c-weight);border-color:var(--c-weight)}
 .btn:disabled,.btn:disabled:hover{opacity:.45;background:var(--card);color:var(--ink)}
-.chip{padding:5px 11px;font-size:13px}.chip:hover{border-color:var(--ink)}
+.chip{padding:5px 11px;font-size:13px}.chip:hover{border-color:var(--edge)}
 .seg{padding:0}.seg button{padding:8px 0;border-right:1px solid var(--line)}.seg button:last-child{border-right:0}
-.pager button{border-color:var(--ink);height:34px;width:38px}
+.pager button{border-color:var(--edge);height:34px;width:38px}
 .pager .t{font-size:15px}
-.stat,.card{border-color:var(--ink)}
+.stat,.card{border-color:var(--edge)}
+.grid{gap:0;border:1px solid var(--edge);background:var(--card);overflow:hidden}
+.grid .stat{border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);margin:0 -1px -1px 0}
 .stat .v{font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:-.02em}.stat .v small{font-size:12px}
 .stat .l{font-size:12px}
 .card h3{font-size:13px;color:var(--ink);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px}
@@ -213,25 +225,25 @@ header h1{font-size:16px;font-weight:700;letter-spacing:0}
 .item .rt{font-size:13px}
 .bar{width:3px}
 .tag,.bdg{border:1px solid var(--line);background:none}
-input,select,textarea{background:var(--card);border-color:var(--ink)}
+input,select,textarea{background:var(--card);border-color:var(--edge)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0}
-dialog{border:1px solid var(--ink);box-shadow:none}
+dialog{border:1px solid var(--edge);box-shadow:none}
 dialog::backdrop{background:rgba(10,12,16,.55)}
 .toast{border:1px solid var(--bg)}
-nav{border-top:1px solid var(--ink)}
+nav{border-top:1px solid var(--edge)}
 nav button{position:relative}nav button.on{color:var(--ink)}
 nav button.on::before{content:'';position:absolute;left:0;right:0;top:-1px;height:3px;background:var(--accent)}
-.cal{border-color:var(--ink)}
+.cal{border-color:var(--edge)}
 .cal-h span{font-family:var(--mono);font-size:11px}
 .cal-d .n{font-family:var(--mono)}
 .cal-d.today .n{width:auto;min-width:18px;padding:0 3px}
 .cch{font-family:var(--mono)}
 .tv-tabs button.on,.metric button.on{background:none;color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
-.tbl th{border-bottom:1px solid var(--ink)}
-.tbl tr.tt td{background:var(--bg);border-bottom:1px solid var(--ink)}
+.tbl th{border-bottom:1px solid var(--edge)}
+.tbl tr.tt td{background:var(--bg);border-bottom:1px solid var(--edge)}
 .tbl tbody tr:hover td{background:var(--bg)}
-.mm,.hm,.shr-box img{border:1px solid var(--ink)}
+.mm,.hm,.shr-box img{border:1px solid var(--edge)}
 @media (min-width:1000px){
   nav{border:0}nav button.on::before{top:auto;bottom:-1px;left:12px;right:12px;height:3px}
   nav button:hover{background:none}
@@ -249,9 +261,9 @@ nav button.on::before{content:'';position:absolute;left:0;right:0;top:-1px;heigh
 
 <nav id="nav">
   <button data-v="cal" class="on"><b>▤</b>Kalendar</button>
-  <button data-v="overview"><b>▦</b>Pregled</button>
-  <button data-v="map"><b>◉</b>Karta</button>
   <button data-v="table"><b>☰</b>Tablica</button>
+  <button data-v="map"><b>◉</b>Karta</button>
+  <button data-v="overview"><b>▦</b>Pregled</button>
   <button data-v="settings"><b>⚙</b>Postavke</button>
 </nav>
 
@@ -525,9 +537,7 @@ function sportChips() {
 
 function flagBar() {
   const A = acts(), opts = [];
-  if (A.some(a => a.commute)) opts.push(['commute', 'Commute'], ['nocommute', 'Bez commutea']);
-  if (A.some(a => a.hasTrack)) opts.push(['map', 'S rutom']);
-  if (A.some(a => a.desc)) opts.push(['desc', 'S opisom']);
+  opts.push(['commute', 'Commute'], ['nocommute', 'Bez commutea']);
   if (!opts.length) return '';
   return '<div class="chips">' + opts.map(([k, l]) => '<button class="chip ' + (UI.flt === k ? 'on' : '') + '" data-flt="' + k + '">' + l + '</button>').join('') + '</div>';
 }
@@ -555,6 +565,13 @@ async function ovSave(sport, fn) {
   const ov = Object.assign({}, DB.settings && DB.settings.ov); ov[sport] = n;
   DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), ov }); UI.metricFor = null; await persist(); render();
 }
+const themePref = () => { try { const t = localStorage.getItem('theme'); return t === 'light' || t === 'dark' ? t : 'auto'; } catch (_) { return 'auto'; } };
+function setTheme(t) {
+  try { if (t === 'auto') localStorage.removeItem('theme'); else localStorage.setItem('theme', t); } catch (_) {}
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t);
+  const dark = t === 'dark' || (t === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.querySelectorAll('meta[name=theme-color]').forEach(m => m.setAttribute('content', dark ? '#0d1014' : '#eef0f3'));
+}
 function viewOverview() {
   if (!acts().length) return emptyState();
   if (UI.q.trim()) return viewList();
@@ -571,7 +588,7 @@ function viewOverview() {
   const unit = metric === 'km' ? 'km' : metric === 'h' ? 'h' : '×';
 
   const stat = (v, l, u) => '<div class="stat"><div class="v">' + v + (u ? '<small>' + u + '</small>' : '') + '</div><div class="l">' + l + '</div></div>';
-  let html = '<input id="q" type="search" placeholder="Traži treninge po nazivu, opisu, bilješci, oznaci…" value="">' + '<div class="chips"><button class="chip" data-go="records">★ Rekordi</button></div>' + filterBar();
+  let html = '<input id="q" type="search" placeholder="Traži treninge po nazivu, opisu, bilješci, oznaci…" value="">' + filterBar();
   html += '<div class="seg">' + [['week', 'Tjedan'], ['month', 'Mjesec'], ['year', 'Godina'], ['all', 'Sve']].map(([k, l]) => '<button data-period="' + k + '" class="' + (UI.period === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
   html += '<div class="pager"><button data-page="-1" ' + (UI.period === 'all' ? 'disabled style="visibility:hidden"' : '') + '>‹</button><div class="t">' + esc(periodTitle()) + '</div><button data-page="1" ' + (UI.period === 'all' ? 'disabled style="visibility:hidden"' : '') + '>›</button></div>';
   const moving = Core.totals(list.filter(a => a.dist > 0)), hrs = list.filter(a => a.avgHr > 0);
@@ -585,13 +602,44 @@ function viewOverview() {
     cal: t.cal > 0 ? stat(Math.round(t.cal).toLocaleString('hr'), 'kalorija', 'kcal') : ''
   };
   html += '<div class="grid">' + ovCfg(UI.sport).stats.map(k => cards[k] || '').join('') + '</div>';
-  html += '<div class="card"><div class="metric">' + [['km', 'Kilometri', hasKm], ['h', 'Sati', true], ['n', 'Treninzi', true]].filter(x => x[2]).map(([k, l]) => '<button data-metric="' + k + '" class="' + (metric === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>' + chart(bks, vals, unit) + '</div>';
+  html += '<div class="card"><div class="metric">' + [['km', 'Kilometri', hasKm], ['h', 'Sati', true], ['n', 'Treninzi', true]].filter(x => x[2]).map(([k, l]) => '<button data-metric="' + k + '" class="' + (metric === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>' + hbars(ovGroups(bks, all), all, metric, unit) + '</div>';
   if (UI.period !== 'all' && !list.length) html += '<p class="empty">Nema treninga u ovom razdoblju.</p>';
   else if (list.length) html += '<div class="list" style="margin-top:6px"><div class="day">Treninzi u razdoblju</div>' + (UI.ovAll ? list.slice(0, UI.limit) : list.slice(0, 8)).map(item).join('') + (UI.ovAll ? (list.length > UI.limit ? '<button class="btn" style="width:100%" id="more">Prikaži još (' + (list.length - UI.limit) + ')</button>' : '') : list.length > 8 ? '<button class="btn" style="width:100%" data-ovall="1">Prikaži svih ' + list.length + '</button>' : '') + '</div>';
+  const recs = Core.records(all);
+  if (recs.length) html += '<div class="rcs"><div class="rch">Rekordi</div>' + recs.map(r => '<div class="rc"' + (r.a ? ' data-id="' + esc(r.a.id) + '"' : '') + '><span class="rt1">' + esc(r.title) + '</span><span class="rv">' + esc(r.value) + '</span><span class="rs">' + (r.a ? esc((r.a.name || typeLabel(r.a.type)) + ' · ' + new Date(r.a.date).toLocaleDateString('hr', { day: 'numeric', month: 'numeric', year: '2-digit' })) : esc(r.note || '')) + '</span></div>').join('') + '</div>';
   return html;
 }
 const hoursStr = s => { const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); return h + '<small>h</small> ' + String(m).padStart(2, '0') + '<small>min</small>'; };
 
+/* Pregled: horizontalni redovi (oznaka, traka, vrijednost). Mjesec se grupira po tjednima, a dugo razdoblje po godinama. */
+function ovGroups(bks, all) {
+  if (UI.period === 'month' && bks.length > 7) {
+    const out = [], s = bks[0].from, e = bks[bks.length - 1].to;
+    for (let d = Core.mondayOf(s); d < e; d = Core.addDays(d, 7)) {
+      const from = d < s ? s : d, to = Core.addDays(d, 7) > e ? e : Core.addDays(d, 7), last = Core.addDays(to, -1);
+      out.push({ label: from.getDate() + '.–' + last.getDate() + '.', from, to });
+    }
+    return out;
+  }
+  if (UI.period === 'all' && bks.length > 18) {
+    const ys = [...new Set(bks.map(b => b.year))];
+    return ys.map(y => ({ label: String(y), from: new Date(y, 0, 1), to: new Date(y + 1, 0, 1) }));
+  }
+  if (UI.period === 'week') { const dn = ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned']; return bks.map((b, i) => ({ label: dn[i] + ' ' + b.from.getDate() + '.', from: b.from, to: b.to })); }
+  if (UI.period === 'year' || UI.period === 'all') return bks.map(b => ({ label: b.label + (UI.period === 'all' ? ' ' + String(b.year).slice(2) : ''), from: b.from, to: b.to }));
+  return bks;
+}
+function hbars(groups, all, metric, unit) {
+  if (!groups.length) return '<p class="empty">Nema podataka.</p>';
+  const vals = Core.bucketValues(groups, all, metric), cnt = Core.bucketValues(groups, all, 'n'), max = Math.max(...vals, 0.0001);
+  const fmtV = v => unit === '×' ? String(v) : (v >= 100 ? String(Math.round(v)) : v.toFixed(1).replace('.', ','));
+  const types = UI.sport === 'all' ? [...new Set(all.map(a => a.type))].sort() : [UI.sport];
+  const per = types.map(t => Core.bucketValues(groups, all.filter(a => a.type === t), metric));
+  const seg = i => types.map((t, k) => { const v = per[k][i]; return v > 0 ? '<i title="' + esc(Core.typeLabel(t)) + ': ' + fmtV(v) + (unit === '×' ? '×' : ' ' + unit) + '" style="width:' + (v / max * 100).toFixed(2) + '%;background:' + typeColor(t) + '"></i>' : ''; }).join('');
+  const used = types.filter((t, k) => per[k].some(v => v > 0));
+  const legend = used.length > 1 ? '<div class="hlg">' + used.map(t => '<span><b style="background:' + typeColor(t) + '"></b>' + esc(Core.typeLabel(t)) + '</span>').join('') + '</div>' : '';
+  return '<div class="hb">' + groups.map((g, i) => '<div class="hbr"><span class="hl">' + esc(g.label) + '</span><span class="ht">' + seg(i) + '</span><span class="hv">' + (vals[i] > 0 ? fmtV(vals[i]) + (unit === '×' ? '' : ' <small>' + unit + '</small>') : '<small>–</small>') + '</span>' + (metric === 'n' ? '' : '<span class="hc">' + (cnt[i] > 0 ? cnt[i] + '×' : '') + '</span>') + '</div>').join('') + '</div>' + legend;
+}
 function chart(bks, vals, unit) {
   if (!bks.length) return '<p class="empty">Nema podataka.</p>';
   const n = bks.length, vert = n > 14, W = 340, H = 150, padL = 4, padB = 18, padT = vert ? 30 : 14;
@@ -762,11 +810,11 @@ function viewTable() {
       '<label>Stupci (redoslijed odozgo prema dolje je slijeva udesno)</label><div class="tcl">' + t.cols.map(k => row(k, true)).join('') + off.map(k => row(k, false)).join('') + '</div>' +
       '<div class="acts"><button class="btn" data-tdel="1"' + (tabs.length < 2 ? ' disabled' : '') + '>Obriši tab</button><div class="row"><button class="btn" data-treset="1">Zadano</button><button class="btn pri" data-tadd="1">+ Novi tab</button></div></div></div>';
   }
-  let list = acts().filter(a => (t.sport === 'all' || a.type === t.sport) && (!isRideTab(t) || (t.commute === 'no' ? !a.commute : t.commute === 'only' ? !!a.commute : true)));
+  let list = acts().filter(a => (t.sport === 'all' || a.type === t.sport) && (t.commute === 'no' ? !a.commute : t.commute === 'only' ? !!a.commute : true));
   const years = [...new Set(list.map(a => new Date(a.date).getFullYear()))].sort((x, y) => y - x);
   if (UI.tyear !== 'all' && !years.includes(+UI.tyear)) UI.tyear = 'all';
   if (UI.tyear !== 'all') list = list.filter(a => String(new Date(a.date).getFullYear()) === UI.tyear);
-  if (isRideTab(t)) html += '<div class="chips">' + [['all', 'Svi'], ['no', 'Bez commutea'], ['only', 'Samo commute']].map(([k, l]) => '<button class="chip ' + (t.commute === k ? 'on' : '') + '" data-tcm="' + k + '">' + l + '</button>').join('') + '</div>';
+  html += '<div class="chips">' + [['all', 'Svi'], ['no', 'Bez commutea'], ['only', 'Samo commute']].map(([k, l]) => '<button class="chip ' + (t.commute === k ? 'on' : '') + '" data-tcm="' + k + '">' + l + '</button>').join('') + '</div>';
   if (years.length > 1) html += '<div class="chips">' + [['all', 'Sve godine']].concat(years.map(y => [String(y), y])).map(([k, l]) => '<button class="chip ' + (UI.tyear === k ? 'on' : '') + '" data-tyear="' + k + '">' + l + '</button>').join('') + '</div>';
   if (!t.cols.length) return html + '<p class="empty">Tab nema stupaca. Dodirni Uredi i odaberi ih.</p>';
   const so = UI.tsort && t.cols.includes(UI.tsort.k) ? UI.tsort : { k: t.cols.includes('date') ? 'date' : t.cols[0], dir: -1 };
@@ -820,6 +868,7 @@ function viewSettings() {
             '<label>Graf na početku</label><select data-detchart>' + [['', 'Visina (zadano)'], ['spd', 'Brzina'], ['pace', 'Tempo'], ['hr', 'Puls'], ['pw', 'Snaga']].map(([k, l]) => '<option value="' + k + '"' + (d.chart === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>' +
             '<label>Ruta na karti je obojena po</label><select data-detroute>' + [['plain', 'Jednobojno'], ['hr', 'Pulsu'], ['spd', 'Brzini']].map(([k, l]) => '<option value="' + k + '"' + (d.route === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>' +
             (d.custom ? '<div class="row" style="margin-top:10px"><button class="btn" data-detreset="1">Vrati zadano za detalj treninga</button></div>' : '') + '<p class="note">Graf tempa je u izborniku grafa kad trening ima GPS brzinu.</p>'; })() + '</div>'; })() +
+    '<div class="card"><h3>Tema</h3><p class="note" style="margin-top:0">Vrijedi samo na ovom uređaju.</p><div class="chips wrap">' + [['auto', 'Kao uređaj'], ['light', 'Svijetla'], ['dark', 'Tamna']].map(([k, l]) => '<button class="chip ' + (themePref() === k ? 'on' : '') + '" data-theme-set="' + k + '">' + l + '</button>').join('') + '</div></div>' +
     '<div class="card"><h3>Uređivanje</h3><p style="margin:0 0 10px">' + (META.locked ? 'Zaključano: treninzi se samo pregledavaju.' : 'Otključano: možeš dodavati i uređivati treninge.') + '</p><button class="btn" data-act="lock">' + (META.locked ? 'Otključaj uređivanje' : 'Zaključaj uređivanje') + '</button></div>' +
     '<div class="card"><h3>Google Drive</h3>' +
     '<p class="note" style="margin:0 0 6px">Aplikacija trenutno koristi ID:</p><p style="margin:0;word-break:break-all"><code>' + (cid ? esc(cid) : '(prazno)') + '</code></p><p class="note" style="margin:4px 0 8px;color:' + (!cid ? 'var(--mute)' : idOk(cid) ? 'var(--c-foot)' : 'var(--c-weight)') + '">' + (!cid ? 'Nije postavljen.' : cid.length + ' znakova · ' + (idOk(cid) ? '✓ oblik je ispravan' : '✗ oblik NIJE ispravan – ID je nepotpun ili pogrešan')) + '</p>' +
@@ -851,6 +900,7 @@ function bind() {
   v.querySelectorAll('[data-ovall]').forEach(b => b.onclick = () => { UI.ovAll = true; render(); });
   v.querySelectorAll('[data-myear]').forEach(b => b.onclick = () => { MAPD.year = b.dataset.myear; render(); });
   v.querySelectorAll('[data-mt]').forEach(b => b.onclick = () => mapToggle(b));
+  v.querySelectorAll('[data-theme-set]').forEach(b => b.onclick = () => { setTheme(b.dataset.themeSet); render(); });
   v.querySelectorAll('[data-col]').forEach(i => i.onchange = async () => { const colors = Object.assign({}, DB.settings && DB.settings.colors, { [i.dataset.col]: i.value }); DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), colors }); await persist(); render(); });
   v.querySelectorAll('[data-colreset]').forEach(b => b.onclick = async () => { const colors = Object.assign({}, DB.settings && DB.settings.colors); delete colors[b.dataset.colreset]; DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), colors }); await persist(); render(); });
   v.querySelectorAll('[data-ovsport]').forEach(i => i.onchange = () => { UI.ovSport = i.value; render(); });
@@ -871,7 +921,7 @@ function bind() {
   v.querySelectorAll('[data-tmove]').forEach(b => b.onclick = () => tabEdit(t => { const [k, d] = b.dataset.tmove.split(':'), i = t.cols.indexOf(k), j = i + +d; if (i >= 0 && j >= 0 && j < t.cols.length) [t.cols[i], t.cols[j]] = [t.cols[j], t.cols[i]]; }));
   v.querySelectorAll('[data-tname]').forEach(i => i.onchange = () => tabEdit(t => { t.name = i.value.trim() || t.name; }));
   v.querySelectorAll('[data-tcm]').forEach(b => b.onclick = () => tabEdit(t => { t.commute = b.dataset.tcm; }));
-  v.querySelectorAll('[data-tsport]').forEach(i => i.onchange = () => tabEdit(t => { t.sport = i.value; if (t.sport !== 'Ride') t.commute = 'all'; }));
+  v.querySelectorAll('[data-tsport]').forEach(i => i.onchange = () => tabEdit(t => { t.sport = i.value; }));
   v.querySelectorAll('[data-tadd]').forEach(b => b.onclick = () => tabsSave(tabsCfg().concat([{ id: 't' + Date.now().toString(36), name: 'Novi tab', sport: 'all', commute: 'all', cols: ['date', 'name', 'dist', 'moving'] }]), 't' + 'new'));
   v.querySelectorAll('[data-tdel]').forEach(b => b.onclick = () => { const a = tabsCfg(); if (a.length > 1) tabsSave(a.filter(t => t.id !== curTab().id)); });
   v.querySelectorAll('[data-treset]').forEach(b => b.onclick = () => tabsSave(null));
