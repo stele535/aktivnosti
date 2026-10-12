@@ -131,3 +131,8 @@ Dodatno: *Dodaj GPS datoteke* (pojedinačni `.gpx`, `.fit`, `.tcx`, i `.gz`) ve�
 ## Razvoj
 
 Čisti HTML i JavaScript bez build koraka. Lokalno pokretanje: u mapi projekta `python3 -m http.server 8000` pa `http://localhost:8000` (service worker i prijava preko Googlea traže `https` ili `localhost`; za Google prijavu `http://localhost:8000` treba dodati u *Authorized JavaScript origins*). Kod u `core.js` i `files.js` ne ovisi o sučelju.
+
+## Screenshot
+
+Tipka s okvirom za snimanje u zaglavlju, pored Drive sinkronizacije, napravi PNG slike cijelog otvorenog prikaza (cijela stranica, ne samo vidljivi dio): kalendar, tablica, karta, pregled ili postavke. Kad je otvoren detalj treninga, ima vlastitu tipku *Screenshot* koja snimi cijeli detalj. Na telefonu se otvara izbornik za dijeljenje (npr. *Spremi sliku*), a na računalu se datoteka preuzima. Za to se koristi biblioteka `html2canvas.min.js` (MIT licenca) koja mora biti uz ostale datoteke; učitava se tek kad prvi put pritisneš tipku.
+

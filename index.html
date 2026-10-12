@@ -32,15 +32,15 @@ window.addEventListener('error',function(e){
 <script>try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <style>
 :root{
-  --bg:#eef0f3; --card:#ffffff; --ink:#0f1419; --mute:#59626c; --line:#dde1e6; --edge:#b4bcc6; --accent:#d8561f; --accent-ink:#fff; --sel:#d6e2f3;
+  --bg:#eef0f3; --card:#ffffff; --ink:#0f1419; --mute:#59626c; --line:#dde1e6; --edge:#b4bcc6; --accent:#d8561f; --accent-ink:#fff; --sel:#d6e2f3; --cm-bg:rgba(47,111,208,.16);
   --c-ride:#2f6fd0; --c-weight:#c8452f; --c-foot:#2a8f55; --c-walk:#7b62c4; --c-other:#b58217;
   --radius:0;--mono:ui-monospace,'SF Mono','Cascadia Mono','Roboto Mono',Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme=light]){ --bg:#0d1014; --card:#151a20; --ink:#e7eaee; --mute:#8b94a0; --line:#262d36; --edge:#3b4450; --accent:#f07a47; --accent-ink:#1a1008; --sel:#2a3a50;
+  :root:not([data-theme=light]){ --bg:#0d1014; --card:#151a20; --ink:#e7eaee; --mute:#8b94a0; --line:#262d36; --edge:#3b4450; --accent:#f07a47; --accent-ink:#1a1008; --sel:#2a3a50; --cm-bg:rgba(106,162,240,.2);
     --c-ride:#6aa2f0; --c-weight:#ef7a64; --c-foot:#5cc388; --c-walk:#a893e6; --c-other:#e0b04a; }
 }
-:root[data-theme=dark]{ --bg:#0d1014; --card:#151a20; --ink:#e7eaee; --mute:#8b94a0; --line:#262d36; --edge:#3b4450; --accent:#f07a47; --accent-ink:#1a1008; --sel:#2a3a50;
+:root[data-theme=dark]{ --bg:#0d1014; --card:#151a20; --ink:#e7eaee; --mute:#8b94a0; --line:#262d36; --edge:#3b4450; --accent:#f07a47; --accent-ink:#1a1008; --sel:#2a3a50; --cm-bg:rgba(106,162,240,.2);
   --c-ride:#6aa2f0; --c-weight:#ef7a64; --c-foot:#5cc388; --c-walk:#a893e6; --c-other:#e0b04a; }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
@@ -65,7 +65,7 @@ nav button.on{color:var(--accent)}
 .chip.on{background:var(--sel);color:var(--ink);border-color:var(--accent)}
 .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:0;padding:3px;margin:10px 0}
 .seg button{flex:1;border:0;background:none;padding:7px 0;border-radius:0;font:inherit;font-size:14px;color:var(--mute);cursor:pointer}
-.seg button.on{background:var(--sel);color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
+.seg button.on{background:linear-gradient(var(--accent),var(--accent)) left bottom/100% 2px no-repeat var(--sel);color:var(--ink)}
 .pager{display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px}
 .pager .t{font-weight:600}
 .pager button{border:1px solid var(--line);background:var(--card);color:var(--ink);width:40px;height:36px;border-radius:0;font-size:18px;cursor:pointer}
@@ -187,7 +187,7 @@ progress{height:10px;accent-color:var(--accent)}
 .hm-cv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .chip.lay i{display:inline-block;width:10px;height:10px;border-radius:0;margin-right:6px;vertical-align:-1px}
 .bdg{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:0;margin-right:6px;background:var(--line);color:var(--ink);vertical-align:1px}
-.bdg.cm{background:color-mix(in srgb,var(--c-ride) 16%,transparent);color:var(--c-ride)}
+.bdg.cm{background:var(--cm-bg);color:var(--c-ride)}
 .chk{display:inline-flex;align-items:center;gap:6px;margin:0 8px 8px 0;padding:6px 12px;border:1px solid var(--line);border-radius:0;font-size:14px;color:var(--ink);cursor:pointer}
 .chk input{width:auto;margin:0;accent-color:var(--accent)}
 .shr-box{min-height:160px;display:flex;align-items:center;justify-content:center;color:var(--mute)}
@@ -239,7 +239,7 @@ nav button.on::before{content:'';position:absolute;left:0;right:0;top:-1px;heigh
 .cal-d .n{font-family:var(--mono)}
 .cal-d.today .n{width:auto;min-width:18px;padding:0 3px}
 .cch{font-family:var(--mono)}
-.tv-tabs button.on,.metric button.on{background:none;color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
+.tv-tabs button.on,.metric button.on{background:linear-gradient(var(--accent),var(--accent)) left bottom/100% 2px no-repeat;color:var(--ink)}
 .tbl th{border-bottom:1px solid var(--edge)}
 .tbl tr.tt td{background:var(--bg);border-bottom:1px solid var(--edge)}
 .tbl tbody tr:hover td{background:var(--bg)}
@@ -248,12 +248,14 @@ nav button.on::before{content:'';position:absolute;left:0;right:0;top:-1px;heigh
   nav{border:0}nav button.on::before{top:auto;bottom:-1px;left:12px;right:12px;height:3px}
   nav button:hover{background:none}
 }
+.snap{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--edge);background:var(--card);color:var(--ink);padding:0;cursor:pointer;flex:none}.snap:hover{border-color:var(--accent);color:var(--accent)}.snap:disabled{opacity:.5;cursor:default}
 </style>
 </head>
 <body>
 <header>
   <h1>Trening</h1>
   <button class="sync" id="syncBtn" title="Sinkroniziraj s Google Driveom"><span class="dot" id="dot"></span><span id="syncTxt">lokalno</span></button>
+  <button class="snap" id="snapBtn" title="Screenshot cijele stranice" aria-label="Screenshot cijele stranice"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><rect x="8.5" y="8.5" width="7" height="7"/></svg></button>
   <button class="btn pri" id="addBtn">+ Novi</button>
 </header>
 
@@ -498,6 +500,42 @@ $('#syncBtn').onclick = () => {
   if (!clientId()) { UI.view = 'settings'; render(); toast('Prvo upiši Google Client ID u Postavkama.'); return; }
   sync(true);
 };
+
+/* ---------- screenshot ---------- */
+let h2cLoading = null;
+const loadH2C = () => window.html2canvas ? Promise.resolve() : (h2cLoading || (h2cLoading = new Promise((res, rej) => { const el = document.createElement('script'); el.src = 'html2canvas.min.js'; el.onload = res; el.onerror = () => { h2cLoading = null; rej(new Error('Biblioteka za screenshot nije učitana (datoteka html2canvas.min.js nedostaje?).')); }; document.head.appendChild(el); })));
+async function snapShot(target, name) {
+  await loadH2C();
+  const cs = getComputedStyle(document.body), isDlg = target.tagName === 'DIALOG';
+  const w = target.clientWidth, h = Math.max(target.scrollHeight, target.clientHeight), grayFix = !isDlg && UI.view === 'map' && MAPD.gray && !!target.querySelector('.hm .hm-cv');
+  const scale = Math.max(1, Math.min(2, window.devicePixelRatio || 1, Math.sqrt(14e6 / (w * h))));
+  const canvas = await html2canvas(target, {
+    backgroundColor: isDlg ? getComputedStyle(target).backgroundColor : cs.backgroundColor, scale, useCORS: true, logging: false, width: w, height: h, windowWidth: document.documentElement.clientWidth, windowHeight: window.innerHeight,
+    ignoreElements: el => el.classList && (el.classList.contains('mm-ctl') || el.classList.contains('toast') || (grayFix && el.classList.contains('hm-cv'))),
+    onclone: (doc, el) => { if (isDlg) { const d = doc.querySelector('dialog[open]') || el; d.style.cssText += ';position:static;transform:none;margin:0;max-height:none;height:auto;overflow:visible;inset:auto'; } }
+  });
+  if (grayFix) { // html2canvas ne zna CSS filter: siva podloga karte se primijeni ručno, a ruta (canvas) se doda povrh
+    const hm = target.querySelector('.hm'), cvl = hm.querySelector('.hm-cv'), tr0 = target.getBoundingClientRect(), r = hm.getBoundingClientRect(), g2 = canvas.getContext('2d');
+    const X = Math.round((r.left - tr0.left) * scale), Y = Math.round((r.top - tr0.top) * scale), Wd = Math.min(canvas.width - X, Math.round(r.width * scale)), Ht = Math.min(canvas.height - Y, Math.round(r.height * scale));
+    const id = g2.getImageData(X, Y, Wd, Ht), p = id.data;
+    for (let i = 0; i < p.length; i += 4) { const l = Math.max(0, Math.min(255, ((0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2] - 128) * 0.92 + 128) * 1.04)); p[i] = p[i + 1] = p[i + 2] = l; }
+    g2.putImageData(id, X, Y); g2.setTransform(1, 0, 0, 1, 0, 0); g2.drawImage(cvl, X, Y, Wd, Ht);
+  }
+  const blob = await new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error('Slika nije napravljena.')), 'image/png'));
+  const d = new Date(), p = n => String(n).padStart(2, '0'), fname = 'trening-' + name + '-' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + '.png';
+  const file = new File([blob], fname, { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: 'Trening' }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('Screenshot spremljen: ' + fname, 3500);
+}
+async function snapRun(target, name, btn) {
+  if (btn) btn.disabled = true; toast('Pripremam screenshot…', 1500);
+  try { await snapShot(target, name); } catch (e) { toast('Screenshot nije uspio: ' + (e.message || e), 5000); }
+  if (btn) btn.disabled = false;
+}
+$('#snapBtn').onclick = () => { const dlg = [...document.querySelectorAll('dialog[open]')].pop(); snapRun(dlg || $('#view'), UI.view, $('#snapBtn')); };
 
 /* ---------- pomoćno ---------- */
 function toast(msg, ms = 2600) {
@@ -1144,7 +1182,7 @@ function openView(a) {
     (sec('text') && a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
     (sec('text') && a.notes ? '<p class="adesc"><b>Bilješka:</b> ' + esc(a.notes) + '</p>' : '') +
     (a.hasTrack ? '<div id="trk"></div><div id="zn"></div>' : '') +
-    '<div class="acts"><div>' + (a.hasTrack ? '<button type="button" class="btn pri" id="shareBtn">Podijeli sliku</button>' : '') + '</div><button type="button" class="btn" id="cancel">Zatvori</button></div></div>';
+    '<div class="acts"><div>' + (a.hasTrack ? '<button type="button" class="btn pri" id="shareBtn">Podijeli sliku</button>' : '') + '<button type="button" class="btn" id="snapDlg">Screenshot</button></div><button type="button" class="btn" id="cancel">Zatvori</button></div></div>';
   dlg.onclose = () => { if (detailView) { detailView.destroy(); detailView = null; } };
   dlg.showModal();
   if (a.hasTrack) {
@@ -1157,6 +1195,7 @@ function openView(a) {
   }
   $('#cancel').onclick = () => dlg.close();
   const sb = $('#shareBtn'); if (sb) sb.onclick = () => openShare(a.id);
+  $('#snapDlg').onclick = () => snapRun(dlg, 'aktivnost', $('#snapDlg'));
 }
 
 function openEdit(id) {
@@ -1182,7 +1221,7 @@ function openEdit(id) {
       (badgesHtml(a) ? '<div style="margin-top:8px">' + badgesHtml(a) + '</div>' : '') +
       (a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
       (a.hasTrack ? '<div id="trk"></div>' : '') +
-      '<div class="row" style="margin-top:10px;flex-wrap:wrap">' + (a.hasTrack ? '<button type="button" class="btn pri" id="shareBtn">Podijeli sliku</button>' : '') + '<button type="button" class="btn" id="addTrk">' + (a.hasTrack ? 'Zamijeni rutu iz datoteke' : 'Dodaj rutu iz datoteke (GPX, FIT, TCX)') + '</button></div>' : '') +
+      '<div class="row" style="margin-top:10px;flex-wrap:wrap">' + (a.hasTrack ? '<button type="button" class="btn pri" id="shareBtn">Podijeli sliku</button>' : '') + '<button type="button" class="btn" id="snapDlg">Screenshot</button>' + '<button type="button" class="btn" id="addTrk">' + (a.hasTrack ? 'Zamijeni rutu iz datoteke' : 'Dodaj rutu iz datoteke (GPX, FIT, TCX)') + '</button></div>' : '') +
     '<label>Naziv</label><input name="name" value="' + esc(x.name) + '">' +
     '<div class="two"><div><label>Sport</label><select name="type">' + types.map(t => '<option value="' + esc(t) + '"' + (t === x.type ? ' selected' : '') + '>' + esc(typeLabel(t)) + '</option>').join('') + '</select></div>' +
     '<div><label>Početak</label><input type="datetime-local" name="date" value="' + toLocalInput(x.date) + '" required></div></div>' +
@@ -1210,6 +1249,7 @@ function openEdit(id) {
   }
   $('#cancel').onclick = () => dlg.close();
   const shareBtn = $('#shareBtn'); if (shareBtn) shareBtn.onclick = () => openShare(a.id);
+  const snapD = $('#snapDlg'); if (snapD) snapD.onclick = () => snapRun(dlg, 'aktivnost', snapD);
   const addTrk = $('#addTrk'); if (addTrk) addTrk.onclick = () => { oneTarget = a.id; $('#oneIn').click(); };
   const del = $('#del');
   if (del) del.onclick = async () => { if (!confirm('Obrisati ovaj trening? Neće se vratiti pri sljedećem uvozu.')) return; delete DB.activities[a.id]; DB.deleted[a.id] = Date.now(); await store.del('tr:' + a.id); dlg.close(); await persist(); render(); };
