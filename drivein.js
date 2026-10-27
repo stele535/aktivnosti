@@ -1,44 +1,23 @@
 /* Uvoz s Google Drivea: jedna mapa u koju ubacuješ Stravin ZIP i/ili FIT/GPX/TCX vožnje.
    Za čitanje tuđih datoteka treba dozvola drive.readonly (zasebna prijava); čita se samo ta jedna mapa. */
 const DriveIn = (() => {
-  const SC = 'https://www.googleapis.com/auth/drive.readonly';
-  let tok = null, exp = 0, cli = null, busy = false;
-  try { const t = JSON.parse(sessionStorage.getItem('rtok')); if (t && Date.now() < t.exp - 60000) { tok = t.tok; exp = t.exp; } } catch (_) {}
+  let busy = false;
   const cfg = () => (DB.settings && DB.settings.driveImp) || null;
 
-  function token(interactive) {
-    return new Promise((res, rej) => {
-      if (tok && Date.now() < exp - 60000) return res(tok);
-      if (!window.google || !google.accounts) return rej(new Error('Google skripta nije učitana (nema interneta?).'));
-      if (!cli || cli._cid !== clientId()) { cli = google.accounts.oauth2.initTokenClient({ client_id: clientId(), scope: SC, callback: () => {} }); cli._cid = clientId(); }
-      cli.callback = r => {
-        if (r.error) return rej(new Error(r.error_description || r.error));
-        tok = r.access_token; exp = Date.now() + (r.expires_in || 3600) * 1000;
-        try { sessionStorage.setItem('rtok', JSON.stringify({ tok, exp })); } catch (_) {}
-        res(tok);
-      };
-      cli.error_callback = e => rej(new Error(e.type === 'popup_closed' ? 'Prijava prekinuta.' : (e.message || e.type || 'Prijava nije uspjela.')));
-      cli.requestAccessToken({ prompt: interactive ? '' : 'none' });
-    });
-  }
   async function gf(path, asBlob) {
-    const r = await fetch('https://www.googleapis.com/' + path, { headers: { Authorization: 'Bearer ' + tok } });
-    if (r.status === 401) { tok = null; try { sessionStorage.removeItem('rtok'); } catch (_) {} throw new Error('Prijava je istekla, pokušaj ponovno.'); }
+    const r = await fetch('https://www.googleapis.com/' + path, { headers: { Authorization: 'Bearer ' + token } });
+    if (r.status === 401) { throw new Error('Prijava je istekla, pokušaj ponovno.'); }
     if (!r.ok) throw new Error('Drive ' + r.status + ': ' + (await r.text()).slice(0, 160));
     return asBlob ? r.blob() : r.json();
   }
-  async function resolveFolder(input) {
-    input = String(input || '').trim(); if (!input) throw new Error('Upiši poveznicu ili naziv mape.');
-    let id = (input.match(/folders\/([\w-]+)/) || input.match(/[?&]id=([\w-]+)/) || [])[1] || (/^[\w-]{20,}$/.test(input) ? input : null);
-    if (!id) {
-      const q = encodeURIComponent("mimeType='application/vnd.google-apps.folder' and name='" + input.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "' and trashed=false");
-      const r = await gf('drive/v3/files?q=' + q + '&fields=files(id,name)&pageSize=5');
-      if (!r.files.length) throw new Error('Mapa „' + input + '“ nije nađena. Zalijepi njezinu poveznicu.');
-      id = r.files[0].id;
-    }
-    const m = await gf('drive/v3/files/' + id + '?fields=id,name,mimeType');
-    if (m.mimeType !== 'application/vnd.google-apps.folder') throw new Error('To nije mapa.');
-    return { id: m.id, name: m.name };
+  const FOLDER = 'Trening aktivnosti';
+  async function makeFolder() {
+    const q = encodeURIComponent("mimeType='application/vnd.google-apps.folder' and name='" + FOLDER + "' and trashed=false");
+    const r = await gf('drive/v3/files?q=' + q + '&fields=files(id,name)&pageSize=5');
+    if (r.files.length) return { id: r.files[0].id, name: r.files[0].name };
+    const c = await fetch('https://www.googleapis.com/drive/v3/files?fields=id,name', { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ name: FOLDER, mimeType: 'application/vnd.google-apps.folder' }) });
+    if (!c.ok) throw new Error('Drive ' + c.status + ': ' + (await c.text()).slice(0, 160));
+    return c.json();
   }
   async function list(id) {
     let out = [], pt = '';
@@ -55,7 +34,7 @@ const DriveIn = (() => {
     const c = cfg(); if (!c || busy || !clientId()) return null;
     busy = true;
     try {
-      await token(interactive);
+      await getToken(interactive);
       const seen = META.driveSeen = META.driveSeen || {};
       if (force) for (const k of Object.keys(seen)) delete seen[k];
       const fresh = (await list(c.id)).filter(f => seen[f.id] !== f.modifiedTime);
@@ -78,30 +57,30 @@ const DriveIn = (() => {
     } finally { busy = false; prog.close(); }
   }
   // tihi pokušaj (pri otvaranju / nakon sinkronizacije); greške se ne prikazuju
-  function auto(interactive) { if (!cfg() || !clientId()) return; if (!interactive && !(tok && Date.now() < exp - 60000)) return; run(!!interactive).then(r => { if (r && r.n) toast('Drive mapa: uvezeno datoteka ' + r.n + '.', 3500); renderCardSoon(); }).catch(() => {}); }
+  function auto(interactive) { if (!cfg() || !clientId()) return; if (!interactive && !(token && Date.now() < tokenExp - 60000 && tokSc === SCOPE_DIR)) return; run(!!interactive).then(r => { if (r && r.n) toast('Drive mapa: uvezeno datoteka ' + r.n + '.', 3500); renderCardSoon(); }).catch(() => {}); }
   const renderCardSoon = () => { if (UI.view === 'settings') render(); };
 
   function card() {
     if (!clientId()) return '';
     const c = cfg(), last = META.driveLast ? new Date(META.driveLast).toLocaleString('hr') : null;
-    return '<div class="card"><h3>Uvoz s Drivea (mapa)</h3><p style="margin:0 0 10px">U jednu mapu na Driveu ubaci Stravin ZIP i/ili FIT/GPX/TCX vožnje (npr. izvezene iz iGPSPORT-a). Aplikacija čita samo tu mapu i uveze ono što još nije uvezeno. Treba dodatnu dozvolu za čitanje Drivea (Google će pri prvoj prijavi upozoriti).</p>' +
+    return '<div class="card"><h3>Uvoz s Drivea (mapa)</h3><p style="margin:0 0 10px">U mapu na Driveu ubaci Stravin ZIP i/ili FIT/GPX/TCX vožnje (npr. izvezene iz iGPSPORT-a). Aplikacija čita samo tu mapu i uveze ono što još nije uvezeno. Aplikacija sama napravi mapu „Trening aktivnosti“ i u nju sprema svoje dvije datoteke (evidencija i rute); ti u nju ubacuješ ZIP i vožnje. Pišeš samo u datoteke koje je aplikacija napravila, a ostalo na Driveu može samo čitati.</p>' +
       (c ? '<p style="margin:0 0 10px"><b>Mapa:</b> ' + esc(c.name) + (last ? '<br><span class="sub">zadnji pregled: ' + esc(last) + '</span>' : '') + '</p><div class="row" style="flex-wrap:wrap"><button class="btn pri" data-di="run">Uvezi sada</button><button class="btn" data-di="again">Ponovi uvoz svega</button><button class="btn" data-di="off">Ukloni mapu</button></div>'
-        : '<label>Poveznica ili naziv mape</label><input id="diIn" placeholder="https://drive.google.com/drive/folders/… ili naziv" autocomplete="off"><div class="row" style="margin-top:8px"><button class="btn pri" data-di="set">Spremi mapu i uvezi</button></div>') + '</div>';
+        : '<div class="row"><button class="btn pri" data-di="set">Napravi mapu „' + FOLDER + '“</button></div>') + '</div>';
   }
   function bind(root) {
     root.querySelectorAll('[data-di]').forEach(b => b.onclick = async () => {
       const a = b.dataset.di;
       try {
         if (a === 'set') {
-          await token(true);
-          const f = await resolveFolder(($('#diIn') || {}).value);
+          META.dirMode = true; await persist(false); await getToken(true);
+          const f = await makeFolder();
           DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), driveImp: f }); await persist(); render();
-          const r = await run(true); render(); toast(r && r.n ? 'Uvezeno datoteka: ' + r.n : 'Mapa spremljena, nema novih datoteka.', 3500);
+          await sync(true); const r = await run(true); render(); toast(r && r.n ? 'Uvezeno datoteka: ' + r.n : 'Mapa spremljena, nema novih datoteka.', 3500);
         } else if (a === 'run' || a === 'again') {
           if (a === 'again' && !confirm('Ponovno proći sve datoteke u mapi? Već uvezene se preskaču.')) return;
           const r = await run(true, a === 'again'); render(); if (r && !r.n) toast('Nema novih datoteka u mapi.');
         } else if (a === 'off') {
-          const s = Object.assign({}, DB.settings, { updated: Date.now() }); delete s.driveImp; DB.settings = s; META.driveSeen = {}; await persist(); render();
+          const s = Object.assign({}, DB.settings, { updated: Date.now() }); delete s.driveImp; DB.settings = s; META.driveSeen = {}; META.dirMode = false; await persist(); render();
         }
       } catch (e) { prog.close(); toast('Drive mapa: ' + (e.message || e), 6000); }
     });

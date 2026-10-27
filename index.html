@@ -313,7 +313,9 @@ dialog#wk{padding:0;width:min(560px,100vw);height:min(100dvh,860px);max-height:1
 const GOOGLE_CLIENT_ID = (window.TRENING_CONFIG && window.TRENING_CONFIG.googleClientId) || '';
 const DRIVE_FILE_NAME = 'trening-evidencija.json';
 const TRACKS_FILE_NAME = 'trening-tragovi.json';
-const SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const SCOPE_FILE = 'https://www.googleapis.com/auth/drive.file', SCOPE_DIR = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly';
+const scopeNow = () => (META.dirMode || (DB.settings && DB.settings.driveImp)) ? SCOPE_DIR : SCOPE_FILE;
+let tokSc = SCOPE_FILE;
 
 const { typeLabel, ymd } = Core;
 const $ = s => document.querySelector(s);
@@ -402,17 +404,17 @@ function renderSync() {
 
 function getToken(interactive) {
   return new Promise((resolve, reject) => {
-    if (token && Date.now() < tokenExp - 60000) return resolve(token);
+    if (token && Date.now() < tokenExp - 60000 && tokSc === scopeNow()) return resolve(token);
     if (!idOk(clientId())) return reject(new Error('Client ID nije u ispravnom obliku (treba biti BROJ-tekst.apps.googleusercontent.com). Vidi Postavke.'));
     if (!window.google || !google.accounts) return reject(new Error('Google skripta nije učitana (nema interneta?).'));
-    if (!tokenClient || tokenClient._cid !== clientId()) {
-      tokenClient = google.accounts.oauth2.initTokenClient({ client_id: clientId(), scope: SCOPE, callback: () => {} });
-      tokenClient._cid = clientId();
+    if (!tokenClient || tokenClient._cid !== clientId() || tokenClient._sc !== scopeNow()) {
+      tokenClient = google.accounts.oauth2.initTokenClient({ client_id: clientId(), scope: scopeNow(), callback: () => {} });
+      tokenClient._cid = clientId(); tokenClient._sc = scopeNow();
     }
     tokenClient.callback = r => {
       if (r.error) return reject(new Error(r.error_description || r.error));
-      token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000;
-      try { sessionStorage.setItem('tok', JSON.stringify({ token, tokenExp })); } catch (_) {}
+      token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000; tokSc = tokenClient._sc;
+      try { sessionStorage.setItem('tok', JSON.stringify({ token, tokenExp, sc: tokSc })); } catch (_) {}
       resolve(token);
     };
     tokenClient.error_callback = e => reject(new Error(e.type === 'popup_closed' ? 'Prijava prekinuta.' : (e.message || e.type || 'Prijava nije uspjela.')));
@@ -427,6 +429,18 @@ async function drive(path, opts = {}, tries = 0) {
   return r;
 }
 
+const homeId = () => (DB.settings && DB.settings.driveImp && tokSc === SCOPE_DIR) ? DB.settings.driveImp.id : null;
+const homeParents = () => homeId() ? { parents: [homeId()] } : {};
+// datoteke koje je aplikacija već napravila (u korijenu Drivea) premjesti u odabranu mapu; radi se jednom po datoteci
+async function goHome(fileId) {
+  const h = homeId(); if (!h || !fileId) return;
+  META.homed = META.homed || {}; if (META.homed[fileId] === h) return;
+  try {
+    const f = await (await drive('drive/v3/files/' + fileId + '?fields=parents')).json(), ps = f.parents || [];
+    if (!ps.includes(h)) await drive('drive/v3/files/' + fileId + '?addParents=' + h + (ps.length ? '&removeParents=' + ps.join(',') : '') + '&fields=id', { method: 'PATCH' });
+    META.homed[fileId] = h; await persist(false);
+  } catch (e) { /* bez dozvole ili bez pristupa: ostaje gdje je, sinkronizacija radi dalje */ }
+}
 async function findFile() {
   if (META.fileId) return META.fileId;
   const q = encodeURIComponent("name='" + DRIVE_FILE_NAME + "' and trashed=false");
@@ -455,15 +469,15 @@ async function sync(interactive = false) {
       if (id) await drive('upload/drive/v3/files/' + id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
       else {
         const b = '-----trening' + Date.now();
-        const multi = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify({ name: DRIVE_FILE_NAME, mimeType: 'application/json' }) +
+        const multi = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(Object.assign({ name: DRIVE_FILE_NAME, mimeType: 'application/json' }, homeParents())) +
           '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + body + '\r\n--' + b + '--';
         const c = await (await drive('upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: multi })).json();
         META.fileId = c.id;
       }
     }
     META.dirty = false; META.lastSync = Date.now();
-    await persist(false);
-    const pulled = await syncTracks();
+    await persist(false); await goHome(META.fileId || id);
+    const pulled = await syncTracks(); await goHome(META.tracksFileId);
     if (changedLocal || pulled) render();
     if (interactive) toast(changedLocal ? 'Sinkronizirano – stigle su promjene s drugog uređaja.' : 'Sinkronizirano.');
   } catch (e) {
@@ -479,7 +493,7 @@ async function findByName(name) {
 async function upsertDriveJson(fileId, name, body) {
   if (fileId) return (await drive('upload/drive/v3/files/' + fileId + '?uploadType=media&fields=id,version', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body })).json();
   const b = '-----trening' + Date.now();
-  const multi = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify({ name, mimeType: 'application/json' }) + '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + body + '\r\n--' + b + '--';
+  const multi = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(Object.assign({ name, mimeType: 'application/json' }, homeParents())) + '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + body + '\r\n--' + b + '--';
   return (await drive('upload/drive/v3/files?uploadType=multipart&fields=id,version', { method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: multi })).json();
 }
 // Trase (rute, visine, brzine) su u zasebnoj datoteci na Driveu; spajaju se unijom po ID-u treninga.
@@ -1586,7 +1600,7 @@ function mapToggle(b) {
 (async function init() {
   const d = await store.get('db'); if (d && d.activities) { DB = d; DB.gear = DB.gear || {}; DB.settings = DB.settings || {}; }
   const m = await store.get('meta'); if (m) META = Object.assign(META, m);
-  try { const t = JSON.parse(sessionStorage.getItem('tok')); if (t && Date.now() < t.tokenExp - 60000) { token = t.token; tokenExp = t.tokenExp; } } catch (_) {}
+  try { const t = JSON.parse(sessionStorage.getItem('tok')); if (t && Date.now() < t.tokenExp - 60000) { token = t.token; tokenExp = t.tokenExp; tokSc = t.sc || SCOPE_FILE; } } catch (_) {}
   render(); renderSync(); Gym.init();
   DriveIn.auto(false);
   if (clientId() && token && META.lastSync) sync(false); // tiha sinkronizacija ako je prijava još valjana

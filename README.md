@@ -169,11 +169,12 @@ Na početnom ekranu loggera "+ Nova rutina": upišeš naziv, dodaš vježbe (iz 
 ## Podsjetnik za Stravin izvoz
 U Postavkama, na vrhu kartice "Podaci", pojavi se obavijest s poveznicom na Stravin izvoz kad prođe zadani broj dana (3/7/14/30) od zadnjeg uvoza. Niže je kartica za uključivanje i razmak. Ništa se ne prikazuje na glavnim ekranima, a uvoz (i iz Drive mape) odmah resetira brojač.
 
-## Uvoz s Drivea (jedna mapa)
-Postavke → "Uvoz s Drivea (mapa)": zalijepi poveznicu mape (ili upiši njezin naziv). U tu mapu ubacuješ zadnji Stravin ZIP (ili activities.csv) i FIT/GPX/TCX vožnje (npr. izvezene iz iGPSPORT-a). Aplikacija pri otvaranju i nakon sinkronizacije pogleda samo tu mapu (bez podmapa) i uveze što još nije uvezeno; "Uvezi sada" pokreće ručno, "Ponovi uvoz svega" prolazi sve ponovno.
-- Treba dodatnu dozvolu `drive.readonly` (zasebna prijava). U Google Cloud konzoli, OAuth consent screen → Data Access, dodaj taj scope; ako je aplikacija u "Testing", tvoj račun mora biti među testnim korisnicima. Google pri prijavi upozori da aplikacija nije verificirana, što je za osobnu uporabu normalno. Ako dobiješ `access_denied`, to je obično ova postavka.
+## Drive mapa „Trening aktivnosti“ (uvoz + spremanje)
+Postavke → "Uvoz s Drivea (mapa)" → "Napravi mapu". Aplikacija sama napravi mapu „Trening aktivnosti“ (ili iskoristi postojeću s istim nazivom) i u nju premjesti/sprema svoje dvije datoteke (`trening-evidencija.json`, `trening-tragovi.json`). U tu istu mapu ti ubacuješ zadnji Stravin ZIP (ili activities.csv) i FIT/GPX/TCX vožnje (npr. iz iGPSPORT-a). Pri otvaranju i nakon sinkronizacije aplikacija pogleda mapu (bez podmapa) i uveze što još nije uvezeno; "Uvezi sada" pokreće ručno, "Ponovi uvoz svega" prolazi sve ponovno.
+- Dozvole: `drive.file` (piše samo u datoteke koje je sama napravila) + `drive.readonly` (čita tvoje ubačene datoteke). U Google Cloud konzoli: OAuth consent screen → Data Access, dodaj scope `.../auth/drive.readonly`; u "Testing" načinu tvoj račun mora biti testni korisnik. Google pri prijavi upozori da aplikacija nije verificirana, što je za osobnu uporabu normalno. `access_denied` je gotovo uvijek ova postavka.
+- "Ukloni mapu" vraća aplikaciju na uži `drive.file`; mapa i datoteke ostaju na Driveu.
 - Vožnja koja je prvo stigla kao FIT/GPX, pa poslije dođe u Stravinom izvozu (početak do 10 min razlike), spaja se u jedan zapis (Stravin naziv, opis i oznake + tvoja ruta), bez duplikata.
-- Uspješno pregledane datoteke pamte se na uređaju; ako ih pregaziš novom verzijom na Driveu, uvezu se opet.
+- Uspješno pregledane datoteke pamte se na uređaju.
 
 ## Uređivanje iz detalja
 U detalju treninga tipka "Uredi" otvara uređivanje čak i kad je uređivanje zaključano u Postavkama (zaključavanje samo skriva "+ Novi" i uređivanje iz popisa).
