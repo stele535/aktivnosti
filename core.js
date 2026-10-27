@@ -125,6 +125,14 @@
         dup++; continue;
       }
       if (db.deleted[a.id]) { dup++; continue; } // namjerno obrisano – ne vraćaj
+      // vožnja koja je prije stigla iz GPS datoteke (isti početak ±10 min): spoji sa Stravinim podacima umjesto duplikata
+      const t0 = Date.parse(a.date);
+      const fm = Object.values(db.activities).find(x => x.sid === a.id || (x.src === 'file' && !x.sid && Math.abs(Date.parse(x.date) - t0) < 600000));
+      if (fm) {
+        if (fm.sid === a.id) { dup++; continue; }
+        Object.assign(fm, a, { id: fm.id, hasTrack: fm.hasTrack, file: fm.file || a.file, src: 'strava', sid: a.id, updated: now });
+        filled++; continue;
+      }
       db.activities[a.id] = Object.assign({}, a, { updated: now });
       added++;
     }

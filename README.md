@@ -167,4 +167,13 @@ Gumb s bučicom u zaglavlju (uvijek dostupan, i kad je uređivanje zaključano).
 Na početnom ekranu loggera "+ Nova rutina": upišeš naziv, dodaš vježbe (iz povijesti ili nove), po vježbi biraš broj setova i **odmor** (30, 45, 60 … 240 s; "zadano" koristi opći odmor), vježbe pomičeš ↑ ↓. Rutinu uređuješ tipkom ✎. Opći odmor (30/45/60/90/120/180 s) biraš na traci odmora, a tijekom treninga odmor se može promijeniti i po vježbi.
 
 ## Podsjetnik za Stravin izvoz
-Kad od zadnjeg uvoza Stravina ZIP-a/CSV-a prođe zadani broj dana (zadano 7), pri otvaranju aplikacije pojavi se traka s poveznicom na Stravu, tipkom "Uvezi ZIP" i "Odgodi 1 dan". Uključivanje i razmak biraš u Postavkama. To je traka u aplikaciji, a ne obavijest na telefonu: sama aplikacija ne može slati obavijesti dok je zatvorena.
+U Postavkama, na vrhu kartice "Podaci", pojavi se obavijest s poveznicom na Stravin izvoz kad prođe zadani broj dana (3/7/14/30) od zadnjeg uvoza. Niže je kartica za uključivanje i razmak. Ništa se ne prikazuje na glavnim ekranima, a uvoz (i iz Drive mape) odmah resetira brojač.
+
+## Uvoz s Drivea (jedna mapa)
+Postavke → "Uvoz s Drivea (mapa)": zalijepi poveznicu mape (ili upiši njezin naziv). U tu mapu ubacuješ zadnji Stravin ZIP (ili activities.csv) i FIT/GPX/TCX vožnje (npr. izvezene iz iGPSPORT-a). Aplikacija pri otvaranju i nakon sinkronizacije pogleda samo tu mapu (bez podmapa) i uveze što još nije uvezeno; "Uvezi sada" pokreće ručno, "Ponovi uvoz svega" prolazi sve ponovno.
+- Treba dodatnu dozvolu `drive.readonly` (zasebna prijava). U Google Cloud konzoli, OAuth consent screen → Data Access, dodaj taj scope; ako je aplikacija u "Testing", tvoj račun mora biti među testnim korisnicima. Google pri prijavi upozori da aplikacija nije verificirana, što je za osobnu uporabu normalno. Ako dobiješ `access_denied`, to je obično ova postavka.
+- Vožnja koja je prvo stigla kao FIT/GPX, pa poslije dođe u Stravinom izvozu (početak do 10 min razlike), spaja se u jedan zapis (Stravin naziv, opis i oznake + tvoja ruta), bez duplikata.
+- Uspješno pregledane datoteke pamte se na uređaju; ako ih pregaziš novom verzijom na Driveu, uvezu se opet.
+
+## Uređivanje iz detalja
+U detalju treninga tipka "Uredi" otvara uređivanje čak i kad je uređivanje zaključano u Postavkama (zaključavanje samo skriva "+ Novi" i uređivanje iz popisa).

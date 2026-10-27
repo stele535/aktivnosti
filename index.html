@@ -265,7 +265,6 @@ dialog#wk{padding:0;width:min(560px,100vw);height:min(100dvh,860px);max-height:1
 .wk-add{width:100%;margin-top:4px}.wk-rt{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);padding:10px;margin-bottom:8px;background:var(--card)}.wk-rt .m{font-size:12px;margin-top:2px}.wk-rb{display:flex;gap:6px;flex:none}
 .wk-pick{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;padding:12px 2px;cursor:pointer}.wk-pick .m{font-size:12px;white-space:nowrap}
 .wk-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}.wk-sum div{border:1px solid var(--line);padding:8px;text-align:center}.wk-sum b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.wk-sum span{font-size:11px;color:var(--mute)}.wk-ck{display:flex;gap:8px;align-items:center;margin:10px 0}.wk-ck input{width:auto}
-#remind{max-width:1100px;margin:10px auto 0;padding:0 16px}#remind[hidden]{display:none}#remind .rem{border:1px solid var(--accent);border-left-width:4px;background:var(--card);padding:10px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}#remind .rem span{flex:1;min-width:200px;font-size:14px}#remind .btn{padding:5px 11px;font-size:13px;text-decoration:none;display:inline-block}
 </style>
 </head>
 <body>
@@ -277,7 +276,6 @@ dialog#wk{padding:0;width:min(560px,100vw);height:min(100dvh,860px);max-height:1
   <button class="btn pri" id="addBtn">+ Novi</button>
 </header>
 
-<div id="remind" hidden></div>
 <main id="view"></main>
 
 <nav id="nav">
@@ -305,6 +303,7 @@ dialog#wk{padding:0;width:min(560px,100vw);height:min(100dvh,860px);max-height:1
 <script src="share.js"></script>
 <script src="analytics.js"></script>
 <script src="gym.js"></script>
+<script src="drivein.js"></script>
 <script>
 'use strict';
 /* =====================================================================
@@ -520,7 +519,7 @@ function scheduleSync() {
 }
 $('#syncBtn').onclick = () => {
   if (!clientId()) { UI.view = 'settings'; render(); toast('Prvo upiši Google Client ID u Postavkama.'); return; }
-  sync(true);
+  Promise.resolve(sync(true)).finally(() => DriveIn.auto(true));
 };
 
 /* ---------- izvoz za analizu ---------- */
@@ -662,15 +661,11 @@ function stravaLast() {
   let m = 0; for (const a of Object.values(DB.activities)) if (a.src === 'strava') m = Math.max(m, new Date(a.date).getTime() || 0);
   return m;
 }
-function renderRemind() {
-  const el = $('#remind'); if (!el) return;
-  const r = sRem(), last = stravaLast(), now = Date.now();
-  if (r.off || !last || now - last < r.days * 864e5 || (META.snooze || 0) > now) { el.hidden = true; el.innerHTML = ''; return; }
-  const d = Math.floor((now - last) / 864e5);
-  el.hidden = false;
-  el.innerHTML = '<div class="rem"><span><b>Vrijeme za Stravin izvoz.</b> Zadnji uvoz prije ' + d + ' dana. Izvoz traži od Strave e-poštu s poveznicom.</span><a class="btn pri" href="' + STRAVA_EXPORT + '" target="_blank" rel="noopener">Otvori Stravu</a><button class="btn" id="remImp">Uvezi ZIP</button><button class="btn" id="remSnz">Odgodi 1 dan</button></div>';
-  $('#remSnz').onclick = async () => { META.snooze = Date.now() + 864e5; await persist(false); renderRemind(); };
-  $('#remImp').onclick = () => actions.csv();
+function renderRemind() {}
+function stravaNotice() {
+  const r = sRem(), last = stravaLast(); if (r.off || !last) return '';
+  const d = Math.floor((Date.now() - last) / 864e5); if (d < r.days) return '';
+  return '<div style="border:1px solid var(--accent);border-left-width:4px;padding:9px 12px;margin:0 0 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:180px"><b>Vrijeme je za novi Stravin izvoz.</b> Zadnji uvoz prije ' + d + ' ' + (d === 1 ? 'dan' : 'dana') + '.</span><a class="btn pri" href="' + STRAVA_EXPORT + '" target="_blank" rel="noopener">Otvori Stravu</a></div>';
 }
 async function markStravaImport() { await setSRem({ last: Date.now() }); renderRemind(); }
 
@@ -1025,7 +1020,7 @@ function emptyState() {
 function viewSettings() {
   const n = acts().length;
   const cid = clientId();
-  return '<div class="card" style="margin-top:0"><h3>Podaci</h3><p style="margin:0 0 10px">' + n + ' treninga u evidenciji.</p>' +
+  return '<div class="card" style="margin-top:0"><h3>Podaci</h3><p style="margin:0 0 10px">' + n + ' treninga u evidenciji.</p>' + stravaNotice() +
     '<div class="row" style="flex-wrap:wrap"><button class="btn pri" data-act="csv">Uvezi Strava ZIP ili CSV</button><button class="btn" data-act="gps">Dodaj GPS datoteke</button><button class="btn" data-act="export">Izvezi backup (JSON)</button><button class="btn" data-act="exportai">Izvezi za analizu (JSON)</button><button class="btn" data-act="exportcsv">Izvezi CSV</button><button class="btn" data-act="import">Vrati iz backupa</button></div>' +
     '<p class="note">Najlakše je odabrati cijeli ZIP koji dobiješ od Strave: aplikacija sama pročita treninge, opise i sve .gpx/.fit.gz rute. Postojeći treninzi se preskaču (bez dupliciranja), a tvoje bilješke i oznake ostaju. „GPS datoteke“ služe za pojedinačne .gpx, .fit, .tcx (i .gz) datoteke, npr. s drugog sata ili aplikacije.</p></div>' +
     '<div class="card"><h3>Zone pulsa i brzine</h3><p class="note" style="margin-top:0">Upiši donje granice zona 2–5 (npr. kao na iGPSPORT-u). Zona 1 je sve ispod prve granice. Puls vrijedi za sve sportove, a brzina posebno za bicikl i za hodanje (hodanje i planinarenje). Ostali sportovi imaju samo zone pulsa.</p>' +
@@ -1045,7 +1040,10 @@ function viewSettings() {
             '<label>Ruta na karti je obojena po</label><select data-detroute>' + [['plain', 'Jednobojno'], ['hr', 'Pulsu'], ['spd', 'Brzini']].map(([k, l]) => '<option value="' + k + '"' + (d.route === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>' +
             (d.custom ? '<div class="row" style="margin-top:10px"><button class="btn" data-detreset="1">Vrati zadano za detalj treninga</button></div>' : '') + '<p class="note">Graf tempa je u izborniku grafa kad trening ima GPS brzinu.</p>'; })() + '</div>'; })() +
     '<div class="card"><h3>Tema</h3><p class="note" style="margin-top:0">Vrijedi samo na ovom uređaju.</p><div class="chips wrap">' + [['auto', 'Kao uređaj'], ['light', 'Svijetla'], ['dark', 'Tamna']].map(([k, l]) => '<button class="chip ' + (themePref() === k ? 'on' : '') + '" data-theme-set="' + k + '">' + l + '</button>').join('') + '</div></div>' +
-    '<div class="card"><h3>Podsjetnik za Stravin izvoz</h3><p style="margin:0 0 10px">Strava dopušta izvoz otprilike jednom tjedno. Pri otvaranju aplikacije pojavi se traka ako je prošlo zadano vrijeme od zadnjeg uvoza.</p><div class="row" style="flex-wrap:wrap;gap:12px;align-items:center"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" data-srem="on"' + (sRem().off ? '' : ' checked') + ' style="width:auto"> Podsjećaj me</label><label style="display:flex;gap:8px;align-items:center;margin:0">svakih <select data-srem="days" style="width:auto">' + [3, 7, 14, 30].map(d => '<option value="' + d + '"' + (sRem().days === d ? ' selected' : '') + '>' + d + ' dana</option>').join('') + '</select></label></div></div>' +
+    DriveIn.card() +
+    (() => { const r = sRem(), last = stravaLast(), d = last ? Math.floor((Date.now() - last) / 864e5) : null, due = !r.off && last && d >= r.days;
+      return '<div class="card"><h3>Podsjetnik za Stravin izvoz</h3><p style="margin:0 0 10px">' + (last ? 'Zadnji uvoz: prije ' + d + ' ' + (d === 1 ? 'dan' : 'dana') + '.' : 'Još nema uvoza iz Strave.') + ' Strava dopušta izvoz otprilike jednom tjedno.</p>' +
+        '<div class="row" style="flex-wrap:wrap;gap:12px;align-items:center;"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" data-srem="on"' + (r.off ? '' : ' checked') + ' style="width:auto"> Podsjećaj me</label><label style="display:flex;gap:8px;align-items:center;margin:0">svakih <select data-srem="days" style="width:auto">' + [3, 7, 14, 30].map(x => '<option value="' + x + '"' + (r.days === x ? ' selected' : '') + '>' + x + ' dana</option>').join('') + '</select></label></div>' + '</div>'; })() +
     '<div class="card"><h3>Uređivanje</h3><p style="margin:0 0 10px">' + (META.locked ? 'Zaključano: treninzi se samo pregledavaju.' : 'Otključano: možeš dodavati i uređivati treninge.') + '</p><button class="btn" data-act="lock">' + (META.locked ? 'Otključaj uređivanje' : 'Zaključaj uređivanje') + '</button></div>' +
     '<div class="card"><h3>Google Drive</h3>' +
     '<p class="note" style="margin:0 0 6px">Aplikacija trenutno koristi ID:</p><p style="margin:0;word-break:break-all"><code>' + (cid ? esc(cid) : '(prazno)') + '</code></p><p class="note" style="margin:4px 0 8px;color:' + (!cid ? 'var(--mute)' : idOk(cid) ? 'var(--c-foot)' : 'var(--c-weight)') + '">' + (!cid ? 'Nije postavljen.' : cid.length + ' znakova · ' + (idOk(cid) ? '✓ oblik je ispravan' : '✗ oblik NIJE ispravan – ID je nepotpun ili pogrešan')) + '</p>' +
@@ -1078,6 +1076,7 @@ function bind() {
   v.querySelectorAll('[data-myear]').forEach(b => b.onclick = () => { MAPD.year = b.dataset.myear; render(); });
   v.querySelectorAll('[data-mt]').forEach(b => b.onclick = () => mapToggle(b));
   v.querySelectorAll('[data-theme-set]').forEach(b => b.onclick = () => { setTheme(b.dataset.themeSet); render(); });
+  DriveIn.bind(v);
   v.querySelectorAll('[data-srem]').forEach(i => i.onchange = async () => { await setSRem(i.dataset.srem === 'on' ? { off: !i.checked } : { days: +i.value }); renderRemind(); });
   v.querySelectorAll('[data-col]').forEach(i => i.onchange = async () => { const colors = Object.assign({}, DB.settings && DB.settings.colors, { [i.dataset.col]: i.value }); DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), colors }); await persist(); render(); });
   v.querySelectorAll('[data-colreset]').forEach(b => b.onclick = async () => { const colors = Object.assign({}, DB.settings && DB.settings.colors); delete colors[b.dataset.colreset]; DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), colors }); await persist(); render(); });
@@ -1334,7 +1333,7 @@ function openView(a) {
     (sec('text') && a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
     (sec('text') && a.notes ? '<p class="adesc"><b>Bilješka:</b> ' + esc(a.notes) + '</p>' : '') +
     (a.hasTrack ? '<div id="trk"></div><div id="zn"></div>' : '') +
-    '<div class="acts"><div>' + (a.hasTrack ? '<button type="button" class="btn pri" id="shareBtn">Podijeli sliku</button>' : '') + '<button type="button" class="btn" id="snapDlg">Screenshot</button></div><button type="button" class="btn" id="cancel">Zatvori</button></div></div>';
+    '<div class="acts"><div>' + (a.hasTrack ? '<button type="button" class="btn pri" id="shareBtn">Podijeli sliku</button>' : '') + '<button type="button" class="btn" id="snapDlg">Screenshot</button><button type="button" class="btn" id="editBtn">Uredi</button></div><button type="button" class="btn" id="cancel">Zatvori</button></div></div>';
   dlg.onclose = () => { if (detailView) { detailView.destroy(); detailView = null; } };
   dlg.showModal();
   if (a.hasTrack) {
@@ -1348,11 +1347,12 @@ function openView(a) {
   $('#cancel').onclick = () => dlg.close();
   const sb = $('#shareBtn'); if (sb) sb.onclick = () => openShare(a.id);
   $('#snapDlg').onclick = () => snapRun(dlg, 'aktivnost', $('#snapDlg'));
+  $('#editBtn').onclick = () => openEdit(a.id, true);
 }
 
-function openEdit(id) {
+function openEdit(id, force) {
   const a = id ? DB.activities[id] : null;
-  if (META.locked) { if (a) openView(a); return; }
+  if (META.locked && !force) { if (a) openView(a); return; }
   const isNew = !a;
   const x = a || { type: UI.sport !== 'all' ? UI.sport : 'Ride', date: new Date().toISOString(), name: '', dist: 0, moving: 0, tags: [], notes: '', desc: '' };
   const types = [...new Set(['Ride', 'Weight Training', 'Football (Soccer)', 'Run', 'Walk', 'Workout', 'Swim', 'Hike', x.type].concat(sports()))];
@@ -1588,6 +1588,7 @@ function mapToggle(b) {
   const m = await store.get('meta'); if (m) META = Object.assign(META, m);
   try { const t = JSON.parse(sessionStorage.getItem('tok')); if (t && Date.now() < t.tokenExp - 60000) { token = t.token; tokenExp = t.tokenExp; } } catch (_) {}
   render(); renderSync(); Gym.init();
+  DriveIn.auto(false);
   if (clientId() && token && META.lastSync) sync(false); // tiha sinkronizacija ako je prijava još valjana
   if ('serviceWorker' in navigator && /^https:|^http:\/\/localhost/.test(location.href)) navigator.serviceWorker.register('sw.js').catch(() => {});
   if (clientId()) { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onerror = () => {}; document.head.appendChild(s); }
