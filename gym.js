@@ -81,6 +81,7 @@ const Gym = (() => {
   const dlg = () => document.getElementById('wk');
   function paintTimers() {
     const btn = document.getElementById('wkBtn'), bar = document.getElementById('wkBar');
+    if (btn) btn.classList.toggle('hide', !W);
     if (!W) { if (btn) { btn.classList.remove('act'); btn.querySelector('span').textContent = ''; } if (bar) bar.hidden = true; return; }
     const now = Date.now(), t = clock((now - W.start) / 1000);
     if (W.rest && W.rest.end <= now) { W.rest = null; save(); beep(); paintRest(); }
@@ -141,7 +142,7 @@ const Gym = (() => {
       '<div class="wk-foot"><span class="m">' + T.sets + ' setova · ' + T.reps + ' pon. · ' + T.kg + ' kg</span><button class="btn pri" data-g="finish">Završi</button></div>';
   }
   function vPick() {
-    const s = low(q), all = [...H.values()].sort((a, b) => b.count - a.count || a.n.localeCompare(b.n));
+    const s = low(q), all = [...H.values()].sort((a, b) => a.n.localeCompare(b.n, "hr", { sensitivity: "base" }));
     const list = all.filter(h => !s || low(h.n).includes(s));
     const exact = all.some(h => low(h.n) === s);
     return '<div class="wk-top"><input id="wkQ" placeholder="Traži ili upiši novu vježbu" value="' + E(q) + '" autocomplete="off"><button class="btn" data-g="back">Nazad</button></div><div class="wk-body">' +
@@ -269,5 +270,13 @@ const Gym = (() => {
   }
   function init() { if (!document.getElementById('wk')) return; wire(); if (W) { H = history(); run(); } else paintTimers(); }
 
-  return { init, open, parseDesc, history, _state: () => W };
+  function sessions() {
+    return Object.values(DB.activities).filter(a => a.type === 'Weight Training' && a.desc).map(a => ({ id: a.id, date: a.date, name: a.name || 'Trening', sec: a.moving || a.elapsed || 0, ex: parseDesc(a.desc) })).filter(s => s.ex.length).sort((a, b) => a.date < b.date ? 1 : -1);
+  }
+  const show = () => { if (!dlg().open) dlg().showModal(); };
+  const startEmpty = () => { H = history(); start('Trening'); show(); };
+  const startRt = id => { H = history(); const r = routines().find(x => x.id === id); if (r) { start(r.name, r); show(); } };
+  const newRt = () => { H = history(); RT = { id: null, name: '', ex: [] }; view = 'rted'; show(); paint(); };
+  const editRt = id => { const r = routines().find(x => x.id === id); if (!r) return; H = history(); RT = { id: r.id, name: r.name, ex: r.ex.map(e => Object.assign({}, e)) }; view = 'rted'; show(); paint(); };
+  return { init, open, parseDesc, history, sessions, routines, startEmpty, startRt, newRt, editRt, active: () => !!W, elapsed: () => W ? Math.floor((Date.now() - W.start) / 1000) : 0, _state: () => W };
 })();

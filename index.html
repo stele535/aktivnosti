@@ -265,26 +265,31 @@ dialog#wk{padding:0;width:min(560px,100vw);height:min(100dvh,860px);max-height:1
 .wk-add{width:100%;margin-top:4px}.wk-rt{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);padding:10px;margin-bottom:8px;background:var(--card)}.wk-rt .m{font-size:12px;margin-top:2px}.wk-rb{display:flex;gap:6px;flex:none}
 .wk-pick{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;padding:12px 2px;cursor:pointer}.wk-pick .m{font-size:12px;white-space:nowrap}
 .wk-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}.wk-sum div{border:1px solid var(--line);padding:8px;text-align:center}.wk-sum b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.wk-sum span{font-size:11px;color:var(--mute)}.wk-ck{display:flex;gap:8px;align-items:center;margin:10px 0}.wk-ck input{width:auto}
+#menu{position:absolute;top:100%;left:10px;z-index:8;min-width:190px;background:var(--card);border:1px solid var(--edge);box-shadow:0 6px 18px rgba(0,0,0,.18)}#menu[hidden]{display:none}
+#menu button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:15px;padding:13px 16px;cursor:pointer}#menu button:last-child{border-bottom:0}#menu button.on{background:var(--sel);box-shadow:inset 3px 0 0 var(--accent);font-weight:600}
+.tr-big{width:100%;margin:8px 0;padding:12px}.tr-h{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 8px}
+.tr-act{display:flex;justify-content:space-between;align-items:center;margin-top:0;border-left:4px solid var(--accent)}.tr-rt{display:flex;gap:10px;justify-content:space-between;align-items:center;border:1px solid var(--line);background:var(--card);padding:10px 12px;margin-bottom:8px}.tr-i{min-width:0}.tr-i .m{font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tr-b{display:flex;gap:6px;flex:none}
+.tr-list{border:1px solid var(--line);background:var(--card)}.tr-s{display:grid;grid-template-columns:62px 1fr;gap:2px 8px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:14px;padding:10px 12px;cursor:pointer}.tr-s:last-child{border-bottom:0}.tr-s .m{grid-column:2;font-size:12px}
+.tr-sel{width:100%;margin:6px 0;font-size:15px}.tr-l{display:block;font-size:12px;color:var(--mute);margin-top:8px}.tr-chips{margin:8px -16px 0}.tr-ch{width:100%;height:auto;display:block}.tr-cmp td,.tr-cmp th{white-space:nowrap}
+.chips{gap:7px;margin-bottom:8px;padding-bottom:0}.chip{padding:4px 10px;font-size:12.5px}.seg button{padding:6px 0;font-size:13px}
+@media (min-width:1000px){#menu{left:24px}}
+#dlg .acts{flex-wrap:wrap;gap:8px 10px;align-items:center}#dlg .acts>div{display:flex;gap:8px;flex-wrap:wrap}#dlg .acts .btn{padding:6px 10px;font-size:13px;min-height:0}
 </style>
 </head>
 <body>
 <header>
-  <h1>Trening</h1>
+  <button class="snap" id="menuBtn" title="Izbornik" aria-label="Izbornik" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <h1 id="ttl">Analiza</h1>
   <button class="sync" id="syncBtn" title="Sinkroniziraj s Google Driveom"><span class="dot" id="dot"></span><span id="syncTxt">lokalno</span></button>
-  <button class="snap" id="wkBtn" title="Snaga: bilježenje treninga" aria-label="Snaga: bilježenje treninga"><svg width="20" height="18" viewBox="0 0 28 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M2 9v6M6 6v12M22 6v12M26 9v6M6 12h16"/></svg><span></span></button>
+  <button class="snap hide" id="wkBtn" title="Snaga: bilježenje treninga" aria-label="Snaga: bilježenje treninga"><svg width="20" height="18" viewBox="0 0 28 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M2 9v6M6 6v12M22 6v12M26 9v6M6 12h16"/></svg><span></span></button>
   <button class="snap" id="snapBtn" title="Screenshot cijele stranice" aria-label="Screenshot cijele stranice"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><rect x="8.5" y="8.5" width="7" height="7"/></svg></button>
   <button class="btn pri" id="addBtn">+ Novi</button>
+  <div id="menu" hidden></div>
 </header>
 
 <main id="view"></main>
 
-<nav id="nav">
-  <button data-v="cal" class="on"><b>▤</b>Kalendar</button>
-  <button data-v="table"><b>☰</b>Tablica</button>
-  <button data-v="map"><b>◉</b>Karta</button>
-  <button data-v="overview"><b>▦</b>Pregled</button>
-  <button data-v="settings"><b>⚙</b>Postavke</button>
-</nav>
+<nav id="nav"></nav>
 
 <dialog id="dlg"></dialog>
 <dialog id="shr"></dialog>
@@ -303,6 +308,7 @@ dialog#wk{padding:0;width:min(560px,100vw);height:min(100dvh,860px);max-height:1
 <script src="share.js"></script>
 <script src="analytics.js"></script>
 <script src="gym.js"></script>
+<script src="train.js"></script>
 <script src="drivein.js"></script>
 <script>
 'use strict';
@@ -373,7 +379,13 @@ const store = {
 /* ---------- stanje ---------- */
 let DB = Core.emptyDB();
 let META = { fileId: null, lastSync: null, dirty: false, clientId: '', tracksFileId: null, tracksVer: null, tracksDirty: false, locked: true };
-const UI = { view: 'cal', cal: { mode: 'month', cursor: new Date() }, sport: 'all', flt: '', period: 'month', cursor: new Date(), metric: 'km', q: '', limit: 60, tyear: 'all' };
+const SEC_OF = { cal: 'analiza', table: 'analiza', map: 'analiza', overview: 'analiza', list: 'analiza', records: 'analiza', gym: 'trening', prog: 'trening', cmp: 'trening', settings: 'postavke' };
+const SECS = {
+  analiza: { t: 'Analiza', def: 'cal', nav: [['cal', '▤', 'Kalendar'], ['table', '☰', 'Tablica'], ['map', '◉', 'Karta'], ['overview', '▦', 'Pregled']] },
+  trening: { t: 'Trening', def: 'gym', nav: [['gym', '▣', 'Trening'], ['prog', '↗', 'Napredak'], ['cmp', '⇄', 'Usporedba']] },
+  postavke: { t: 'Postavke', def: 'settings', nav: [] }
+};
+const UI = { lastV: {}, view: 'cal', cal: { mode: 'month', cursor: new Date() }, sport: 'all', flt: '', period: 'month', cursor: new Date(), metric: 'km', q: '', limit: 60, tyear: 'all' };
 const acts = () => Object.values(DB.activities).sort((a, b) => b.date.localeCompare(a.date));
 const sports = () => [...new Set(acts().map(a => a.type))].sort((a, b) => acts().filter(x => x.type === b).length - acts().filter(x => x.type === a).length);
 const FLT = { commute: a => a.commute, nocommute: a => !a.commute, map: a => a.hasTrack, desc: a => a.desc };
@@ -700,17 +712,25 @@ function download(name, text, type) {
 /* ---------- prikaz ---------- */
 function render() {
   renderRemind();
-  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === (UI.view === 'records' ? 'overview' : UI.view)));
+  const sec = SEC_OF[UI.view] || 'analiza', S = SECS[sec]; UI.lastV[sec] = UI.view;
+  $('#ttl').textContent = S.t;
+  const nav = $('#nav'); nav.classList.toggle('hide', !S.nav.length);
+  nav.innerHTML = S.nav.map(([k, ic, l]) => '<button data-v="' + k + '"' + (k === (UI.view === 'records' || UI.view === 'list' ? 'overview' : UI.view) ? ' class="on"' : '') + '><b>' + ic + '</b>' + l + '</button>').join('');
+  $('#menu').innerHTML = Object.entries(SECS).map(([k, x]) => '<button data-sec="' + k + '"' + (k === sec ? ' class="on"' : '') + '>' + x.t + '</button>').join('');
   const v = $('#view');
-  $('#addBtn').classList.toggle('hide', !!META.locked); v.classList.toggle('wide', ['cal', 'table', 'map'].includes(UI.view));
+  $('#addBtn').classList.toggle('hide', !!META.locked || sec !== 'analiza'); v.classList.toggle('wide', ['cal', 'table', 'map'].includes(UI.view));
   if (UI.view === 'cal') v.innerHTML = viewCal();
   else if (UI.view === 'overview') v.innerHTML = viewOverview();
   else if (UI.view === 'map') v.innerHTML = viewMap();
   else if (UI.view === 'list') v.innerHTML = viewList();
   else if (UI.view === 'records') v.innerHTML = viewRecords();
   else if (UI.view === 'table') v.innerHTML = viewTable();
+  else if (UI.view === 'gym') v.innerHTML = Train.viewGym();
+  else if (UI.view === 'prog') v.innerHTML = Train.viewProg();
+  else if (UI.view === 'cmp') v.innerHTML = Train.viewCmp();
   else v.innerHTML = viewSettings();
   bind();
+  if (['gym', 'prog', 'cmp'].includes(UI.view)) Train.bind(v);
   if (UI.view === 'map') mountMap(); else destroyMap();
 }
 
@@ -950,6 +970,7 @@ function viewRecords() {
 
 /* ---------- tablica (tabovi s odabranim stupcima) ---------- */
 const spdOf = a => a.avgSpeed || (a.dist > 0 && a.moving > 0 ? a.dist / (a.moving / 3600) : null);
+const descLine = a => String(a.desc || '').replace(/^logged with \S+\s*/i, '').split(/\r?\n/).map(x => x.trim()).filter(Boolean).join(' · ');
 const COLS = {
   date: { l: 'Datum', get: a => a.date, fmt: a => { const d = new Date(a.date); return d.getDate() + '.' + (d.getMonth() + 1) + '.' + String(d.getFullYear()).slice(2); } },
   name: { l: 'Naziv', get: a => (a.name || typeLabel(a.type)).toLowerCase(), fmt: a => a.name || typeLabel(a.type), left: true },
@@ -965,6 +986,7 @@ const COLS = {
   watts: { l: 'Snaga W', get: a => a.watts > 0 ? a.watts : null, fmt: a => Math.round(a.watts), tot: 'avg' },
   cal: { l: 'kcal', get: a => a.cal > 0 ? a.cal : null, fmt: a => Math.round(a.cal), tot: 'sum' },
   gear: { l: 'Oprema', get: a => a.gear || null, fmt: a => a.gear, left: true },
+  desc: { l: 'Opis', get: a => descLine(a) || null, fmt: a => descLine(a), left: true },
   tags: { l: 'Oznake', get: a => (a.tags || []).join(', ') || null, fmt: a => (a.tags || []).join(', '), left: true },
   commute: { l: 'Commute', get: a => a.commute ? 1 : null, fmt: () => '✓' },
   route: { l: 'Ruta', get: a => a.hasTrack ? 1 : null, fmt: () => '✓' }
@@ -1122,7 +1144,11 @@ function bind() {
   const cid = $('#cid'); if (cid) cid.onchange = async () => { META.clientId = cid.value.trim(); await persist(false); renderSync(); };
   v.querySelectorAll('[data-act]').forEach(b => b.onclick = () => actions[b.dataset.act]());
 }
-document.querySelectorAll('#nav button').forEach(b => b.onclick = () => { UI.view = b.dataset.v; render(); scrollTo(0, 0); });
+$('#nav').onclick = e => { const b = e.target.closest('button'); if (!b) return; UI.view = b.dataset.v; render(); scrollTo(0, 0); };
+const menuClose = () => { $('#menu').hidden = true; $('#menuBtn').setAttribute('aria-expanded', 'false'); };
+$('#menuBtn').onclick = e => { e.stopPropagation(); const m = $('#menu'); m.hidden = !m.hidden; $('#menuBtn').setAttribute('aria-expanded', String(!m.hidden)); };
+$('#menu').onclick = e => { const b = e.target.closest('button'); if (!b) return; const sc = SECS[b.dataset.sec]; UI.view = UI.lastV[b.dataset.sec] || sc.def; menuClose(); render(); scrollTo(0, 0); };
+document.addEventListener('click', e => { if (!e.target.closest('#menu')) menuClose(); });
 $('#addBtn').onclick = () => openEdit(null);
 
 const actions = {
@@ -1347,7 +1373,7 @@ function openView(a) {
     (sec('text') && a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
     (sec('text') && a.notes ? '<p class="adesc"><b>Bilješka:</b> ' + esc(a.notes) + '</p>' : '') +
     (a.hasTrack ? '<div id="trk"></div><div id="zn"></div>' : '') +
-    '<div class="acts"><div>' + (a.hasTrack ? '<button type="button" class="btn pri" id="shareBtn">Podijeli sliku</button>' : '') + '<button type="button" class="btn" id="snapDlg">Screenshot</button><button type="button" class="btn" id="editBtn">Uredi</button></div><button type="button" class="btn" id="cancel">Zatvori</button></div></div>';
+    '<div class="acts"><div>' + (a.hasTrack ? '<button type="button" class="btn pri" id="shareBtn">Podijeli</button>' : '') + '<button type="button" class="btn" id="snapDlg">Screenshot</button><button type="button" class="btn" id="editBtn">Uredi</button></div><button type="button" class="btn" id="cancel">Zatvori</button></div></div>';
   dlg.onclose = () => { if (detailView) { detailView.destroy(); detailView = null; } };
   dlg.showModal();
   if (a.hasTrack) {

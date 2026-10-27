@@ -182,3 +182,10 @@ U detalju treninga tipka "Uredi" otvara uređivanje čak i kad je uređivanje za
 Napomena (mapa): aplikacija prepoznaje vlastitu mapu po oznaci; ako već postoji tvoja mapa istog naziva, napravi novu „Trening aktivnosti (aplikacija)“, jer u tuđu mapu ne smije pisati. Ako premještanje ne uspije, razlog piše u kartici "Uvoz s Drivea" (Postavke); "Ponovno postavi mapu" pokušava ispočetka.
 
 Podmape: uz "Napravi mapu" aplikacija pravi i podmape „Strava export“ (za Stravin ZIP) i „Aktivnosti“ (za FIT/GPX/TCX bilo kojeg sporta; ranije napravljena podmapa „Vožnje“ i dalje se čita). Čita se glavna mapa i njezine izravne podmape (jedna razina); dublje se ne ide. Ako vožnju uvezeš iz FIT-a i Stravinog izvoza, prepoznaje se po početku (do 10 min razlike) i ne dupla se, bez obzira na to što je stiglo prvo.
+
+## Izbornik i odjeljci
+Tipka ☰ gore lijevo otvara izbornik s tri odjeljka:
+- **Analiza**: Kalendar, Tablica, Karta, Pregled (sve što je bilo do sada, osim loggera i postavki). Tipka "+ Novi" (ručni unos) je samo ovdje.
+- **Trening**: logger (prazan trening, rutine, zadnji treninzi snage), **Napredak** (po vježbi: težina, procijenjeni 1RM, volumen, rekordi, graf) i **Usporedba** (dva treninga ili dva razdoblja: ovaj/prošli mjesec, zadnjih 30 dana, godina).
+- **Postavke**.
+Dok traje trening u zaglavlju je tipka s trajanjem (inače je skrivena). U tablici je nova kolona **Opis** (Uredi → dodaj kolonu), a tipke filtera su manje i razmaknutije.
