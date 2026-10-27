@@ -249,16 +249,35 @@ nav button.on::before{content:'';position:absolute;left:0;right:0;top:-1px;heigh
   nav button:hover{background:none}
 }
 .snap{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--edge);background:var(--card);color:var(--ink);padding:0;cursor:pointer;flex:none}.snap:hover{border-color:var(--accent);color:var(--accent)}.snap:disabled{opacity:.5;cursor:default}
+.snap#wkBtn{gap:6px;width:auto;min-width:34px;padding:0 8px;font-variant-numeric:tabular-nums;font-size:13px;font-family:var(--mono)}.snap#wkBtn.act{border-color:var(--accent);color:var(--accent)}
+#wkBar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;gap:12px;align-items:center;padding:12px 16px;border:0;border-top:2px solid var(--accent);background:var(--card);color:var(--ink);font:inherit;font-variant-numeric:tabular-nums;cursor:pointer}#wkBar[hidden]{display:none}#wkBar u{color:var(--accent);text-decoration:none;font-size:13px}
+dialog#wk{padding:0;width:min(560px,100vw);height:min(100dvh,860px);max-height:100dvh}dialog#wk[open]{display:flex;flex-direction:column}
+@media (max-width:640px){dialog#wk{width:100vw;max-width:100vw;height:100dvh;margin:0;border:0}}
+.wk-top{display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--edge);flex:none}.wk-top input{flex:1;min-width:0;font-size:16px;font-weight:600}.rt{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:18px}
+.wk-rest{display:flex;gap:8px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line);flex:none;flex-wrap:wrap;min-height:46px}.wk-rest .k{color:var(--mute);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}.wk-rest .rt{color:var(--accent);min-width:52px}.wk-rest .btn{padding:5px 10px}
+.wk-body{flex:1;overflow:auto;padding:12px 14px;-webkit-overflow-scrolling:touch}.wk-foot{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--edge)}
+.m{color:var(--mute)}.wk-rs{width:auto;font-size:13px;padding:4px 6px}.wk-cf{display:flex;gap:8px;align-items:center}.wk-cf .k{color:var(--mute);font-size:12px;font-weight:600;text-transform:uppercase}.wk-cf .btn{padding:3px 12px}.wk-cf .rt{min-width:22px;text-align:center}
+.wk-h{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 6px}.wk-big{width:100%;margin:6px 0;padding:12px}.wk-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.wk-ex{border:1px solid var(--line);margin-bottom:12px;padding:10px;background:var(--card)}.wk-eh{display:flex;align-items:center;gap:8px;margin-bottom:6px}.wk-eh .btn{padding:3px 9px}
+.wk-sr{display:grid;grid-template-columns:26px 1fr 72px 62px 42px;gap:6px;align-items:center;margin-bottom:5px}.wk-sr input{width:100%;min-width:0;text-align:center;font-size:16px;padding:7px 4px}.wk-sr .n{color:var(--mute);text-align:center;font-variant-numeric:tabular-nums}
+.wk-sh{color:var(--mute);font-size:11px;text-transform:uppercase;text-align:center}.wk-pv{border:0;background:none;color:var(--mute);font:inherit;font-size:13px;cursor:pointer;padding:6px 2px;text-align:center}.wk-pv:disabled{cursor:default}
+.wk-ok{height:36px;border:1px solid var(--edge);background:var(--card);color:var(--ink);font-size:18px;cursor:pointer;padding:0}.wk-sr.dn{background:var(--sel)}.wk-sr.dn .wk-ok{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.wk-add{width:100%;margin-top:4px}.wk-rt{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);padding:10px;margin-bottom:8px;background:var(--card)}.wk-rt .m{font-size:12px;margin-top:2px}.wk-rb{display:flex;gap:6px;flex:none}
+.wk-pick{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;padding:12px 2px;cursor:pointer}.wk-pick .m{font-size:12px;white-space:nowrap}
+.wk-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}.wk-sum div{border:1px solid var(--line);padding:8px;text-align:center}.wk-sum b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.wk-sum span{font-size:11px;color:var(--mute)}.wk-ck{display:flex;gap:8px;align-items:center;margin:10px 0}.wk-ck input{width:auto}
+#remind{max-width:1100px;margin:10px auto 0;padding:0 16px}#remind[hidden]{display:none}#remind .rem{border:1px solid var(--accent);border-left-width:4px;background:var(--card);padding:10px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}#remind .rem span{flex:1;min-width:200px;font-size:14px}#remind .btn{padding:5px 11px;font-size:13px;text-decoration:none;display:inline-block}
 </style>
 </head>
 <body>
 <header>
   <h1>Trening</h1>
   <button class="sync" id="syncBtn" title="Sinkroniziraj s Google Driveom"><span class="dot" id="dot"></span><span id="syncTxt">lokalno</span></button>
+  <button class="snap" id="wkBtn" title="Snaga: bilježenje treninga" aria-label="Snaga: bilježenje treninga"><svg width="20" height="18" viewBox="0 0 28 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M2 9v6M6 6v12M22 6v12M26 9v6M6 12h16"/></svg><span></span></button>
   <button class="snap" id="snapBtn" title="Screenshot cijele stranice" aria-label="Screenshot cijele stranice"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><rect x="8.5" y="8.5" width="7" height="7"/></svg></button>
   <button class="btn pri" id="addBtn">+ Novi</button>
 </header>
 
+<div id="remind" hidden></div>
 <main id="view"></main>
 
 <nav id="nav">
@@ -271,6 +290,8 @@ nav button.on::before{content:'';position:absolute;left:0;right:0;top:-1px;heigh
 
 <dialog id="dlg"></dialog>
 <dialog id="shr"></dialog>
+<dialog id="wk"></dialog>
+<button id="wkBar" hidden><b class="t"></b><span class="r"></span><span style="flex:1"></span><u>Otvori trening</u></button>
 <dialog id="prog"><div id="progTxt" style="margin-bottom:10px">…</div><progress id="progBar" style="width:100%"></progress></dialog>
 <input type="file" id="csvIn" accept=".zip,.csv,application/zip,text/csv" class="hide">
 <input type="file" id="gpsIn" multiple class="hide">
@@ -283,6 +304,7 @@ nav button.on::before{content:'';position:absolute;left:0;right:0;top:-1px;heigh
 <script src="trackview.js"></script>
 <script src="share.js"></script>
 <script src="analytics.js"></script>
+<script src="gym.js"></script>
 <script>
 'use strict';
 /* =====================================================================
@@ -501,6 +523,99 @@ $('#syncBtn').onclick = () => {
   sync(true);
 };
 
+/* ---------- izvoz za analizu ---------- */
+/* Jedna datoteka s već izračunatim podacima: opis polja i jedinice, zbrojevi po godini/mjesecu/sportu, po treningu datumski dijelovi, tempo, zone, dionice po km i (neobavezno) cijeli GPS trag kao obični nizovi. */
+const AN_FIELDS = {
+  id: 'Strava ID ili interni ID', date: 'početak, ISO 8601 UTC', local: 'lokalni datum i vrijeme (Europe/Zagreb ili zona uređaja): date, time, year, month, day, weekday (1=pon), iso_week, hour',
+  sport: 'izvorni tip (Ride, Run, Walk, Weight Training…)', sport_label: 'hrvatski naziv sporta', group: 'ride | walk | other (po kojem se biraju zone brzine)', name: 'naziv', description: 'opis', notes: 'privatna bilješka', tags: 'vlastite oznake',
+  dist_km: 'udaljenost u km', moving_s: 'vrijeme kretanja u sekundama', elapsed_s: 'ukupno vrijeme u sekundama', avg_speed_kmh: 'prosječna brzina km/h', pace_min_km: 'prosječni tempo min/km (samo hodanje/trčanje/planinarenje)',
+  elev_gain_m: 'ukupni uspon u m', avg_hr: 'prosječni puls bpm', max_hr: 'maksimalni puls bpm', avg_watts: 'prosječna snaga W', calories: 'kalorije kcal', relative_effort: 'Strava relative effort', gear: 'oprema', commute: 'true ako je commute', flags: 'Strava oznake (npr. Race, Trainer)', temp_c: 'temperatura °C',
+  lifted_kg: 'podignuto kg (trening snage)', sets: 'serije', reps: 'ponavljanja', has_gps: 'true ako postoji GPS trag', source: 'strava | GPS datoteka | ručno',
+  max_speed_kmh_track: 'najveća brzina iz traga (uzorci su usrednjeni, pa je blago niža od stvarne)', max_hr_track: 'najveći puls iz traga', ele_min_m: 'najniža visina', ele_max_m: 'najviša visina', ele_loss_m: 'ukupni spust u m (iz traga)',
+  zones_s: 'sekunde po zonama: hr i speed, nizovi [Z1..Z5]; granice su u meta.zones', splits_km: 'dionice po 1 km: km, dist_km, time_s, speed_kmh, pace_min_km, avg_hr, ele_gain_m, ele_loss_m (zadnja može biti kraća)',
+  track: 'samo ako je uključeno: points, t_s (sekunde od početka), dist_m, lat, lon, ele_m, speed_kmh, hr_bpm, power_w; nizovi su iste duljine, null = nema podatka'
+};
+const isoWeek = d => { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())), n = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - n); const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return Math.ceil(((t - y0) / 864e5 + 1) / 7); };
+const rn = (v, d = 1) => v === null || v === undefined || !isFinite(v) ? null : Math.round(v * Math.pow(10, d)) / Math.pow(10, d);
+function anSplits(tr) {
+  const d = tr.d, t = tr.t; if (!d || !t || d.length < 3 || d[d.length - 1] < 1000) return null;
+  const n = d.length, at = (arr, m) => { // linearna interpolacija vrijednosti na udaljenosti m
+    let a = 0, b = n - 1; while (b - a > 1) { const k = (a + b) >> 1; if (d[k] < m) a = k; else b = k; }
+    const f = d[b] === d[a] ? 0 : (m - d[a]) / (d[b] - d[a]); return arr[a] + (arr[b] - arr[a]) * f; };
+  const out = [], total = d[n - 1], km = Math.ceil(total / 1000);
+  for (let k = 0; k < km; k++) {
+    const m0 = k * 1000, m1 = Math.min((k + 1) * 1000, total), len = m1 - m0; if (len < 100) continue;
+    const dt = at(t, m1) - at(t, m0); let hrS = 0, hrN = 0, up = 0, dn = 0, prev = null;
+    for (let i = 0; i < n; i++) if (d[i] >= m0 && d[i] <= m1) {
+      if (tr.hr && tr.hr[i] != null) { hrS += tr.hr[i]; hrN++; }
+      if (tr.ele && tr.ele[i] != null) { if (prev !== null) { const df = tr.ele[i] - prev; if (df > 0) up += df; else dn -= df; } prev = tr.ele[i]; }
+    }
+    out.push({ km: k + 1, dist_km: rn(len / 1000, 3), time_s: Math.round(dt), speed_kmh: dt > 0 ? rn(len / dt * 3.6) : null, pace_min_km: dt > 0 && len > 0 ? rn(dt / 60 / (len / 1000), 2) : null, avg_hr: hrN ? Math.round(hrS / hrN) : null, ele_gain_m: tr.ele ? Math.round(up) : null, ele_loss_m: tr.ele ? Math.round(dn) : null });
+  }
+  return out;
+}
+async function buildAnalysis(withTrack) {
+  const list = acts().slice().reverse(), out = [], agg = { by_sport: {}, by_year: {}, by_month: {} };
+  const add = (o, key, a) => { const x = o[key] = o[key] || { count: 0, dist_km: 0, moving_s: 0, elev_gain_m: 0, calories: 0 }; x.count++; x.dist_km += a.dist_km || 0; x.moving_s += a.moving_s || 0; x.elev_gain_m += a.elev_gain_m || 0; x.calories += a.calories || 0; };
+  for (const a of list) {
+    const dt = new Date(a.date), g = Analytics.group(a.type), tr = a.hasTrack ? await store.get('tr:' + a.id) : null, ok = !!(tr && tr.n);
+    const cfg = zoneCfg(a.type), z = ok ? Analytics.zonesFor(tr, cfg) : null;
+    const dist = a.dist > 0 ? a.dist : null, mv = a.moving || a.elapsed || null;
+    const rec = {
+      id: a.id, date: a.date, local: { date: ymd(dt), time: String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0'), year: dt.getFullYear(), month: dt.getMonth() + 1, day: dt.getDate(), weekday: dt.getDay() || 7, iso_week: isoWeek(dt), hour: dt.getHours() },
+      sport: a.type, sport_label: typeLabel(a.type), group: g || 'other', name: a.name || '', description: a.desc || '', notes: a.notes || '', tags: a.tags || [],
+      dist_km: dist !== null ? rn(dist, 3) : null, moving_s: a.moving || null, elapsed_s: a.elapsed || null, avg_speed_kmh: a.avgSpeed || (dist && mv ? rn(dist / (mv / 3600), 2) : null),
+      pace_min_km: g === 'walk' || /run/i.test(a.type) ? (dist && mv ? rn(mv / 60 / dist, 2) : null) : undefined,
+      elev_gain_m: a.elev ?? null, avg_hr: a.avgHr ?? null, max_hr: a.maxHr ?? null, avg_watts: a.watts ?? null, calories: a.cal ?? null, relative_effort: a.effort ?? null, gear: a.gear || '', commute: !!a.commute, flags: a.flags || [], temp_c: a.temp ?? null,
+      lifted_kg: a.lifted ?? null, sets: a.sets ?? null, reps: a.reps ?? null, has_gps: ok, source: a.src === 'strava' ? 'strava' : a.src === 'file' ? 'GPS datoteka' : 'ručno'
+    };
+    if (rec.pace_min_km === undefined) delete rec.pace_min_km;
+    if (ok) {
+      const nn = arr => (arr || []).filter(v => v !== null && v !== undefined);
+      const sp = nn(tr.spd), hr = nn(tr.hr), el = nn(tr.ele);
+      if (sp.length) rec.max_speed_kmh_track = rn(Math.max(...sp));
+      if (hr.length) rec.max_hr_track = Math.max(...hr);
+      if (el.length) { rec.ele_min_m = rn(Math.min(...el)); rec.ele_max_m = rn(Math.max(...el)); let dn = 0; for (let i = 1; i < tr.ele.length; i++) if (tr.ele[i] != null && tr.ele[i - 1] != null && tr.ele[i] < tr.ele[i - 1]) dn += tr.ele[i - 1] - tr.ele[i]; rec.ele_loss_m = Math.round(dn); }
+      if (z) rec.zones_s = { hr: z.hr ? z.hr.map(Math.round) : null, speed: z.spd ? z.spd.map(Math.round) : null };
+      const sps = anSplits(tr); if (sps) rec.splits_km = sps;
+      if (withTrack) {
+        const ll = tr.poly ? Files.decPoly(tr.poly) : [];
+        rec.track = { points: tr.n, t_s: tr.t, dist_m: tr.d, lat: ll.length ? ll.map(p => p[0]) : null, lon: ll.length ? ll.map(p => p[1]) : null, ele_m: tr.ele || null, speed_kmh: tr.spd || null, hr_bpm: tr.hr || null, power_w: tr.pw || null };
+      }
+    }
+    out.push(rec);
+    add(agg.by_sport, rec.sport, rec); add(agg.by_year, String(rec.local.year), rec); add(agg.by_month, rec.local.year + '-' + String(rec.local.month).padStart(2, '0'), rec);
+    const ys = agg.by_year[String(rec.local.year)]; (ys.sports = ys.sports || {}); add(ys.sports, rec.sport, rec);
+    const ms = agg.by_month[rec.local.year + '-' + String(rec.local.month).padStart(2, '0')]; (ms.sports = ms.sports || {}); add(ms.sports, rec.sport, rec);
+  }
+  const fin = o => { for (const v of Object.values(o)) { v.dist_km = rn(v.dist_km, 2); v.elev_gain_m = Math.round(v.elev_gain_m); v.calories = Math.round(v.calories); if (v.sports) fin(v.sports); } };
+  fin(agg.by_sport); fin(agg.by_year); fin(agg.by_month);
+  const A = zoneCfgAll();
+  return {
+    meta: { app: 'Trening', format: 'trening-analiza', version: 1, exported: new Date().toISOString(), activities: out.length, with_gps_tracks: !!withTrack,
+      units: { distance: 'km (track.dist_m u m)', time: 'sekunde', speed: 'km/h', pace: 'min/km kao decimalni broj (6.5 = 6:30)', elevation: 'm', heart_rate: 'bpm', power: 'W', temperature: '°C' },
+      zones: { hr_lower_bounds_bpm: A.hr, speed_ride_lower_bounds_kmh: A.spd, speed_walk_lower_bounds_kmh: A.walk, note: 'Granice zona 2–5; zona 1 je sve ispod prve granice. Zone brzine postoje samo za bicikl i hodanje/planinarenje; stajanje (<2 km/h) se ne računa.' },
+      fields: AN_FIELDS },
+    totals: agg, activities: out
+  };
+}
+function exportAnalysis() {
+  const dlg = $('#dlg'); dlg.onclose = null;
+  const n = acts().length, withTr = acts().filter(a => a.hasTrack).length;
+  dlg.innerHTML = '<h2>Izvoz za analizu</h2><p class="note" style="margin-top:6px">Jedna JSON datoteka s ' + n + ' treninga: opis polja i jedinice, zbrojevi po godini, mjesecu i sportu, tempo, zone, dionice po km i datumski dijelovi. Spremno za analizu bez dodatnog računanja.</p>' +
+    '<label class="chk" style="margin-top:12px"><input type="checkbox" id="anTrk"> Uključi cijele GPS tragove (' + withTr + ' treninga; datoteka je puno veća)</label>' +
+    '<p class="note" id="anNote"></p><div class="acts"><button type="button" class="btn" id="anCx">Zatvori</button><button type="button" class="btn pri" id="anGo">Izvezi</button></div>';
+  dlg.showModal(); $('#anCx').onclick = () => dlg.close();
+  $('#anGo').onclick = async () => {
+    $('#anGo').disabled = true; $('#anNote').textContent = 'Pripremam…';
+    try {
+      const data = await buildAnalysis($('#anTrk').checked), txt = JSON.stringify(data);
+      download('trening-analiza-' + ymd(new Date()) + '.json', txt, 'application/json');
+      $('#anNote').textContent = 'Spremljeno: ' + (txt.length / 1048576 >= 1 ? (txt.length / 1048576).toFixed(1) + ' MB' : Math.round(txt.length / 1024) + ' KB') + '.'; $('#anGo').disabled = false;
+    } catch (e) { $('#anNote').textContent = 'Nije uspjelo: ' + (e.message || e); $('#anGo').disabled = false; }
+  };
+}
+
 /* ---------- screenshot ---------- */
 let h2cLoading = null;
 const loadH2C = () => window.html2canvas ? Promise.resolve() : (h2cLoading || (h2cLoading = new Promise((res, rej) => { const el = document.createElement('script'); el.src = 'html2canvas.min.js'; el.onload = res; el.onerror = () => { h2cLoading = null; rej(new Error('Biblioteka za screenshot nije učitana (datoteka html2canvas.min.js nedostaje?).')); }; document.head.appendChild(el); })));
@@ -537,6 +652,28 @@ async function snapRun(target, name, btn) {
 }
 $('#snapBtn').onclick = () => { const dlg = [...document.querySelectorAll('dialog[open]')].pop(); snapRun(dlg || $('#view'), UI.view, $('#snapBtn')); };
 
+
+/* ---------- podsjetnik za Stravin izvoz ---------- */
+const STRAVA_EXPORT = 'https://www.strava.com/athlete/delete_your_account';
+const sRem = () => Object.assign({ days: 7, off: false, last: 0 }, DB.settings && DB.settings.strava);
+function setSRem(patch) { DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), strava: Object.assign(sRem(), patch) }); return persist(); }
+function stravaLast() {
+  const r = sRem(); if (r.last) return r.last;
+  let m = 0; for (const a of Object.values(DB.activities)) if (a.src === 'strava') m = Math.max(m, new Date(a.date).getTime() || 0);
+  return m;
+}
+function renderRemind() {
+  const el = $('#remind'); if (!el) return;
+  const r = sRem(), last = stravaLast(), now = Date.now();
+  if (r.off || !last || now - last < r.days * 864e5 || (META.snooze || 0) > now) { el.hidden = true; el.innerHTML = ''; return; }
+  const d = Math.floor((now - last) / 864e5);
+  el.hidden = false;
+  el.innerHTML = '<div class="rem"><span><b>Vrijeme za Stravin izvoz.</b> Zadnji uvoz prije ' + d + ' dana. Izvoz traži od Strave e-poštu s poveznicom.</span><a class="btn pri" href="' + STRAVA_EXPORT + '" target="_blank" rel="noopener">Otvori Stravu</a><button class="btn" id="remImp">Uvezi ZIP</button><button class="btn" id="remSnz">Odgodi 1 dan</button></div>';
+  $('#remSnz').onclick = async () => { META.snooze = Date.now() + 864e5; await persist(false); renderRemind(); };
+  $('#remImp').onclick = () => actions.csv();
+}
+async function markStravaImport() { await setSRem({ last: Date.now() }); renderRemind(); }
+
 /* ---------- pomoćno ---------- */
 function toast(msg, ms = 2600) {
   document.querySelectorAll('.toast').forEach(t => t.remove());
@@ -553,6 +690,7 @@ function download(name, text, type) {
 
 /* ---------- prikaz ---------- */
 function render() {
+  renderRemind();
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === (UI.view === 'records' ? 'overview' : UI.view)));
   const v = $('#view');
   $('#addBtn').classList.toggle('hide', !!META.locked); v.classList.toggle('wide', ['cal', 'table', 'map'].includes(UI.view));
@@ -888,7 +1026,7 @@ function viewSettings() {
   const n = acts().length;
   const cid = clientId();
   return '<div class="card" style="margin-top:0"><h3>Podaci</h3><p style="margin:0 0 10px">' + n + ' treninga u evidenciji.</p>' +
-    '<div class="row" style="flex-wrap:wrap"><button class="btn pri" data-act="csv">Uvezi Strava ZIP ili CSV</button><button class="btn" data-act="gps">Dodaj GPS datoteke</button><button class="btn" data-act="export">Izvezi backup (JSON)</button><button class="btn" data-act="exportcsv">Izvezi CSV</button><button class="btn" data-act="import">Vrati iz backupa</button></div>' +
+    '<div class="row" style="flex-wrap:wrap"><button class="btn pri" data-act="csv">Uvezi Strava ZIP ili CSV</button><button class="btn" data-act="gps">Dodaj GPS datoteke</button><button class="btn" data-act="export">Izvezi backup (JSON)</button><button class="btn" data-act="exportai">Izvezi za analizu (JSON)</button><button class="btn" data-act="exportcsv">Izvezi CSV</button><button class="btn" data-act="import">Vrati iz backupa</button></div>' +
     '<p class="note">Najlakše je odabrati cijeli ZIP koji dobiješ od Strave: aplikacija sama pročita treninge, opise i sve .gpx/.fit.gz rute. Postojeći treninzi se preskaču (bez dupliciranja), a tvoje bilješke i oznake ostaju. „GPS datoteke“ služe za pojedinačne .gpx, .fit, .tcx (i .gz) datoteke, npr. s drugog sata ili aplikacije.</p></div>' +
     '<div class="card"><h3>Zone pulsa i brzine</h3><p class="note" style="margin-top:0">Upiši donje granice zona 2–5 (npr. kao na iGPSPORT-u). Zona 1 je sve ispod prve granice. Puls vrijedi za sve sportove, a brzina posebno za bicikl i za hodanje (hodanje i planinarenje). Ostali sportovi imaju samo zone pulsa.</p>' +
     (() => { const c = zoneCfgAll(), row = (key, title, unit, step) => '<b style="font-size:13px">' + title + '</b><div class="zset">' + c[key].map((v, i) => '<div><label>Z' + (i + 2) + ' od</label><input data-z="' + key + '" data-i="' + i + '" inputmode="decimal" value="' + v + '" aria-label="' + title + ' zona ' + (i + 2) + '"></div>').join('') + '</div>'; return row('hr', 'Puls (bpm)') + '<div style="height:8px"></div>' + row('spd', 'Brzina bicikl (km/h)') + '<div style="height:8px"></div>' + row('walk', 'Brzina hodanje (km/h)'); })() +
@@ -907,6 +1045,7 @@ function viewSettings() {
             '<label>Ruta na karti je obojena po</label><select data-detroute>' + [['plain', 'Jednobojno'], ['hr', 'Pulsu'], ['spd', 'Brzini']].map(([k, l]) => '<option value="' + k + '"' + (d.route === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>' +
             (d.custom ? '<div class="row" style="margin-top:10px"><button class="btn" data-detreset="1">Vrati zadano za detalj treninga</button></div>' : '') + '<p class="note">Graf tempa je u izborniku grafa kad trening ima GPS brzinu.</p>'; })() + '</div>'; })() +
     '<div class="card"><h3>Tema</h3><p class="note" style="margin-top:0">Vrijedi samo na ovom uređaju.</p><div class="chips wrap">' + [['auto', 'Kao uređaj'], ['light', 'Svijetla'], ['dark', 'Tamna']].map(([k, l]) => '<button class="chip ' + (themePref() === k ? 'on' : '') + '" data-theme-set="' + k + '">' + l + '</button>').join('') + '</div></div>' +
+    '<div class="card"><h3>Podsjetnik za Stravin izvoz</h3><p style="margin:0 0 10px">Strava dopušta izvoz otprilike jednom tjedno. Pri otvaranju aplikacije pojavi se traka ako je prošlo zadano vrijeme od zadnjeg uvoza.</p><div class="row" style="flex-wrap:wrap;gap:12px;align-items:center"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" data-srem="on"' + (sRem().off ? '' : ' checked') + ' style="width:auto"> Podsjećaj me</label><label style="display:flex;gap:8px;align-items:center;margin:0">svakih <select data-srem="days" style="width:auto">' + [3, 7, 14, 30].map(d => '<option value="' + d + '"' + (sRem().days === d ? ' selected' : '') + '>' + d + ' dana</option>').join('') + '</select></label></div></div>' +
     '<div class="card"><h3>Uređivanje</h3><p style="margin:0 0 10px">' + (META.locked ? 'Zaključano: treninzi se samo pregledavaju.' : 'Otključano: možeš dodavati i uređivati treninge.') + '</p><button class="btn" data-act="lock">' + (META.locked ? 'Otključaj uređivanje' : 'Zaključaj uređivanje') + '</button></div>' +
     '<div class="card"><h3>Google Drive</h3>' +
     '<p class="note" style="margin:0 0 6px">Aplikacija trenutno koristi ID:</p><p style="margin:0;word-break:break-all"><code>' + (cid ? esc(cid) : '(prazno)') + '</code></p><p class="note" style="margin:4px 0 8px;color:' + (!cid ? 'var(--mute)' : idOk(cid) ? 'var(--c-foot)' : 'var(--c-weight)') + '">' + (!cid ? 'Nije postavljen.' : cid.length + ' znakova · ' + (idOk(cid) ? '✓ oblik je ispravan' : '✗ oblik NIJE ispravan – ID je nepotpun ili pogrešan')) + '</p>' +
@@ -939,6 +1078,7 @@ function bind() {
   v.querySelectorAll('[data-myear]').forEach(b => b.onclick = () => { MAPD.year = b.dataset.myear; render(); });
   v.querySelectorAll('[data-mt]').forEach(b => b.onclick = () => mapToggle(b));
   v.querySelectorAll('[data-theme-set]').forEach(b => b.onclick = () => { setTheme(b.dataset.themeSet); render(); });
+  v.querySelectorAll('[data-srem]').forEach(i => i.onchange = async () => { await setSRem(i.dataset.srem === 'on' ? { off: !i.checked } : { days: +i.value }); renderRemind(); });
   v.querySelectorAll('[data-col]').forEach(i => i.onchange = async () => { const colors = Object.assign({}, DB.settings && DB.settings.colors, { [i.dataset.col]: i.value }); DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), colors }); await persist(); render(); });
   v.querySelectorAll('[data-colreset]').forEach(b => b.onclick = async () => { const colors = Object.assign({}, DB.settings && DB.settings.colors); delete colors[b.dataset.colreset]; DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), colors }); await persist(); render(); });
   v.querySelectorAll('[data-ovsport]').forEach(i => i.onchange = () => { UI.ovSport = i.value; render(); });
@@ -979,7 +1119,15 @@ const actions = {
   gps: () => $('#gpsIn').click(),
   import: () => $('#jsonIn').click(),
   sync: () => { const c = $('#cid'); if (c) META.clientId = c.value.trim(); if (!clientId()) return toast('Prvo upiši Client ID.'); sync(true); },
-  export: () => download('trening-backup-' + ymd(new Date()) + '.json', JSON.stringify(DB, null, 1), 'application/json'),
+  export: async () => {
+    try {
+      const tracks = {}; for (const id of Object.keys(DB.activities)) { const t = await store.get('tr:' + id); if (t) tracks[id] = t; }
+      const out = Object.assign({}, DB, { format: 'trening-backup', backup_version: 2, exported: new Date().toISOString(), tracks });
+      const txt = JSON.stringify(out); download('trening-backup-' + ymd(new Date()) + '.json', txt, 'application/json');
+      toast('Backup spremljen: ' + Object.keys(DB.activities).length + ' treninga, ' + Object.keys(tracks).length + ' ruta (' + (txt.length / 1048576).toFixed(1) + ' MB).', 4500);
+    } catch (e) { toast('Backup nije uspio: ' + (e.message || e), 5000); }
+  },
+  exportai: () => exportAnalysis(),
   exportcsv: () => {
     const cols = ['id', 'date', 'name', 'type', 'dist', 'moving', 'elapsed', 'avgSpeed', 'elev', 'avgHr', 'maxHr', 'watts', 'cal', 'gear', 'lifted', 'sets', 'reps', 'commute', 'flags', 'temp', 'hasTrack', 'tags', 'notes', 'desc'];
     const q = v => { v = Array.isArray(v) ? v.join(';') : v ?? ''; v = String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
@@ -1029,7 +1177,7 @@ function showReport(title, lines, fails) {
 async function importCsvText(text) {
   const { activities, bad } = Core.importStravaCSV(text);
   const r = Core.addImported(DB, activities);
-  await persist(r.added > 0 || r.filled > 0);
+  await persist(r.added > 0 || r.filled > 0); await markStravaImport();
   UI.view = 'overview'; render();
   showReport('Uvoz završen', ['Treninga: ' + r.added + ' novih, ' + r.dup + ' već postoji' + (r.filled ? ' (' + r.filled + ' dopunjeno opisima i oznakama)' : '') + (bad.length ? ', ' + bad.length + ' redaka preskočeno' : '') + '.',
     'Za rute i grafove uvezi cijeli ZIP ili dodaj GPS datoteke.'], []);
@@ -1045,7 +1193,7 @@ async function importExport(file) {
   if (!ce) throw new Error('U ZIP-u nema datoteke activities.csv.');
   const { activities, bad } = Core.importStravaCSV(Files.decodeText(await zip.read(ce)));
   const r = Core.addImported(DB, activities);
-  await persist(r.added > 0 || r.filled > 0);
+  await persist(r.added > 0 || r.filled > 0); await markStravaImport();
   const byBase = new Map();
   for (const e of zip.entries.values()) byBase.set(Files.baseName(e.name), e);
   const withFile = Object.values(DB.activities).filter(a => a.file);
@@ -1145,7 +1293,11 @@ $('#jsonIn').onchange = async e => {
   try {
     const inc = JSON.parse(await f.text());
     if (!inc || typeof inc.activities !== 'object') throw new Error('Datoteka nije backup ove aplikacije.');
-    DB = Core.mergeDB(DB, inc); await persist(true); toast('Backup spojen s evidencijom.'); render();
+    DB = Core.mergeDB(DB, inc);
+    let tr = 0; // rute iz backupa: dodaj one koje na ovom uređaju još nema (postojeće se ne prepisuju)
+    for (const [id, t] of Object.entries(inc.tracks || {})) { if (DB.activities[id] && t && t.n && !(await store.get('tr:' + id))) { await store.set('tr:' + id, t); DB.activities[id].hasTrack = true; tr++; } }
+    if (tr) META.tracksDirty = true;
+    await persist(true); toast('Backup spojen s evidencijom' + (tr ? ' (vraćeno ruta: ' + tr + ')' : '') + '.', 4000); render();
   } catch (err) { toast('Nije uspjelo: ' + err.message, 4500); }
 };
 
@@ -1435,7 +1587,7 @@ function mapToggle(b) {
   const d = await store.get('db'); if (d && d.activities) { DB = d; DB.gear = DB.gear || {}; DB.settings = DB.settings || {}; }
   const m = await store.get('meta'); if (m) META = Object.assign(META, m);
   try { const t = JSON.parse(sessionStorage.getItem('tok')); if (t && Date.now() < t.tokenExp - 60000) { token = t.token; tokenExp = t.tokenExp; } } catch (_) {}
-  render(); renderSync();
+  render(); renderSync(); Gym.init();
   if (clientId() && token && META.lastSync) sync(false); // tiha sinkronizacija ako je prijava još valjana
   if ('serviceWorker' in navigator && /^https:|^http:\/\/localhost/.test(location.href)) navigator.serviceWorker.register('sw.js').catch(() => {});
   if (clientId()) { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onerror = () => {}; document.head.appendChild(s); }

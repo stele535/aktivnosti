@@ -77,6 +77,8 @@
     for (const k of Object.keys(FLAG_COLS)) C['f_' + k] = col(FLAG_COLS[k]);
     const truthy = v => { v = String(v === undefined ? '' : v).trim().toLowerCase(); return v === 'true' || v === 'yes' || (isFinite(parseFloat(v)) && parseFloat(v) > 0); };
     const get = (r, k) => (C[k] >= 0 ? r[C[k]] : undefined);
+    /* cijeli redak iz Stravinog CSV-a (sve neprazne stupce), da backup bude vjeran Stravinom izvozu; ponovljeni nazivi stupaca dobiju sufiks _2, _3… */
+    const rawRow = (hd, r) => { const o = {}, seen = {}; hd.forEach((name, k) => { seen[name] = (seen[name] || 0) + 1; const v = r[k]; if (v === undefined || String(v).trim() === '') return; o[seen[name] > 1 ? name + '_' + seen[name] : name] = String(v).trim(); }); return o; };
     const out = [], bad = [];
     for (let i = 1; i < rows.length; i++) {
       const r = rows[i];
@@ -97,7 +99,8 @@
         lifted: num(get(r, 'lifted')), sets: num(get(r, 'sets')), reps: num(get(r, 'reps')),
         file: (get(r, 'file') || '').trim(), notes: (get(r, 'note') || '').trim(), tags: [], src: 'strava', updated: 0,
         commute: truthy(get(r, 'commute')), flags: Object.keys(FLAG_COLS).filter(k => truthy(get(r, 'f_' + k))),
-        temp: num(get(r, 'wTemp')) ?? num(get(r, 'aTemp'))
+        temp: num(get(r, 'wTemp')) ?? num(get(r, 'aTemp')),
+        raw: rawRow(h, r)
       });
     }
     return { activities: out, bad };
@@ -117,7 +120,7 @@
         if (!ex.desc && a.desc) { ex.desc = a.desc; ch = true; }
         if (!ex.notes && a.notes) { ex.notes = a.notes; ch = true; }
         if (!ex.file && a.file) { ex.file = a.file; ch = true; }
-        if (ex.src === 'strava') for (const k of ['commute', 'flags', 'temp']) if (ex[k] === undefined && a[k] !== undefined) { ex[k] = a[k]; ch = true; }
+        if (ex.src === 'strava') for (const k of ['commute', 'flags', 'temp', 'raw']) if (ex[k] === undefined && a[k] !== undefined) { ex[k] = a[k]; ch = true; }
         if (ch) { ex.updated = now; filled++; }
         dup++; continue;
       }

@@ -136,3 +136,35 @@ Dodatno: *Dodaj GPS datoteke* (pojedinačni `.gpx`, `.fit`, `.tcx`, i `.gz`) ve�
 
 Tipka s okvirom za snimanje u zaglavlju, pored Drive sinkronizacije, napravi PNG slike cijelog otvorenog prikaza (cijela stranica, ne samo vidljivi dio): kalendar, tablica, karta, pregled ili postavke. Kad je otvoren detalj treninga, ima vlastitu tipku *Screenshot* koja snimi cijeli detalj. Na telefonu se otvara izbornik za dijeljenje (npr. *Spremi sliku*), a na računalu se datoteka preuzima. Za to se koristi biblioteka `html2canvas.min.js` (MIT licenca) koja mora biti uz ostale datoteke; učitava se tek kad prvi put pritisneš tipku.
 
+## Izvoz za analizu (JSON)
+
+U Postavkama, *Izvezi za analizu (JSON)*: jedna datoteka namijenjena analizi bez dodatnog računanja (npr. da je daš nekom alatu ili AI-ju). Sadrži:
+
+- `meta`: jedinice, opis svakog polja i granice zona koje trenutno koristiš.
+- `totals`: već zbrojeno po sportu, po godini i po mjesecu (broj treninga, km, vrijeme, uspon, kalorije), a godina i mjesec imaju i razradu po sportovima.
+- `activities`: svaki trening s lokalnim datumom i satom, danom u tjednu i ISO tjednom, tempom (za hodanje i trčanje), commute oznakom, oznakama, opremom i temperaturom. Za treninge s GPS-om još i sekunde po zonama pulsa i brzine, dionice po 1 km (vrijeme, brzina, tempo, puls, uspon i spust), najvišu brzinu i raspon visina.
+- Neobavezno (kvačica): cijeli GPS trag kao obični nizovi (`lat`, `lon`, `t_s`, `dist_m`, `ele_m`, `speed_kmh`, `hr_bpm`, `power_w`). Datoteka je tada puno veća.
+
+Obični backup (*Izvezi backup*) služi za vraćanje podataka u aplikaciju (vidi dolje).
+
+## Backup (vjeran Stravinom izvozu)
+
+*Izvezi backup* sprema jednu JSON datoteku sa svime što aplikacija zna: sve treninge, **cijeli redak iz Stravinog `activities.csv`** za svaki trening (polje `raw`, svi neprazni stupci), vlastite izmjene (opisi, bilješke, oznake), opremu, postavke (zone, boje, tablice…), popis namjerno obrisanih treninga i **sve rute** (GPS tragovi). *Vrati iz backupa* (uvoz JSON-a) vraća treninge i rute koje na uređaju još nema, a postojeće ne prepisuje.
+
+Ograničenja: rute su spremljene sa smanjenim brojem točaka (najviše 600 po treningu), a ne kao izvorni FIT/GPX, a pulsni i snage nizovi su usrednjeni. Izvorne datoteke ostaju samo u Stravinom ZIP izvozu, pa ZIP čuvaj kao i do sada. Polje `raw` postoji za nove uvoze; za treninge koje si već uvezao dopuni se kad ponovno uvezeš isti Strava ZIP (ništa se ne dupla).
+
+
+
+## Snaga: bilježenje treninga (zamjena za Hevy)
+Gumb s bučicom u zaglavlju (uvijek dostupan, i kad je uređivanje zaključano). Tijekom treninga gumb prikazuje sat, a kad zatvoriš prozor ("Minimiziraj") pri dnu se pojavi traka sa satom i odmorom; dodir je vraća.
+- **Vježbe** dolaze iz tvojih starih treninga: čitaju se opisi "Logged with hevyapp.com" na Weight Training aktivnostima. Novu vježbu upišeš u pretragu i dodaš.
+- **Setovi**: kg × ponavljanja, ✓ označava gotov set i pokreće **odmor** (60/90/120/180 s, ±15 s, zvuk + vibracija na kraju). Stupac "Prethodno" je zadnji put; dodir ga upisuje.
+- **Rutine**: "Spremi kao rutinu" (ili kvačica pri završetku); pokretanje rutine puni vježbe i zadnje vrijednosti. Spremaju se u postavke i sinkroniziraju na Drive.
+- **Završi** sprema samo označene setove kao običan Weight Training zapis (trajanje, ukupno kg, setovi, ponavljanja, opis u Hevy formatu), pa ulazi u sve preglede i izvoze.
+- Nedovršeni trening preživi osvježavanje stranice (lokalno na uređaju). Ekran ostaje budan dok traje trening (gdje preglednik to podržava).
+
+## Rutine i vrijeme odmora
+Na početnom ekranu loggera "+ Nova rutina": upišeš naziv, dodaš vježbe (iz povijesti ili nove), po vježbi biraš broj setova i **odmor** (30, 45, 60 … 240 s; "zadano" koristi opći odmor), vježbe pomičeš ↑ ↓. Rutinu uređuješ tipkom ✎. Opći odmor (30/45/60/90/120/180 s) biraš na traci odmora, a tijekom treninga odmor se može promijeniti i po vježbi.
+
+## Podsjetnik za Stravin izvoz
+Kad od zadnjeg uvoza Stravina ZIP-a/CSV-a prođe zadani broj dana (zadano 7), pri otvaranju aplikacije pojavi se traka s poveznicom na Stravu, tipkom "Uvezi ZIP" i "Odgodi 1 dan". Uključivanje i razmak biraš u Postavkama. To je traka u aplikaciji, a ne obavijest na telefonu: sama aplikacija ne može slati obavijesti dok je zatvorena.
