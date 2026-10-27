@@ -1415,7 +1415,7 @@ function openEdit(id, force) {
       (a.hasTrack ? '<div id="trk"></div>' : '') +
       '<div class="row" style="margin-top:10px;flex-wrap:wrap">' + (a.hasTrack ? '<button type="button" class="btn pri" id="shareBtn">Podijeli sliku</button>' : '') + '<button type="button" class="btn" id="snapDlg">Screenshot</button>' + '<button type="button" class="btn" id="addTrk">' + (a.hasTrack ? 'Zamijeni rutu iz datoteke' : 'Dodaj rutu iz datoteke (GPX, FIT, TCX)') + '</button></div>' : '') +
     '<label>Naziv</label><input name="name" value="' + esc(x.name) + '">' +
-    '<div class="two"><div><label>Sport</label><select name="type">' + types.map(t => '<option value="' + esc(t) + '"' + (t === x.type ? ' selected' : '') + '>' + esc(typeLabel(t)) + '</option>').join('') + '</select></div>' +
+    '<div class="two"><div><label>Sport</label><select name="type">' + types.map(t => '<option value="' + esc(t) + '"' + (t === x.type ? ' selected' : '') + '>' + esc(typeLabel(t)) + '</option>').join('') + '<option value="__new">+ Novi sport…</option></select><input name="newtype" id="newtype" placeholder="Naziv sporta (npr. Tenis)" class="hide" style="margin-top:6px"></div>' +
     '<div><label>Početak</label><input type="datetime-local" name="date" value="' + toLocalInput(x.date) + '" required></div></div>' +
     '<div class="two"><div><label>Trajanje (min)</label><input name="min" inputmode="decimal" value="' + (x.moving ? Math.round(x.moving / 60 * 10) / 10 : '') + '"></div>' +
     '<div><label>Udaljenost (km)</label><input name="dist" inputmode="decimal" value="' + (x.dist ? x.dist : '') + '"></div></div>' +
@@ -1445,13 +1445,16 @@ function openEdit(id, force) {
   const addTrk = $('#addTrk'); if (addTrk) addTrk.onclick = () => { oneTarget = a.id; $('#oneIn').click(); };
   const del = $('#del');
   if (del) del.onclick = async () => { if (!confirm('Obrisati ovaj trening? Neće se vratiti pri sljedećem uvozu.')) return; delete DB.activities[a.id]; DB.deleted[a.id] = Date.now(); await store.del('tr:' + a.id); dlg.close(); await persist(); render(); };
+  const typeSel = $('#f select[name=type]'), newType = $('#newtype');
+  typeSel.onchange = () => { newType.classList.toggle('hide', typeSel.value !== '__new'); if (typeSel.value === '__new') newType.focus(); };
   $('#f').onsubmit = async e => {
     e.preventDefault();
+    if (typeSel.value === '__new' && !newType.value.trim()) { toast('Upiši naziv sporta.'); newType.focus(); return; }
     const f = new FormData(e.target), n = k => { const v = String(f.get(k) || '').trim().replace(',', '.'); return v === '' ? null : (isFinite(+v) ? +v : null); };
     const min = n('min') || 0, dist = n('dist') || 0;
     const sameMin = !!a && min === (a.moving ? Math.round(a.moving / 60 * 10) / 10 : 0), sameDist = !!a && dist === (a.dist || 0);
     const rec = Object.assign({}, x, {
-      id: a ? a.id : 'm' + Date.now(), name: String(f.get('name')).trim(), type: f.get('type'),
+      id: a ? a.id : 'm' + Date.now(), name: String(f.get('name')).trim(), type: f.get('type') === '__new' ? newType.value.trim() : f.get('type'),
       date: new Date(f.get('date')).toISOString(), moving: sameMin ? a.moving : Math.round(min * 60), elapsed: a ? Math.max(a.elapsed || 0, Math.round(min * 60)) : Math.round(min * 60),
       dist, elev: n('elev'), avgHr: n('avgHr'), cal: n('cal'), lifted: n('lifted'),
       avgSpeed: sameMin && sameDist ? a.avgSpeed : dist > 0 && min > 0 ? Math.round(dist / (min / 60) * 100) / 100 : (a ? a.avgSpeed : null),

@@ -189,3 +189,6 @@ Tipka ☰ gore lijevo otvara izbornik s tri odjeljka:
 - **Trening**: logger (prazan trening, rutine, zadnji treninzi snage), **Napredak** (po vježbi: težina, procijenjeni 1RM, volumen, rekordi, graf) i **Usporedba** (dva treninga ili dva razdoblja: ovaj/prošli mjesec, zadnjih 30 dana, godina).
 - **Postavke**.
 Dok traje trening u zaglavlju je tipka s trajanjem (inače je skrivena). U tablici je nova kolona **Opis** (Uredi → dodaj kolonu), a tipke filtera su manje i razmaknutije.
+
+## Novi sport
+U uređivanju aktivnosti (Sport) odaberi "+ Novi sport…" i upiši naziv (npr. Tenis). Sport se pojavi među filterima i u Postavkama (boje), a svi budući treninzi ga mogu odabrati s popisa.
