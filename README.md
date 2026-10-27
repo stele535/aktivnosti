@@ -180,3 +180,5 @@ Postavke → "Uvoz s Drivea (mapa)" → "Napravi mapu". Aplikacija sama napravi 
 U detalju treninga tipka "Uredi" otvara uređivanje čak i kad je uređivanje zaključano u Postavkama (zaključavanje samo skriva "+ Novi" i uređivanje iz popisa).
 
 Napomena (mapa): aplikacija prepoznaje vlastitu mapu po oznaci; ako već postoji tvoja mapa istog naziva, napravi novu „Trening aktivnosti (aplikacija)“, jer u tuđu mapu ne smije pisati. Ako premještanje ne uspije, razlog piše u kartici "Uvoz s Drivea" (Postavke); "Ponovno postavi mapu" pokušava ispočetka.
+
+Podmape: uz "Napravi mapu" aplikacija pravi i podmape „Strava export“ (za Stravin ZIP) i „Aktivnosti“ (za FIT/GPX/TCX bilo kojeg sporta; ranije napravljena podmapa „Vožnje“ i dalje se čita). Čita se glavna mapa i njezine izravne podmape (jedna razina); dublje se ne ide. Ako vožnju uvezeš iz FIT-a i Stravinog izvoza, prepoznaje se po početku (do 10 min razlike) i ne dupla se, bez obzira na to što je stiglo prvo.
