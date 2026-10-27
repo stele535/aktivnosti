@@ -12,10 +12,12 @@ const DriveIn = (() => {
   }
   const FOLDER = 'Trening aktivnosti';
   async function makeFolder() {
-    const q = encodeURIComponent("mimeType='application/vnd.google-apps.folder' and name='" + FOLDER + "' and trashed=false");
-    const r = await gf('drive/v3/files?q=' + q + '&fields=files(id,name)&pageSize=5');
-    if (r.files.length) return { id: r.files[0].id, name: r.files[0].name };
-    const c = await fetch('https://www.googleapis.com/drive/v3/files?fields=id,name', { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ name: FOLDER, mimeType: 'application/vnd.google-apps.folder' }) });
+    const find = q => gf('drive/v3/files?q=' + encodeURIComponent(q + " and mimeType='application/vnd.google-apps.folder' and trashed=false") + '&fields=files(id,name)&pageSize=5');
+    const mine = await find("appProperties has { key='trening' and value='1' }");
+    if (mine.files.length) return mine.files[0];
+    // postoji li već tuđa (tvoja) mapa istog naziva? U nju aplikacija ne smije pisati, pa pravimo vlastitu
+    const same = await find("name='" + FOLDER + "'");
+    const c = await fetch('https://www.googleapis.com/drive/v3/files?fields=id,name', { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ name: same.files.length ? FOLDER + ' (aplikacija)' : FOLDER, mimeType: 'application/vnd.google-apps.folder', appProperties: { trening: '1' } }) });
     if (!c.ok) throw new Error('Drive ' + c.status + ': ' + (await c.text()).slice(0, 160));
     return c.json();
   }
@@ -64,7 +66,7 @@ const DriveIn = (() => {
     if (!clientId()) return '';
     const c = cfg(), last = META.driveLast ? new Date(META.driveLast).toLocaleString('hr') : null;
     return '<div class="card"><h3>Uvoz s Drivea (mapa)</h3><p style="margin:0 0 10px">U mapu na Driveu ubaci Stravin ZIP i/ili FIT/GPX/TCX vožnje (npr. izvezene iz iGPSPORT-a). Aplikacija čita samo tu mapu i uveze ono što još nije uvezeno. Aplikacija sama napravi mapu „Trening aktivnosti“ i u nju sprema svoje dvije datoteke (evidencija i rute); ti u nju ubacuješ ZIP i vožnje. Pišeš samo u datoteke koje je aplikacija napravila, a ostalo na Driveu može samo čitati.</p>' +
-      (c ? '<p style="margin:0 0 10px"><b>Mapa:</b> ' + esc(c.name) + (last ? '<br><span class="sub">zadnji pregled: ' + esc(last) + '</span>' : '') + '</p><div class="row" style="flex-wrap:wrap"><button class="btn pri" data-di="run">Uvezi sada</button><button class="btn" data-di="again">Ponovi uvoz svega</button><button class="btn" data-di="off">Ukloni mapu</button></div>'
+      (c ? '<p style="margin:0 0 10px"><b>Mapa:</b> ' + esc(c.name) + (last ? '<br><span class="sub">zadnji pregled: ' + esc(last) + '</span>' : '') + (META.homeErr ? '<br><span class="sub" style="color:#c8452f">Premještanje datoteka aplikacije u mapu nije uspjelo: ' + esc(META.homeErr) + '</span>' : (Object.keys(META.homed || {}).length ? '<br><span class="sub">Datoteke aplikacije su u ovoj mapi (' + Object.keys(META.homed).length + ').</span>' : '')) + '</p><div class="row" style="flex-wrap:wrap"><button class="btn pri" data-di="run">Uvezi sada</button><button class="btn" data-di="again">Ponovi uvoz svega</button><button class="btn" data-di="set">Ponovno postavi mapu</button><button class="btn" data-di="off">Ukloni mapu</button></div>'
         : '<div class="row"><button class="btn pri" data-di="set">Napravi mapu „' + FOLDER + '“</button></div>') + '</div>';
   }
   function bind(root) {
@@ -72,7 +74,7 @@ const DriveIn = (() => {
       const a = b.dataset.di;
       try {
         if (a === 'set') {
-          META.dirMode = true; await persist(false); await getToken(true);
+          META.dirMode = true; META.homed = {}; META.homeErr = ''; await persist(false); await getToken(true);
           const f = await makeFolder();
           DB.settings = Object.assign({}, DB.settings, { updated: Date.now(), driveImp: f }); await persist(); render();
           await sync(true); const r = await run(true); render(); toast(r && r.n ? 'Uvezeno datoteka: ' + r.n : 'Mapa spremljena, nema novih datoteka.', 3500);

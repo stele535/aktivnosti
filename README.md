@@ -178,3 +178,5 @@ Postavke → "Uvoz s Drivea (mapa)" → "Napravi mapu". Aplikacija sama napravi 
 
 ## Uređivanje iz detalja
 U detalju treninga tipka "Uredi" otvara uređivanje čak i kad je uređivanje zaključano u Postavkama (zaključavanje samo skriva "+ Novi" i uređivanje iz popisa).
+
+Napomena (mapa): aplikacija prepoznaje vlastitu mapu po oznaci; ako već postoji tvoja mapa istog naziva, napravi novu „Trening aktivnosti (aplikacija)“, jer u tuđu mapu ne smije pisati. Ako premještanje ne uspije, razlog piše u kartici "Uvoz s Drivea" (Postavke); "Ponovno postavi mapu" pokušava ispočetka.

@@ -438,8 +438,8 @@ async function goHome(fileId) {
   try {
     const f = await (await drive('drive/v3/files/' + fileId + '?fields=parents')).json(), ps = f.parents || [];
     if (!ps.includes(h)) await drive('drive/v3/files/' + fileId + '?addParents=' + h + (ps.length ? '&removeParents=' + ps.join(',') : '') + '&fields=id', { method: 'PATCH' });
-    META.homed[fileId] = h; await persist(false);
-  } catch (e) { /* bez dozvole ili bez pristupa: ostaje gdje je, sinkronizacija radi dalje */ }
+    META.homed[fileId] = h; META.homeErr = ''; await persist(false);
+  } catch (e) { META.homeErr = String(e.message || e).slice(0, 200); await persist(false); } // datoteka ostaje gdje je, sinkronizacija radi dalje
 }
 async function findFile() {
   if (META.fileId) return META.fileId;
